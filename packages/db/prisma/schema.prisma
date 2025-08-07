@@ -1,0 +1,296 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Contact {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  name    String
+  email   String
+  mobile  String
+  message String
+}
+
+model User {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  username       String    @unique
+  password       String
+  role           Role
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastLoggedInAt DateTime?
+  refreshToken   String?
+  student        Student?
+  teacher        Teacher?
+}
+
+model Student {
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  studentId         String              @unique
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String              @unique @db.ObjectId
+  firstName         String
+  lastName          String?
+  dob               DateTime
+  address           String?
+  phone             String
+  fatherName        String?
+  motherName        String?
+  fatherOccupation  String?
+  motherOccupation  String?
+  studentAadhar     String?
+  fatherAadhar      String?
+  dateOfAdmission   DateTime            @default(now())
+  class             Class               @relation(fields: [classId], references: [id], onDelete: Restrict)
+  classId           String              @db.ObjectId
+  rollNo            Int
+  appId             String?             @unique
+  profilePhoto      String              @default("https://cdn-icons-png.flaticon.com/512/2886/2886011.png")
+  studentAttendance StudentAttendance[]
+  studentFees       StudentFee[]
+  examResults       ExamResult[]
+
+  @@unique([classId, rollNo])
+}
+
+model Teacher {
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  teacherId         String              @unique
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String              @unique @db.ObjectId
+  firstName         String
+  lastName          String?
+  dob               DateTime
+  address           String?
+  phone             String
+  teacherAadhar     String?
+  dateOfJoining     DateTime            @default(now())
+  about             String?
+  profilePhoto      String              @default("https://cdn-icons-png.flaticon.com/512/9187/9187604.png")
+  qualifications    String[]
+  subjectHandled    String[]
+  salaryPerMonth    Float
+  teacherAttendance TeacherAttendance[]
+  teacherSalaries   TeacherSalary[]
+  examSubjects      ExamSubject[]
+  timeTableEntries  TimeTable[]
+}
+
+model StudentAttendance {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String           @db.ObjectId
+  date      DateTime
+  status    AttendanceStatus
+
+  @@unique([studentId, date])
+}
+
+model Class {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  className        String // e.g., "10"
+  section          String // e.g., "A"
+  session          String // e.g., "2025-2026"
+  students         Student[]
+  exams            Exam[]
+  timeTableEntries TimeTable[]
+  classAttendances ClassAttendance[]
+
+  @@unique([className, section, session])
+}
+
+model ClassAttendance {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  class    Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId  String   @db.ObjectId
+  date     DateTime
+  isMarked Boolean
+
+  @@unique([date, classId])
+}
+
+model StudentFee {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  student       Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId     String         @db.ObjectId
+  transaction   Transaction    @relation(fields: [transactionId], references: [id])
+  transactionId String         @unique @db.ObjectId
+  month         DateTime
+  feeBreakdown  FeeBreakdown[]
+
+  @@unique([month, studentId])
+}
+
+model FeeBreakdown {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  studentFee   StudentFee @relation(fields: [studentFeeId], references: [id], onDelete: Cascade)
+  studentFeeId String     @db.ObjectId
+  feeType      String
+  amount       Float
+}
+
+model TeacherAttendance {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  teacher   Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String           @db.ObjectId
+  date      DateTime
+  status    AttendanceStatus
+
+  @@unique([teacherId, date])
+}
+
+model TeacherSalary {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  teacher       Teacher     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId     String      @db.ObjectId
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  transactionId String      @unique @db.ObjectId
+  month         DateTime
+}
+
+model Transaction {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  finalAmount   Float
+  status        TxnStatus
+  category      TxnCategory
+  createdAt     DateTime       @default(now())
+  studentFee    StudentFee?
+  teacherSalary TeacherSalary?
+}
+
+model Exam {
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId
+  class             Class         @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId           String        @db.ObjectId
+  title             String
+  dateFrom          DateTime
+  dateTo            DateTime?
+  isResultDecleared Boolean
+  examSubjects      ExamSubject[]
+}
+
+model ExamSubject {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  exam        Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  examId      String       @db.ObjectId
+  subject     Subject      @relation(fields: [subjectId], references: [id])
+  subjectId   String       @db.ObjectId
+  fullMarks   Float
+  teacherId   String       @db.ObjectId
+  teacher     Teacher      @relation(fields: [teacherId], references: [id], onDelete: NoAction)
+  date        DateTime
+  isMarked    Boolean      @default(false)
+  examResults ExamResult[]
+}
+
+model ExamResult {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  examSubjectId String      @db.ObjectId
+  examSubject   ExamSubject @relation(fields: [examSubjectId], references: [id], onDelete: Cascade)
+  studentId     String      @db.ObjectId
+  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  marksObtained Float
+  grade         String
+  remark        String?
+
+  @@unique([examSubjectId, studentId])
+}
+
+model Subject {
+  id               String        @id @default(auto()) @map("_id") @db.ObjectId
+  subjectName      String
+  subjectCode      String        @unique
+  timeTableEntries TimeTable[]
+  examSubjects     ExamSubject[]
+}
+
+model TimeTable {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId   String  @db.ObjectId
+  weekday   WeekDay
+  period    Int
+  subjectId String  @db.ObjectId
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: NoAction)
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  teacherId String  @db.ObjectId
+
+  @@unique([classId, weekday, period])
+}
+
+model Notice {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  fileUrl     String?
+  targetRole  TargetRole
+  date        DateTime   @default(now())
+  expiryDate  DateTime?
+}
+
+model AcademicCalendar {
+  id       String                   @id @default(auto()) @map("_id") @db.ObjectId
+  title    String
+  date     DateTime                 @unique @db.Date
+  category AcademicCalendarCategory
+}
+
+enum AcademicCalendarCategory {
+  HOLIDAY
+  EVENT
+  EXAM
+  OTHER
+}
+
+enum TargetRole {
+  Student
+  Teacher
+  All
+}
+
+enum WeekDay {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+}
+
+enum TxnStatus {
+  Paid
+  Pending
+  Failed
+}
+
+enum TxnCategory {
+  Utility
+  Infrastructure
+  Fee
+  Salary
+  Other
+}
+
+enum Role {
+  Student
+  Teacher
+  Finance
+  Admin
+}
+
+enum AttendanceStatus {
+  Present
+  Absent
+  Leave
+}

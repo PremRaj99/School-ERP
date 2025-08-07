@@ -1,5 +1,5 @@
 {
-  "name": "SchoolERP",
+  "name": "school-erp",
   "private": true,
   "scripts": {
     "build": "turbo run build",
@@ -9,6 +9,9 @@
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express-http-proxy": "^1.6.7",
+    "@types/morgan": "^1.9.10",
     "prettier": "^3.6.2",
     "turbo": "^2.5.5",
     "typescript": "5.8.3"
@@ -19,6 +22,14 @@
   "packageManager": "npm@10.9.2",
   "workspaces": [
     "apps/*",
-    "packages/*"
-  ]
+    "packages/*",
+    "packages/libs/*"
+  ],
+  "dependencies": {
+    "@repo/responsehandler": "^1.0.0",
+    "cors": "^2.8.5",
+    "express-rate-limit": "^8.0.1",
+    "morgan": "^1.10.1",
+    "zod": "^4.0.15"
+  }
 }
