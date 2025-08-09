@@ -36,6 +36,7 @@ model User {
 
 model Student {
   id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  serialNumber      Int
   studentId         String              @unique
   user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            String              @unique @db.ObjectId
@@ -48,6 +49,7 @@ model Student {
   motherName        String?
   fatherOccupation  String?
   motherOccupation  String?
+  motherAadhar      String?
   studentAadhar     String?
   fatherAadhar      String?
   dateOfAdmission   DateTime            @default(now())
@@ -61,10 +63,12 @@ model Student {
   examResults       ExamResult[]
 
   @@unique([classId, rollNo])
+  @@index([dateOfAdmission])
 }
 
 model Teacher {
   id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  serialNumber      Int
   teacherId         String              @unique
   user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            String              @unique @db.ObjectId
@@ -77,13 +81,15 @@ model Teacher {
   dateOfJoining     DateTime            @default(now())
   about             String?
   profilePhoto      String              @default("https://cdn-icons-png.flaticon.com/512/9187/9187604.png")
-  qualifications    String[]
+  qualifications    String
   subjectHandled    String[]
   salaryPerMonth    Float
   teacherAttendance TeacherAttendance[]
   teacherSalaries   TeacherSalary[]
   examSubjects      ExamSubject[]
   timeTableEntries  TimeTable[]
+
+  @@index([dateOfJoining])
 }
 
 model StudentAttendance {

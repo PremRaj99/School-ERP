@@ -13,6 +13,7 @@
   "dependencies": {
     "@repo/db": "^1.0.0",
     "@repo/errorhandler": "^1.0.0",
+    "@repo/responsehandler": "^1.0.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

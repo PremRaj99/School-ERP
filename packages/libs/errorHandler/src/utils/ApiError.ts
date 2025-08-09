@@ -38,3 +38,9 @@ export class TooManyRequestError extends ApiError {
     super(429, message);
   }
 }
+
+export class DatabaseError extends ApiError {
+  constructor(message = "database failed to do task") {
+    super(502, message)
+  }
+}

@@ -9,6 +9,7 @@ import {
 } from "./utils/ApiError";
 
 import { validateSchema } from "./middlewares/validateSchema";
+import { DatabaseError } from './utils/ApiError';
 
 export const errorHandlerMiddleware = (
   err: ApiError,
@@ -32,5 +33,6 @@ export {
   UnauthorizedError,
   ValidationError,
   ApiError,
+  DatabaseError,
   validateSchema
 };
