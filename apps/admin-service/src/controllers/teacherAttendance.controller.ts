@@ -1,9 +1,8 @@
 import prisma from "@repo/db";
 import { DatabaseError, NotFoundError, validateSchema } from "@repo/errorhandler";
-import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
+import { asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
+import { CreateTeacherAttendanceSchema, dateSchema, UpdateTeacherAttendanceSchema } from "@repo/types";
 import { NextFunction, Request, Response } from 'express';
-import { dateSchema } from "../types/teacherSchema";
-import { CreateTeacherAttendanceSchema, UpdateTeacherAttendanceSchema } from "../types/teacherAttendanceSchema";
 
 export const getTeacherAttendance = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const date = validateSchema(dateSchema, req.query.date);

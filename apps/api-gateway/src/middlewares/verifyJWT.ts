@@ -18,7 +18,7 @@ export const userMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  const header = req.headers.authorization;
+  const header = req.cookies?.["access_token"] || req.headers.authorization;
   const token = header?.split(" ")[1];
 
   if (!token) {

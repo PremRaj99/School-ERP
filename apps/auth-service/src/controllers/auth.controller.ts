@@ -34,6 +34,13 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
         expiresIn: "7d"
     });
 
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            refreshToken: refreshToken
+        }
+    })
+
     setCookie(res, "access_token", accessToken)
     setCookie(res, "refresh_token", refreshToken)
 

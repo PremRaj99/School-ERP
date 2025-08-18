@@ -2,11 +2,10 @@ import prisma from "@repo/db";
 import { DatabaseError, NotFoundError, validateSchema } from "@repo/errorhandler";
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
 import { NextFunction, Request, Response } from 'express';
-import { CreateTeacherSchema, UpdateTeacherSchema } from "../types/teacherSchema";
-import { getNewTeacherSerialNumber } from "../helpers/getNewTeacherSerialNumber";
-import { generateId } from "../helpers/generateId";
+import { CreateTeacherSchema, UpdateTeacherSchema, teacherIdSchema } from "@repo/types";
+import { getNewTeacherSerialNumber, generateId } from "@repo/helper";
+
 import bcrypt from 'bcrypt';
-import { teacherIdSchema } from "../types/teacherAttendanceSchema";
 
 export const getTeachers = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const teachers = await prisma.teacher.findMany({

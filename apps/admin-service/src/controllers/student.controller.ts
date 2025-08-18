@@ -2,11 +2,9 @@ import prisma from "@repo/db";
 import { DatabaseError, NotFoundError, validateSchema } from "@repo/errorhandler";
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
 import { NextFunction, Request, Response } from 'express';
-import { CreateStudentSchema, UpdateStudentSchema } from "../types/studentSchema";
-import { getNewStudentSerialNumber } from "../helpers/getNewStudentSerialNumber";
-import { generateId } from "../helpers/generateId";
+import { getNewStudentSerialNumber, generateId } from "@repo/helper";
 import bcrypt from 'bcrypt';
-import { studentIdSchema } from '../types/teacherAttendanceSchema';
+import { studentIdSchema, CreateStudentSchema, UpdateStudentSchema } from '@repo/types';
 
 export const getStudents = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const students = await prisma.student.findMany({

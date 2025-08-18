@@ -198,6 +198,8 @@ model ExamSubject {
   date        DateTime
   isMarked    Boolean      @default(false)
   examResults ExamResult[]
+
+  @@unique([examId, subjectId])
 }
 
 model ExamResult {

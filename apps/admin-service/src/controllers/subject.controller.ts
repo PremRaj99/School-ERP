@@ -2,14 +2,12 @@ import prisma from "@repo/db";
 import { NotFoundError, validateSchema } from "@repo/errorhandler";
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
 import { NextFunction, Request, Response } from 'express';
-import { generateSubjectCode } from "../helpers/generateSubjectCode";
-import { CreateSubjectSchema, subjectCodeSchema, UpdateSubjectSchema } from "../types/subjectSchema";
-import { getGroupedSubject } from '../helpers/getGroupedSubject';
+import { generateSubjectCode, getGroupedSubject } from "@repo/helper";
+import { CreateSubjectSchema, subjectCodeSchema, UpdateSubjectSchema } from "@repo/types";
 
-export const SESSION_START_MONTH = 3; // April
 
 export const getAllClassSubjects = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const data = getGroupedSubject()
+    const data = await getGroupedSubject()
 
     res.status(200).json(new OkResponse(data))
 

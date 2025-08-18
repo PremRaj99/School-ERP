@@ -43,6 +43,9 @@ app.get("/health-check", (req, res) => {
 
 app.use("/api/v1/auth", proxy("http://localhost:3001"))
 app.use("/api/v1/admin", proxy("http://localhost:3002"))
+app.use("/api/v1/teacher", proxy("http://localhost:3003"))
+app.use("/api/v1/student", proxy("http://localhost:3004"))
+app.use("/api/v1/user", proxy("http://localhost:3005"))
 
 app.listen(PORT, () => {
     console.log(`API Gateway is running in ${NODE_ENV} environment at http://localhost:${PORT}`)

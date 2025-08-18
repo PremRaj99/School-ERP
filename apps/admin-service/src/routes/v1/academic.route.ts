@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getTimeTables, updateTimeTable } from '../../controllers/timetable.controller';
+import { createAcademicCalender, deleteAcademicCalendar, getAcademicCalenderEvent } from '../../controllers/academicCalendar.conroller';
 export const academicRouter = Router()
 
 academicRouter.get("/time-table", getTimeTables)

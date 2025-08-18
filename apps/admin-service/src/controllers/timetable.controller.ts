@@ -2,9 +2,8 @@ import prisma from "@repo/db";
 import { NotFoundError, validateSchema } from "@repo/errorhandler";
 import { AcceptedResponse, asyncHandler, OkResponse } from "@repo/responsehandler";
 import { NextFunction, Request, Response } from 'express';
-import { getCurrentSessionYear } from "../helpers/getCurrentSessionYear";
-import { timeTableFormattedData } from "../helpers/timeTableFormattedData";
-import { UpdateTimeTableSchema } from "../types/timeTableSchema";
+import { getCurrentSessionYear, timeTableFormattedData } from "@repo/helper";
+import { UpdateTimeTableSchema } from "@repo/types";
 
 export const getTimeTables = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 
