@@ -1,5 +1,5 @@
 import prisma from "@repo/db";
-import { NotFoundError, ValidationError } from "@repo/errorhandler";
+import { DatabaseError, NotFoundError, ValidationError } from "@repo/errorhandler";
 import { asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
 import bcrypt from "bcrypt";
 import { NextFunction, Request, Response } from "express";
@@ -44,7 +44,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
     setCookie(res, "access_token", accessToken)
     setCookie(res, "refresh_token", refreshToken)
 
-    res.status(200).json(new OkResponse())
+    res.status(200).json(new OkResponse({ accessToken: accessToken, refreshToken: refreshToken }))
 })
 
 export const signup = asyncHandler(async (req, res, next) => {
@@ -52,13 +52,17 @@ export const signup = asyncHandler(async (req, res, next) => {
 
     const hashPassword = await bcrypt.hash(password, 10);
 
-
-    await prisma.user.create({
-        data: {
-            username: username,
-            password: hashPassword,
-            role: "Admin",
-        }
-    })
+    try {
+        await prisma.user.create({
+            data: {
+                username: username,
+                password: hashPassword,
+                role: "Admin",
+            }
+        })
+        
+    } catch (error) {
+       throw new ValidationError() 
+    }
     res.status(201).json(new CreatedResponse())
 })

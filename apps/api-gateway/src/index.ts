@@ -5,7 +5,6 @@ import morgan from "morgan"
 import rateLimit, { ipKeyGenerator } from "express-rate-limit"
 import cookieParser from 'cookie-parser';
 import { NODE_ENV, PORT } from "./constant"
-import { success } from "zod"
 
 const app = express()
 

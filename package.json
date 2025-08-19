@@ -29,6 +29,7 @@
     "@repo/helper": "^1.0.0",
     "@repo/responsehandler": "^1.0.0",
     "@repo/types": "^1.0.0",
+    "axios": "^1.11.0",
     "cors": "^2.8.5",
     "express-rate-limit": "^8.0.1",
     "morgan": "^1.10.1",
