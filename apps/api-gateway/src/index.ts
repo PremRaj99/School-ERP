@@ -2,7 +2,7 @@ import express from "express"
 import cors from "cors"
 import proxy from "express-http-proxy"
 import morgan from "morgan"
-import rateLimit from "express-rate-limit"
+import rateLimit, { ipKeyGenerator } from "express-rate-limit"
 import cookieParser from 'cookie-parser';
 import { NODE_ENV, PORT } from "./constant"
 import { success } from "zod"
@@ -31,7 +31,7 @@ const limiter = rateLimit({
     message: { error: "Too Many Requests, please try again later!" },
     standardHeaders: true,
     legacyHeaders: true,
-    keyGenerator: (req: any) => req.ip,
+    keyGenerator: (req: any) => ipKeyGenerator(req.ip),
 })
 
 app.use(limiter)
