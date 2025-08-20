@@ -2,7 +2,7 @@ import prisma from "@repo/db";
 import { asyncHandler, OkResponse } from "@repo/responsehandler";
 import { NextFunction, Request, Response } from 'express';
 import { NotFoundError, validateSchema } from '@repo/errorhandler';
-import { sessionSchema } from "@repo/types";
+import { ObjectIdSchema, sessionSchema } from "@repo/types";
 
 export const getStudentFee = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const sessionYear = validateSchema(sessionSchema, req.query.year)
@@ -34,7 +34,7 @@ export const getStudentFee = asyncHandler(async (req: Request, res: Response, ne
 
 export const getStudentFeeDetail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 
-    const { feeId } = req.params;
+    const feeId = validateSchema(ObjectIdSchema, req.params.feeId);
 
     const studentFee = await prisma.studentFee.findUnique({
         where: {

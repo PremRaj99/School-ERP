@@ -2,7 +2,8 @@ import prisma from "@repo/db";
 import { NotFoundError, validateSchema } from "@repo/errorhandler";
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
 import { NextFunction, Request, Response } from 'express';
-import { CreateNoticeSchema } from "@repo/types";
+import { CreateNoticeSchema, ObjectIdSchema } from "@repo/types";
+import { getDateString } from "@repo/helper";
 
 export const getNotices = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const notices = await prisma.notice.findMany({
@@ -17,13 +18,13 @@ export const getNotices = asyncHandler(async (req: Request, res: Response, next:
 })
 
 export const getNoticeDetail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { noticeId } = req.params
+    const noticeId = validateSchema(ObjectIdSchema, req.params.noticeId)
 
     const notice = await prisma.notice.findUnique({
         where: { id: noticeId }
     });
 
-    if(!notice) {
+    if (!notice) {
         throw new NotFoundError()
     }
 
@@ -36,11 +37,11 @@ export const createNotice = asyncHandler(async (req: Request, res: Response, nex
     await prisma.notice.create({
         data: {
             targetRole: parseData.targetRole,
-            date: parseData.date,
+            date: getDateString(parseData.date),
             title: parseData.title,
             description: parseData.description,
             fileUrl: parseData.fileUrl,
-            expiryDate: parseData.expiryDate
+            expiryDate: parseData.expiryDate ? getDateString(parseData.expiryDate) : undefined
         }
     });
 
@@ -48,15 +49,16 @@ export const createNotice = asyncHandler(async (req: Request, res: Response, nex
 })
 
 export const deleteNotice = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { noticeId } = req.params
+    const noticeId = validateSchema(ObjectIdSchema, req.params.noticeId)
 
-    const notice = await prisma.notice.delete({
-        where: { id: noticeId }
-    });
-
-    if (!notice) {
+    try {
+        await prisma.notice.delete({
+            where: { id: noticeId }
+        });
+    } catch (e) {
         throw new NotFoundError()
     }
+
 
     res.status(202).json(new AcceptedResponse())
 })

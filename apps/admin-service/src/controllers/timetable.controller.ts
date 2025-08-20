@@ -48,11 +48,13 @@ export const updateTimeTable = asyncHandler(async (req: Request, res: Response, 
     const parseData = validateSchema(UpdateTimeTableSchema, req.body);
     const currentSessionYear = getCurrentSessionYear()
 
-    const className = await prisma.class.findFirst({
+    const className = await prisma.class.findUnique({
         where: {
-            className: parseData.className,
-            section: parseData.section,
-            session: currentSessionYear
+            className_section_session: {
+                className: parseData.className,
+                section: parseData.section,
+                session: currentSessionYear
+            }
         }
     })
 
@@ -74,21 +76,21 @@ export const updateTimeTable = asyncHandler(async (req: Request, res: Response, 
         })
     }
 
-    const timetable = await prisma.timeTable.update({
-        where: {
-            classId_weekday_period: {
-                classId: className.id,
-                weekday: parseData.weekday,
-                period: parseData.period
+    try {
+        await prisma.timeTable.update({
+            where: {
+                classId_weekday_period: {
+                    classId: className.id,
+                    weekday: parseData.weekday,
+                    period: parseData.period
+                }
+            },
+            data: {
+                teacherId: teacher?.id,
+                subjectId: subject?.id
             }
-        },
-        data: {
-            teacherId: teacher?.id,
-            subjectId: subject?.id
-        }
-    })
-
-    if (!timetable) {
+        })
+    } catch (e) {
         if (!subject || !teacher) {
             throw new NotFoundError()
         }

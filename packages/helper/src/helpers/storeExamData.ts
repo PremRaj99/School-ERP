@@ -2,6 +2,7 @@ import prisma from "@repo/db";
 import { CreateExamSchema } from "@repo/types";
 import z from 'zod';
 import { NotFoundError } from "@repo/errorhandler";
+import { getDateString } from './getDateString';
 
 export const storeExamData = async (data: z.infer<typeof CreateExamSchema>) => {
     await prisma.$transaction(async (tx) => {
@@ -26,8 +27,8 @@ export const storeExamData = async (data: z.infer<typeof CreateExamSchema>) => {
             const newExam = await tx.exam.create({
                 data: {
                     title,
-                    dateFrom,
-                    dateTo,
+                    dateFrom: getDateString(dateFrom),
+                    dateTo: getDateString(dateTo),
                     classId: classRecord.id,
                     isResultDecleared: false,
                 },
@@ -69,7 +70,7 @@ export const storeExamData = async (data: z.infer<typeof CreateExamSchema>) => {
                         subjectId: subjectInfo.id,
                         teacherId: subjectInfo.teacherId, // Using the teacherId from the Subject model.
                         fullMarks: subjectData.fullMarks,
-                        date: subjectData.date,
+                        date: getDateString(subjectData.date),
                         isMarked: false,
                     },
                 });

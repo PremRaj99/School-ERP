@@ -8,4 +8,4 @@ academicRouter.put("/time-table", updateTimeTable)
 
 academicRouter.get("/calendar", getAcademicCalenderEvent)
 academicRouter.post("/calendar", createAcademicCalender)
-academicRouter.delete("/calender/:calendarId", deleteAcademicCalendar)
+academicRouter.delete("/calendar/:calendarId", deleteAcademicCalendar)

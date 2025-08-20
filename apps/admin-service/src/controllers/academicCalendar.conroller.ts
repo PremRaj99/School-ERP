@@ -1,8 +1,9 @@
 import prisma from "@repo/db";
-import { NotFoundError, validateSchema } from "@repo/errorhandler";
+import { NotFoundError, validateSchema, ValidationError } from "@repo/errorhandler";
+import { getDateString } from "@repo/helper";
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
+import { CreatAacademicCalendarSchema, ObjectIdSchema } from "@repo/types";
 import { NextFunction, Request, Response } from 'express';
-import { CreatAacademicCalendarSchema } from "@repo/types";
 
 export const getAcademicCalenderEvent = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const calendar = await prisma.academicCalendar.findMany({
@@ -20,25 +21,30 @@ export const createAcademicCalender = asyncHandler(async (req: Request, res: Res
 
     const parseData = validateSchema(CreatAacademicCalendarSchema, req.body)
 
-    await prisma.academicCalendar.create({
-        data: {
-            date: parseData.date,
-            title: parseData.title,
-            category: parseData.category
-        }
-    })
+    try {
+        await prisma.academicCalendar.create({
+            data: {
+                date: getDateString(parseData.date),
+                title: parseData.title,
+                category: parseData.category
+            }
+        })
+    } catch (error) {
+        throw new ValidationError("already exist")
+    }
     res.status(201).json(new CreatedResponse())
 })
 
 export const deleteAcademicCalendar = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { calendarId } = req.params
+    const calendarId = validateSchema(ObjectIdSchema, req.params.calendarId)
 
-    const calendar = await prisma.academicCalendar.delete({
-        where: { id: calendarId }
-    })
-
-    if (!calendar) {
+    try {
+        await prisma.academicCalendar.delete({
+            where: { id: calendarId }
+        })
+    } catch (e) {
         throw new NotFoundError()
     }
+
     res.status(202).json(new AcceptedResponse())
 })

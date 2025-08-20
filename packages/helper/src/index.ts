@@ -8,6 +8,7 @@ import { storeExamData } from "./helpers/storeExamData";
 import { timeTableFormattedData } from "./helpers/timeTableFormattedData";
 import { getMonthStartEnd } from "./helpers/getMonthStartEnd";
 import { getGrade } from "./helpers/getGrade";
+import { getDateString } from "./helpers/getDateString";
 
 export {
     generateId,
@@ -19,5 +20,6 @@ export {
     storeExamData,
     timeTableFormattedData,
     getMonthStartEnd,
-    getGrade
+    getGrade,
+    getDateString
 }

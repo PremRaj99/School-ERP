@@ -3,6 +3,6 @@ import { createNotice, deleteNotice, getNoticeDetail, getNotices } from '../../c
 export const noticeRouter = Router()
 
 noticeRouter.get("/", getNotices)
-noticeRouter.post("/:noticeId", createNotice)
+noticeRouter.post("/", createNotice)
 noticeRouter.get("/:noticeId", getNoticeDetail)
 noticeRouter.delete("/:noticeId", deleteNotice)

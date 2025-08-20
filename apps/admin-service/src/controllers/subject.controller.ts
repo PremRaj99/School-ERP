@@ -48,14 +48,16 @@ export const updateSubject = asyncHandler(async (req: Request, res: Response, ne
     const parseData = validateSchema(UpdateSubjectSchema, req.body)
     const newSubjectCode = generateSubjectCode(parseData.subjectName);
 
-    const subject = await prisma.subject.update({
-        where: { subjectCode },
-        data: {
-            subjectName: parseData.subjectName,
-            subjectCode: newSubjectCode
-        }
-    })
-    if (!subject) {
+    try {
+        await prisma.subject.update({
+            where: { subjectCode },
+            data: {
+                subjectName: parseData.subjectName,
+                subjectCode: newSubjectCode
+            }
+        })
+
+    } catch (error) {
         throw new NotFoundError()
     }
 
@@ -66,11 +68,13 @@ export const updateSubject = asyncHandler(async (req: Request, res: Response, ne
 export const deleteSubject = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const subjectCode = validateSchema(subjectCodeSchema, req.params.subjectCode);
 
-    const subject = await prisma.subject.delete({
-        where: { subjectCode }
-    })
+    try {
 
-    if (!subject) {
+        await prisma.subject.delete({
+            where: { subjectCode }
+        })
+    }
+    catch (e) {
         throw new NotFoundError()
     }
 

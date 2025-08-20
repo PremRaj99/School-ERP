@@ -2,14 +2,15 @@ import prisma from "@repo/db";
 import { DatabaseError, NotFoundError, validateSchema } from "@repo/errorhandler";
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
 import { NextFunction, Request, Response } from 'express';
-import { CreateTeacherSchema, UpdateTeacherSchema, teacherIdSchema } from "@repo/types";
-import { getNewTeacherSerialNumber, generateId } from "@repo/helper";
+import { CreateTeacherSchema, ObjectIdSchema, UpdateTeacherSchema, teacherIdSchema } from "@repo/types";
+import { getNewTeacherSerialNumber, generateId, getDateString } from "@repo/helper";
 
 import bcrypt from 'bcrypt';
 
 export const getTeachers = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const teachers = await prisma.teacher.findMany({
         select: {
+            id: true,
             firstName: true,
             lastName: true,
             phone: true,
@@ -23,11 +24,11 @@ export const getTeachers = asyncHandler(async (req: Request, res: Response, next
 })
 
 export const getTeacherDetail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const teacherId = validateSchema(teacherIdSchema, req.params.teacherId);
+    const teacherId = validateSchema(ObjectIdSchema, req.params.teacherId);
 
     const teacher = await prisma.teacher.findUnique({
         where: {
-            teacherId
+            id: teacherId
         }
     })
 
@@ -77,8 +78,8 @@ export const createTeacher = asyncHandler(async (req: Request, res: Response, ne
                 data: {
                     firstName: parseData.firstName,
                     lastName: parseData.lastName,
-                    dob: parseData.dob,
-                    dateOfJoining: parseData.dateOfJoining,
+                    dob: getDateString(parseData.dob),
+                    dateOfJoining: getDateString(parseData.dateOfJoining),
                     phone: parseData.phone,
                     salaryPerMonth: parseData.salaryPerMonth,
                     teacherId: teacherId,
@@ -101,22 +102,22 @@ export const createTeacher = asyncHandler(async (req: Request, res: Response, ne
 })
 
 export const updateTeacher = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const teacherId = validateSchema(teacherIdSchema, req.params.teacherId);
+    const teacherId = validateSchema(ObjectIdSchema, req.params.teacherId);
 
     const parseData = validateSchema(UpdateTeacherSchema, req.body)
-    const teacher = await prisma.teacher.findUnique({ where: { teacherId } })
+    const teacher = await prisma.teacher.findUnique({ where: { id: teacherId } })
 
     if (!teacher) {
         throw new NotFoundError("Teacher not Found")
     }
 
     await prisma.teacher.update({
-        where: { teacherId },
+        where: { id: teacherId },
         data: {
             about: parseData.about,
             address: parseData.address,
-            dateOfJoining: parseData.dateOfJoining,
-            dob: parseData.dob,
+            dateOfJoining: parseData.dateOfJoining ? getDateString(parseData.dateOfJoining) : undefined,
+            dob: parseData.dob ? getDateString(parseData.dob) : undefined,
             firstName: parseData.firstName,
             lastName: parseData.lastName,
             phone: parseData.phone,
@@ -132,13 +133,13 @@ export const updateTeacher = asyncHandler(async (req: Request, res: Response, ne
 })
 
 export const deleteTeacher = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const teacherId = validateSchema(teacherIdSchema, req.params.teacherId);
+    const teacherId = validateSchema(ObjectIdSchema, req.params.teacherId);
 
-    const teacher = await prisma.teacher.delete({
-        where: { teacherId }
-    })
-
-    if (!teacher) {
+    try {
+        await prisma.teacher.delete({
+            where: { id: teacherId }
+        })
+    } catch (e) {
         throw new NotFoundError()
     }
     res.status(202).json(new AcceptedResponse())

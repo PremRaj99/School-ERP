@@ -1,11 +1,12 @@
 import prisma from "@repo/db";
-import { NotFoundError } from "@repo/errorhandler";
+import { NotFoundError, validateSchema } from "@repo/errorhandler";
 import { asyncHandler, OkResponse } from "@repo/responsehandler";
+import { ObjectIdSchema } from "@repo/types";
 import { NextFunction, Request, Response } from 'express';
 
 export const getResult = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 
-    const { examId } = req.params;
+    const examId = validateSchema(ObjectIdSchema, req.params.examId);
 
     const student = await prisma.student.findUnique({
         where: {

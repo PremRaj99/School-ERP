@@ -1,5 +1,6 @@
 import prisma from "@repo/db";
 import { DatabaseError, NotFoundError, validateSchema } from "@repo/errorhandler";
+import { getDateString } from "@repo/helper";
 import { asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
 import { CreateTeacherAttendanceSchema, dateSchema, UpdateTeacherAttendanceSchema } from "@repo/types";
 import { NextFunction, Request, Response } from 'express';
@@ -7,11 +8,7 @@ import { NextFunction, Request, Response } from 'express';
 export const getTeacherAttendance = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const date = validateSchema(dateSchema, req.query.date);
 
-    if (typeof date !== "string" || !date) {
-        throw new NotFoundError("Date not found");
-    }
-
-    const formattedDate = new Date(date);
+    const formattedDate = getDateString(date);
 
     const teacherAttendance = await prisma.teacherAttendance.findMany({
         where: {
@@ -30,17 +27,22 @@ export const getTeacherAttendance = asyncHandler(async (req: Request, res: Respo
         }
     })
 
-    res.status(200).json(new OkResponse({ date: date, teachers: teacherAttendance.map(a => ({ ...a, teacher: undefined, firstName: a.teacher.firstName, lastName: a.teacher.lastName, teacherId: a.teacher.teacherId })) }))
+    res.status(200).json(new OkResponse({
+        date: date,
+        teachers: teacherAttendance.map(a => ({
+            ...a,
+            teacher: undefined,
+            firstName: a.teacher.firstName,
+            lastName: a.teacher.lastName,
+            teacherId: a.teacher.teacherId
+        }))
+    }))
 })
 
 export const createTeacherAttendance = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const date = validateSchema(dateSchema, req.query.date);
 
-    if (typeof date !== "string" || !date) {
-        throw new NotFoundError("Date not found");
-    }
-
-    const formattedDate = new Date(date);
+    const formattedDate = getDateString(date);
 
     const parseData = validateSchema(CreateTeacherAttendanceSchema, req.body)
 

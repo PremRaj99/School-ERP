@@ -1,13 +1,14 @@
 import prisma from "@repo/db";
 import { DatabaseError, NotFoundError, validateSchema } from "@repo/errorhandler";
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
-import { CreateResultSchema, UpdateResultSchema } from "@repo/types";
+import { CreateResultSchema, ObjectIdSchema, UpdateResultSchema } from "@repo/types";
 import { NextFunction, Request, Response } from 'express';
 import { getCurrentSessionYear } from '../../../../packages/helper/src/helpers/getCurrentSessionYear';
 import { getGrade } from "@repo/helper";
 
 export const getResult = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { examId, subjectId } = req.params;
+    const examId = validateSchema(ObjectIdSchema, req.params.examId)
+    const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId)
 
     const examSubject = await prisma.examSubject.findFirst({
         where: {
@@ -67,7 +68,8 @@ export const getResult = asyncHandler(async (req: Request, res: Response, next: 
 
 export const createResult = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 
-    const { examId, subjectId } = req.params;
+    const examId = validateSchema(ObjectIdSchema, req.params.examId)
+    const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId)
     const parseData = validateSchema(CreateResultSchema, req.body)
 
     try {
@@ -109,7 +111,8 @@ export const createResult = asyncHandler(async (req: Request, res: Response, nex
 
 export const updateResult = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 
-    const { examId, subjectId } = req.params;
+    const examId = validateSchema(ObjectIdSchema, req.params.examId)
+    const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId)
     const parseData = validateSchema(UpdateResultSchema, req.body)
 
     const examSubject = await prisma.examSubject.findUnique({

@@ -9,6 +9,7 @@ import { dateSchema, monthSchema, CreateTeacherSchema, UpdateTeacherSchema, abou
 import { weekDaySchema, periodSchema, UpdateTimeTableSchema } from "./types/timeTableSchema"
 import { CreateClassAttendanceSchema } from "./types/createAttendanceSchema"
 import { CreateResultSchema, UpdateResultSchema } from "./types/resultSchema"
+import { ObjectIdSchema } from "./types/objectIdSchema"
 
 export {
     academicCategory, CreatAacademicCalendarSchema,
@@ -21,6 +22,7 @@ export {
     dateSchema, monthSchema, CreateTeacherSchema, UpdateTeacherSchema, aboutSchema,
     weekDaySchema, periodSchema, UpdateTimeTableSchema,
     CreateClassAttendanceSchema,
-    CreateResultSchema, UpdateResultSchema
+    CreateResultSchema, UpdateResultSchema,
+    ObjectIdSchema
 }
 

@@ -1,14 +1,15 @@
 import prisma from "@repo/db";
 import { DatabaseError, NotFoundError, validateSchema } from "@repo/errorhandler";
+import { generateId, getDateString, getNewStudentSerialNumber } from "@repo/helper";
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
-import { NextFunction, Request, Response } from 'express';
-import { getNewStudentSerialNumber, generateId } from "@repo/helper";
+import { CreateStudentSchema, ObjectIdSchema, UpdateStudentSchema } from '@repo/types';
 import bcrypt from 'bcrypt';
-import { studentIdSchema, CreateStudentSchema, UpdateStudentSchema } from '@repo/types';
+import { NextFunction, Request, Response } from 'express';
 
 export const getStudents = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const students = await prisma.student.findMany({
         select: {
+            id: true,
             firstName: true,
             lastName: true,
             dob: true,
@@ -24,10 +25,11 @@ export const getStudents = asyncHandler(async (req: Request, res: Response, next
 })
 
 export const getStudentDetail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const studentId = validateSchema(studentIdSchema,req.params.studentId)
+    const studentId = validateSchema(ObjectIdSchema, req.params.studentId)
 
     const student = await prisma.student.findUnique({
-        where: { studentId }, select: {
+        where: { id: studentId }, select: {
+            id: true,
             firstName: true,
             lastName: true,
             dob: true,
@@ -58,11 +60,13 @@ export const getStudentDetail = asyncHandler(async (req: Request, res: Response,
 export const createStudent = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const parseData = validateSchema(CreateStudentSchema, req.body)
 
-    const className = await prisma.class.findFirst({
+    const className = await prisma.class.findUnique({
         where: {
-            className: parseData.className,
-            section: parseData.section,
-            session: parseData.session
+            className_section_session: {
+                className: parseData.className,
+                section: parseData.section,
+                session: parseData.session
+            }
         }
     })
 
@@ -87,7 +91,7 @@ export const createStudent = asyncHandler(async (req: Request, res: Response, ne
                 data: {
                     firstName: parseData.firstName,
                     lastName: parseData.lastName,
-                    dob: parseData.dob,
+                    dob: getDateString(parseData.dob),
                     phone: parseData.phone,
                     rollNo: parseData.rollNo,
                     serialNumber: newSerialNumber,
@@ -96,7 +100,7 @@ export const createStudent = asyncHandler(async (req: Request, res: Response, ne
                     appId: parseData.appId,
                     classId: className.id,
                     userId: user.id,
-                    dateOfAdmission: parseData.dateOfAdmission,
+                    dateOfAdmission: getDateString(parseData.dateOfAdmission),
                     fatherAadhar: parseData.fatherAadhar,
                     fatherName: parseData.fatherName,
                     fatherOccupation: parseData.fatherOccupation,
@@ -118,7 +122,7 @@ export const createStudent = asyncHandler(async (req: Request, res: Response, ne
 
 export const updateStudent = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 
-    const studentId = validateSchema(studentIdSchema,req.params.studentId)
+    const studentId = validateSchema(ObjectIdSchema, req.params.studentId)
 
     const parseData = validateSchema(UpdateStudentSchema, req.body)
 
@@ -138,41 +142,45 @@ export const updateStudent = asyncHandler(async (req: Request, res: Response, ne
         }
     }
 
-    await prisma.student.update({
-        where: { studentId },
-        data: {
-            firstName: parseData.firstName,
-            lastName: parseData.lastName,
-            dob: parseData.dob,
-            phone: parseData.phone,
-            rollNo: parseData.rollNo,
-            studentId: studentId,
-            address: parseData.address,
-            appId: parseData.appId,
-            classId: className?.id,
-            dateOfAdmission: parseData.dateOfAdmission,
-            fatherAadhar: parseData.fatherAadhar,
-            fatherName: parseData.fatherName,
-            fatherOccupation: parseData.fatherOccupation,
-            motherName: parseData.motherName,
-            motherOccupation: parseData.motherOccupation,
-            motherAadhar: parseData.motherAadhar,
-            profilePhoto: parseData.profilePhoto,
-            studentAadhar: parseData.studentAadhar
-        }
-    })
+    try {
+        await prisma.student.update({
+            where: { id: studentId },
+            data: {
+                firstName: parseData.firstName,
+                lastName: parseData.lastName,
+                dob: parseData.dob ? getDateString(parseData.dob) : undefined,
+                phone: parseData.phone,
+                rollNo: parseData.rollNo,
+                studentId: studentId,
+                address: parseData.address,
+                appId: parseData.appId,
+                classId: className?.id,
+                dateOfAdmission: parseData.dateOfAdmission,
+                fatherAadhar: parseData.fatherAadhar,
+                fatherName: parseData.fatherName,
+                fatherOccupation: parseData.fatherOccupation,
+                motherName: parseData.motherName,
+                motherOccupation: parseData.motherOccupation,
+                motherAadhar: parseData.motherAadhar,
+                profilePhoto: parseData.profilePhoto,
+                studentAadhar: parseData.studentAadhar
+            }
+        })
+    } catch (e) {
+        throw new NotFoundError()
+    }
 
     res.status(202).json(new AcceptedResponse())
 })
 
 export const deleteStudent = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const studentId = validateSchema(studentIdSchema,req.params.studentId)
+    const studentId = validateSchema(ObjectIdSchema, req.params.studentId)
 
-    const student = await prisma.student.delete({
-        where: { studentId }
-    })
-
-    if (!student) {
+    try {
+        await prisma.student.delete({
+            where: { id: studentId }
+        })
+    } catch (e) {
         throw new NotFoundError()
     }
     res.status(202).json(new AcceptedResponse())

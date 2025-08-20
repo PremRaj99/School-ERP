@@ -3,7 +3,7 @@ import { DatabaseError, NotFoundError, validateSchema } from "@repo/errorhandler
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
 import { NextFunction, Request, Response } from 'express';
 import { storeExamData } from "@repo/helper";
-import { CreateExamSchema } from "@repo/types";
+import { CreateExamSchema, ObjectIdSchema } from "@repo/types";
 
 export const getExam = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 
@@ -33,6 +33,8 @@ export const createExam = asyncHandler(async (req: Request, res: Response, next:
     try {
         await storeExamData(parseData)
     } catch (error) {
+        if (error instanceof Error)
+            throw new DatabaseError(error.message)
         throw new DatabaseError()
     }
 
@@ -41,7 +43,7 @@ export const createExam = asyncHandler(async (req: Request, res: Response, next:
 
 export const deleteExam = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 
-    const { examId } = req.params
+    const examId = validateSchema(ObjectIdSchema, req.params.examId)
 
     const exam = await prisma.exam.delete({
         where: { id: examId }

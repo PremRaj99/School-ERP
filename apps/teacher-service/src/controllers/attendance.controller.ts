@@ -2,8 +2,8 @@ import prisma from "@repo/db";
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
 import { NextFunction, Request, Response } from 'express';
 import { validateSchema } from "../../../../packages/libs/errorHandler/src/middlewares/validateSchema";
-import { CreateClassAttendanceSchema, monthSchema } from "@repo/types";
-import { getMonthStartEnd } from "@repo/helper";
+import { CreateClassAttendanceSchema, monthSchema, ObjectIdSchema } from "@repo/types";
+import { getDateString, getMonthStartEnd } from "@repo/helper";
 import { DatabaseError, NotFoundError } from "../../../../packages/libs/errorHandler/src/utils/ApiError";
 import { getCurrentSessionYear } from '../../../../packages/helper/src/helpers/getCurrentSessionYear';
 import { UpdateClassAttendanceSchema } from "../../../../packages/types/src/types/createAttendanceSchema";
@@ -61,7 +61,7 @@ export const getClassAttendance = asyncHandler(async (req: Request, res: Respons
 })
 
 export const getClassAttendanceDetail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { classAttendanceId } = req.params;
+    const classAttendanceId = validateSchema(ObjectIdSchema, req.params.classAttendanceId);
 
     const classAttendance = await prisma.classAttendance.findUnique({
         where: { id: classAttendanceId },
@@ -140,7 +140,7 @@ export const createClassAttendance = asyncHandler(async (req: Request, res: Resp
         await prisma.$transaction(async (txn) => {
             await txn.classAttendance.create({
                 data: {
-                    date: parseData.date,
+                    date: getDateString(parseData.date),
                     isMarked: true,
                     classId: className.id,
                 }
@@ -150,7 +150,7 @@ export const createClassAttendance = asyncHandler(async (req: Request, res: Resp
                 data: parseData.attendance.map(a => ({
                     studentId: a.studentId,
                     status: a.status,
-                    date: parseData.date
+                    date: getDateString(parseData.date)
                 }))
             })
         })
