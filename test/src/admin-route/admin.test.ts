@@ -1,7 +1,7 @@
 import { axios } from "../axios"
 
 // Mock data for creating a new teacher
-const mockTeacher = {
+export const mockTeacher = {
     firstName: "John",
     lastName: "Doe",
     dob: "15-01-1990",

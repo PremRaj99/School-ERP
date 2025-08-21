@@ -6,6 +6,7 @@ import { noticeRouter } from "./notice.route"
 import { studentRouter } from "./student.route"
 import { subjectRouter } from "./subject.route"
 import { transactionRouter } from "./transaction.route"
+import { resultRouter } from "./result.route"
 
 export const router = Router()
 
@@ -17,6 +18,8 @@ router.use("/transaction", transactionRouter)
 router.use("/subject", subjectRouter)
 
 router.use("/exam", examRouter)
+
+router.use("/result", resultRouter)
 
 router.use("/academic", academicRouter)
 

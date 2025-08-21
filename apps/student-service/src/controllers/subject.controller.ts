@@ -40,6 +40,14 @@ export const getAllSubjects = asyncHandler(async (req: Request, res: Response, n
         }
     })
 
-    res.status(200).json(new OkResponse(timeTable))
+    res.status(200).json(new OkResponse(timeTable.map(t => ({
+        ...t,
+        ...t.class,
+        ...t.subject,
+        fullName: `${t.teacher.firstName} ${t.teacher.lastName}`,
+        class: undefined,
+        subject: undefined,
+        teacher: undefined
+    }))))
 
 })
