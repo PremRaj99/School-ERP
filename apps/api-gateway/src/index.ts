@@ -9,9 +9,9 @@ import { NODE_ENV, PORT } from "./constant"
 const app = express()
 
 app.use(cors({
-    origin: ["http://localhost:5173"],
+    origin: "*",
     allowedHeaders: [
-        "Authorization", "Contant-Type"
+        "Authorization", "Content-Type"
     ],
     credentials: true
 }))

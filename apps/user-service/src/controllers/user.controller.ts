@@ -74,7 +74,7 @@ export const refresh = asyncHandler(async (req: Request, res: Response, next: Ne
 
     const user = await getUserData(req)
 
-    const incommingrefreshToken = req.cookies?.["refresh_token"];
+    const incommingrefreshToken = req.cookies?.["refresh_token"] || req.body.refresh;
 
     if (!req.cookies || incommingrefreshToken) {
         throw new ForbiddenError()
