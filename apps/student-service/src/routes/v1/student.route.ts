@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { getStudent } from '../../controllers/student.controller';
+import { getDashboard, getStudent } from '../../controllers/student.controller';
 export const studentRouter = Router()
 
 studentRouter.get("/", getStudent)
+studentRouter.get("/info", getDashboard)

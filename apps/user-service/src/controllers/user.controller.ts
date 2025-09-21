@@ -1,8 +1,8 @@
 import prisma from '@repo/db';
 import { AcceptedResponse, asyncHandler, OkResponse } from '@repo/responsehandler';
 import { NextFunction, Request, Response } from 'express';
-import { ForbiddenError, NotFoundError, validateSchema, ValidationError } from '@repo/errorhandler';
-import { ChangePasswordSchema } from '../types';
+import { ForbiddenError, NotFoundError, UnauthorizedError, validateSchema, ValidationError } from '@repo/errorhandler';
+import { ChangePasswordSchema } from '@repo/types';
 import bcrypt from 'bcrypt';
 import { setCookie } from '../utils/setCookie';
 import jwt from 'jsonwebtoken';
@@ -72,16 +72,26 @@ export const logout = asyncHandler(async (req: Request, res: Response, next: Nex
 
 export const refresh = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 
-    const user = await getUserData(req)
+    const token = req.body.refresh;
 
-    const incommingrefreshToken = req.cookies?.["refresh_token"] || req.body.refresh;
-
-    if (!req.cookies || incommingrefreshToken) {
+    if (!token) {
         throw new ForbiddenError()
     }
 
+    try {
+        const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET) as {
+            id: string;
+            role: string;
+        };
+        req.user = decoded;
+    } catch (error) {
+        throw new ForbiddenError()
+    }
+
+    const user = await getUserData(req)
+
     const accessToken = jwt.sign({ id: user.id, role: user.role }, ACCESS_TOKEN_SECRET, {
-        expiresIn: "15m"
+        expiresIn: "15s"
     });
 
     const refreshToken = jwt.sign({ id: user.id, role: user.role }, REFRESH_TOKEN_SECRET, {
@@ -95,8 +105,8 @@ export const refresh = asyncHandler(async (req: Request, res: Response, next: Ne
         }
     })
 
-    setCookie(res, "access_token", accessToken)
-    setCookie(res, "refresh_token", refreshToken)
+    // setCookie(res, "access_token", accessToken)
+    // setCookie(res, "refresh_token", refreshToken)
 
-    res.status(202).json(new AcceptedResponse())
+    res.status(202).json(new OkResponse({ accessToken, refreshToken }))
 })

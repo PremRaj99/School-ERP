@@ -1,19 +1,10 @@
-"use client";
-import React, { useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  Calendar,
-  DollarSign,
-  Clock,
-  FileText,
-  Bell,
-  User,
-  Settings,
-} from "lucide-react";
+"use client"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Calendar, DollarSign, Clock, FileText, Bell, User, Settings } from "lucide-react"
 
 export default function Navigation() {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
   const links = [
     { title: "Attendance", link: "/student/attendance", icon: Calendar },
@@ -23,16 +14,16 @@ export default function Navigation() {
     { title: "Notice & Calendar", link: "/student/notice-and-calendar", icon: Bell },
     { title: "Profile", link: "/student/profile", icon: User },
     { title: "Setting", link: "/student/setting", icon: Settings },
-  ];
+  ]
 
-  const isActive = (path: string) => pathname === path;
+  const isActive = (path: string) => pathname === path
 
   return (
     <nav>
       <ul className="flex flex-wrap items-center justify-center gap-6 p-4">
         {links.map((item) => {
-          const IconComponent = item.icon;
-          const active = isActive(item.link);
+          const IconComponent = item.icon
+          const active = isActive(item.link)
 
           return (
             <li key={item.link}>
@@ -47,17 +38,15 @@ export default function Navigation() {
                 >
                   <IconComponent
                     size={36}
-                    className={`transition-transform duration-200 ${
-                      active ? "scale-110" : "group-hover:scale-105"
-                    }`}
+                    className={`transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-105"}`}
                   />
                   <span className="text-sm font-medium text-center">{item.title}</span>
                 </div>
               </Link>
             </li>
-          );
+          )
         })}
       </ul>
     </nav>
-  );
+  )
 }

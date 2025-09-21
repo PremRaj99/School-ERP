@@ -10,8 +10,12 @@ import { weekDaySchema, periodSchema, UpdateTimeTableSchema } from "./types/time
 import { CreateClassAttendanceSchema } from "./types/createAttendanceSchema"
 import { CreateResultSchema, UpdateResultSchema } from "./types/resultSchema"
 import { ObjectIdSchema } from "./types/objectIdSchema"
+import { LoginSchema, ContactUsSchema } from "./types/authSchema"
+import { ChangePasswordSchema } from './types/userSchema';
 
 export {
+    LoginSchema, ContactUsSchema,
+    ChangePasswordSchema,
     academicCategory, CreatAacademicCalendarSchema,
     classNameSchema, sectionSchema, sessionSchema, CreateClassSchema,
     CreateExamSchema,

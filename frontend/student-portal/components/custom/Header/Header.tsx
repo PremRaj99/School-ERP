@@ -1,8 +1,39 @@
+"use client";
 import React from "react";
 import { ModeToggle } from "../mode-toggle";
 import { Button } from "@/components/ui/button";
+import { useDispatch, useSelector } from "react-redux";
+import { useForm } from "react-hook-form";
+import UserService from "@/services/user";
+import { useMutation } from "@tanstack/react-query";
+import { logout } from "@/redux/feature/userSlice";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Header() {
+  const { user } = useSelector((state: { user: any }) => state);
+
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const mutation = useMutation({
+    mutationFn: UserService.logout,
+    onSuccess: async (data) => {
+      if (data.success) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refresh-token");
+        dispatch(logout());
+        router.push("/login");
+      }
+    },
+    onError: (err) => {
+      toast.error("Logout Failed");
+    },
+  });
+
+  const onSubmit = () => {
+    mutation.mutate();
+  };
+
   return (
     <header className="bg-black">
       <div className="container mx-auto py-4 flex justify-between items-center shadow-md">
@@ -15,11 +46,23 @@ export default function Header() {
           {/* Dark Mode Toggle Icon */}
           <ModeToggle />
           {/* Logout Button */}
-          <Button
-            variant={"destructive"}
-          >
-            Logout
-          </Button>
+
+          {user.username ? (
+            <Button
+              title={user.username}
+              onClick={onSubmit}
+              variant={"destructive"}
+            >
+              Logout
+            </Button>
+          ) : (
+            <Button
+              variant={"destructive"}
+              onClick={() => router.push("/login")}
+            >
+              Login
+            </Button>
+          )}
         </div>
       </div>
     </header>

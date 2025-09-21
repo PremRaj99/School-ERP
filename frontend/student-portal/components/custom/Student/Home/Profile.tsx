@@ -1,17 +1,30 @@
-import React from "react";
-import Image from "next/image";
-import { User, GraduationCap, Hash } from "lucide-react";
+import Image from "next/image"
+import { User, GraduationCap, Hash } from "lucide-react"
 
-export default function Profile() {
-  const data = {
-    profilePicture: "https://cdn-icons-png.flaticon.com/512/2886/2886011.png",
-    firstName: "Prem",
-    lastName: "Raj",
-    className: "04",
-    section: "A",
-    rollNo: 4,
-    studentId: "STU2025001",
-  };
+type StudentProfileData = {
+  profilePhoto?: string;
+  firstName: string;
+  lastName: string;
+  className: string;
+  section: string;
+  rollNo: number | string;
+  studentId: string;
+};
+
+interface ProfileProps {
+  data: StudentProfileData;
+}
+
+export default function Profile({ data }: ProfileProps) {
+  // const data = {
+  //   profilePicture: "https://cdn-icons-png.flaticon.com/512/2886/2886011.png",
+  //   firstName: "Prem",
+  //   lastName: "Raj",
+  //   className: "04",
+  //   section: "A",
+  //   rollNo: 4,
+  //   studentId: "STU2025001",
+  // }
 
   return (
     <div className="max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-xl dark:hover:shadow-2xl transition-shadow duration-300">
@@ -21,7 +34,7 @@ export default function Profile() {
           {/* Profile Picture */}
           <div className="relative">
             <Image
-              src={data.profilePicture || "https://cdn-icons-png.flaticon.com/512/2886/2886011.png"}
+              src={data.profilePhoto || "https://cdn-icons-png.flaticon.com/512/2886/2886011.png"}
               alt="Profile Picture"
               width={64}
               height={64}
@@ -53,7 +66,9 @@ export default function Profile() {
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Class</p>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">{data.className}-{data.section}</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                {data.className}-{data.section}
+              </p>
             </div>
           </div>
 
@@ -70,7 +85,7 @@ export default function Profile() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function ProfileImageSkeleton() {
@@ -96,5 +111,5 @@ function ProfileImageSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }

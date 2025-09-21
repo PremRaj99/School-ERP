@@ -33,130 +33,74 @@ type Schedule = {
   };
 };
 
-const WeeklyTimetable = () => {
-  const days: Day[] = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-  const timeSlots: TimeSlot[] = [
-    "08:00-09:00",
-    "09:00-10:00",
-    "10:00-11:00",
-    "11:00-12:00",
-    "12:00-01:00",
-    "01:00-02:00",
-    "02:00-03:00",
-  ];
+interface SubjectData {
+  period: number;
+  subject: string;
+  subjectCode?: string;
+  teacherName?: string;
+  teacherId?: string;
+}
 
-  // Updated schedule data with teacher information
-  const schedule: Schedule = {
-    Monday: {
-      "09:00-10:00": {
-        subject: "Mathematics",
-        firstName: "Sarah",
-        lastName: "Johnson",
-        teacherId: "T001",
-      },
-      "02:00-03:00": {
-        subject: "Physics",
-        firstName: "Michael",
-        lastName: "Chen",
-        teacherId: "T002",
-      },
-      "10:00-11:00": {
-        subject: "Chemistry Lab",
-        firstName: "Emma",
-        lastName: "Davis",
-        teacherId: "T003",
-      },
-    },
-    Tuesday: {
-      "10:00-11:00": {
-        subject: "English Literature",
-        firstName: "James",
-        lastName: "Wilson",
-        teacherId: "T004",
-      },
-      "02:00-03:00": {
-        subject: "History",
-        firstName: "Lisa",
-        lastName: "Anderson",
-        teacherId: "T005",
-      },
-    },
-    Wednesday: {
-      "08:00-09:00": {
-        subject: "Biology",
-        firstName: "David",
-        lastName: "Martinez",
-        teacherId: "T006",
-      },
-      "11:00-12:00": {
-        subject: "Computer Science",
-        firstName: "Anna",
-        lastName: "Thompson",
-        teacherId: "T007",
-      },
-      "02:00-03:00": {
-        subject: "Music Theory",
-        firstName: "Robert",
-        lastName: "Garcia",
-        teacherId: "T008",
-      },
-    },
-    Thursday: {
-      "09:00-10:00": {
-        subject: "Physical Education",
-        firstName: "Mark",
-        lastName: "Robinson",
-        teacherId: "T009",
-      },
-      "01:00-02:00": {
-        subject: "Art & Design",
-        firstName: "Sophie",
-        lastName: "Brown",
-        teacherId: "T010",
-      },
-    },
-    Friday: {
-      "10:00-11:00": {
-        subject: "Geography",
-        firstName: "Alex",
-        lastName: "Taylor",
-        teacherId: "T011",
-      },
-      "02:00-03:00": {
-        subject: "French Language",
-        firstName: "Marie",
-        lastName: "Dubois",
-        teacherId: "T012",
-      },
-      "01:00-02:00": {
-        subject: "Study Hall",
-        firstName: "John",
-        lastName: "Smith",
-        teacherId: "T013",
-      },
-    },
-    Saturday: {
-      "09:00-10:00": {
-        subject: "Drama Workshop",
-        firstName: "Rachel",
-        lastName: "White",
-        teacherId: "T014",
-      },
-      "01:00-02:00": {
-        subject: "Science Club",
-        firstName: "Kevin",
-        lastName: "Lee",
-        teacherId: "T015",
-      },
-    },
-  };
+interface DayData {
+  weekday: string;
+  subjects: SubjectData[];
+}
+
+type Props = {
+  data: DayData[];
+};
+
+const dayMap: Record<string, Day> = {
+  MON: "Monday",
+  TUE: "Tuesday",
+  WED: "Wednesday",
+  THU: "Thursday",
+  FRI: "Friday",
+  SAT: "Saturday",
+  SUN: "Sunday",
+};
+
+const days: Day[] = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+const timeSlots: TimeSlot[] = [
+  "08:00-09:00",
+  "09:00-10:00",
+  "10:00-11:00",
+  "11:00-12:00",
+  "12:00-01:00",
+  "01:00-02:00",
+  "02:00-03:00",
+];
+
+// Map period number to time slot index (assuming period 1 = first slot)
+const periodToTimeSlot = (period: number) => timeSlots[period - 1];
+
+const WeeklyTimetable: React.FC<Props> = ({ data }) => {
+  // Convert incoming data to Schedule format
+  const schedule: Schedule = {};
+
+  data.forEach((dayItem) => {
+    const dayName = dayMap[dayItem.weekday];
+    if (!dayName) return;
+    schedule[dayName] = {};
+    dayItem.subjects.forEach((subj) => {
+      const slot = periodToTimeSlot(subj.period);
+      if (!slot) return;
+      schedule[dayName]![slot] = {
+        subject: subj.subject,
+        firstName: subj.teacherName?.split(" ")[0],
+        lastName: subj.teacherName?.split(" ").slice(1).join(" "),
+        teacherId: subj.teacherId,
+      };
+    });
+  });
 
   return (
     <div className="w-6xl ">

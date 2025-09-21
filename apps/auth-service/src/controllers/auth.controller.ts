@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "../constant";
-import { LoginSchema } from "../types";
+import { LoginSchema } from "@repo/types";
 import { setCookie } from "../utils/setCookie";
 import { validateSchema } from "@repo/errorhandler";
 
@@ -27,7 +27,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
     }
 
     const accessToken = jwt.sign({ id: user.id, role: user.role }, ACCESS_TOKEN_SECRET, {
-        expiresIn: "15m"
+        expiresIn: "15s"
     });
 
     const refreshToken = jwt.sign({ id: user.id, role: user.role }, REFRESH_TOKEN_SECRET, {

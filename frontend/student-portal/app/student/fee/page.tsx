@@ -1,3 +1,5 @@
+"use client";
+
 import { BreadcrumbResponsive } from "@/components/custom/BreadCrum";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import StudentTransactionService from "@/services/student/transaction";
+import { useQuery } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
 
 export default function page() {
@@ -31,6 +35,28 @@ export default function page() {
       label: "Fee",
     },
   ];
+   const {
+    data: feesData,
+    error,
+    isPending,
+  } = useQuery({
+    queryKey: ["fee"],
+    queryFn: () => StudentTransactionService.studentFee("2025-2026"),
+  })
+
+  if (isPending) {
+    return <>Loading...</>;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <span className="text-red-500">
+          Failed to load fee. Please try again later.
+        </span>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col items-center justify-center container mx-auto gap-4 my-10">
       <BreadcrumbResponsive items={items} />
@@ -40,53 +66,61 @@ export default function page() {
         </div>
       </div>
       <div className="max-w-full w-xl overflow-x-auto p-4 ">
-        <TableDemo />
+        <TableDemo feesData={feesData} />
         {/* <DialogDemo /> */}
       </div>
     </div>
   );
 }
 
-const invoices = [
-  {
-    id: "sdfhsd4357-1",
-    month: "02-2024",
-    finalAmount: "200.00",
-    isPaid: false,
-  },
-  {
-    id: "sdfhsd4357-2",
-    month: "03-2024",
-    finalAmount: "200.00",
-    isPaid: true,
-  },
-  {
-    id: "sdfhsd4357-3",
-    month: "04-2024",
-    finalAmount: "200.00",
-    isPaid: true,
-  },
-];
+// const invoices = [
+//   {
+//     id: "sdfhsd4357-1",
+//     month: "02-2024",
+//     finalAmount: "200.00",
+//     isPaid: false,
+//   },
+//   {
+//     id: "sdfhsd4357-2",
+//     month: "03-2024",
+//     finalAmount: "200.00",
+//     isPaid: true,
+//   },
+//   {
+//     id: "sdfhsd4357-3",
+//     month: "04-2024",
+//     finalAmount: "200.00",
+//     isPaid: true,
+//   },
+// ];
 
 // ✅ Reusable Dialog for showing invoice details
-function FeeDetailDialog({ invoiceId }: { invoiceId: string }) {
+
+function FeeDetailDialog({ feeId }: { feeId: string }) {
+
+  const {
+    data: feeData,
+    error,
+    isPending,
+  } = useQuery({
+    queryKey: ["fee", feeId],
+    queryFn: () => StudentTransactionService.studentFeeDetail(feeId),
+  })
+
+  if (isPending) {
+    return <>Loading...</>;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <span className="text-red-500">
+          Failed to load fee detail. Please try again later.
+        </span>
+      </div>
+    );
+  }
   // Example data (you can later fetch this by invoiceId)
-  const invoice = {
-    id: "sdfhsd4357",
-    firstName: "Prem",
-    lastName: "Raj",
-    className: "02",
-    section: "A",
-    rollNo: 3,
-    month: "04-2024",
-    session: "2024-25",
-    breakDown: [
-      { feeType: "Tuition", amount: 180.0 },
-      { feeType: "Admission", amount: 20.0 },
-    ],
-    finalAmount: "200.00",
-    isPaid: true,
-  };
 
   return (
     <Dialog>
@@ -114,9 +148,9 @@ function FeeDetailDialog({ invoiceId }: { invoiceId: string }) {
                 "Oct",
                 "Nov",
                 "Dec",
-              ][parseInt(invoice.month.split("-")[0], 10) - 1]
+              ][parseInt(feeData.data.month.split("-")[0], 10) - 1]
             }
-            , {invoice.month.split("-")[1]}</span> ({invoice.session})
+            , {feeData.data.month.split("-")[1]}</span> ({feeData.data.session})
           </DialogDescription>
         </DialogHeader>
 
@@ -125,22 +159,22 @@ function FeeDetailDialog({ invoiceId }: { invoiceId: string }) {
           <div className="flex justify-between">
             <span>Student:</span>
             <span>
-              {invoice.firstName} {invoice.lastName}
+              {feeData.data.firstName} {feeData.data.lastName}
             </span>
           </div>
           <div className="flex justify-between">
             <span>Class / Section:</span>
             <span>
-              {invoice.className}-{invoice.section}
+              {feeData.data.className}-{feeData.data.section}
             </span>
           </div>
           <div className="flex justify-between">
             <span>Roll No:</span>
-            <span>{invoice.rollNo}</span>
+            <span>{feeData.data.rollNo}</span>
           </div>
           <div className="flex justify-between">
             <span>Invoice ID:</span>
-            <span>{invoice.id}</span>
+            <span>{feeData.data.id}</span>
           </div>
         </div>
 
@@ -148,12 +182,14 @@ function FeeDetailDialog({ invoiceId }: { invoiceId: string }) {
         <div className="mt-3">
           <h4 className="font-medium mb-2">Fee Breakdown</h4>
           <div className="space-y-1">
-            {invoice.breakDown.map((item, idx) => (
-              <div key={idx} className="flex justify-between text-sm">
-                <span>{item.feeType}</span>
-                <span>₹{item.amount.toFixed(2)}</span>
-              </div>
-            ))}
+            {feeData.data.breakDown.map(
+              (item: { feeType: string; amount: number }, idx: number) => (
+                <div key={idx} className="flex justify-between text-sm">
+                  <span>{item.feeType}</span>
+                  <span>₹{item.amount.toFixed(2)}</span>
+                </div>
+              )
+            )}
           </div>
         </div>
 
@@ -162,14 +198,14 @@ function FeeDetailDialog({ invoiceId }: { invoiceId: string }) {
           <div className="flex justify-between">
             <span>Status:</span>
             <span
-              className={invoice.isPaid ? "text-green-600" : "text-red-600"}
+              className={feeData.data.isPaid ? "text-green-600" : "text-red-600"}
             >
-              {invoice.isPaid ? "Paid" : "Not Paid"}
+              {feeData.data.isPaid ? "Paid" : "Not Paid"}
             </span>
           </div>
           <div className="flex justify-between font-medium">
             <span>Final Amount:</span>
-            <span>₹{invoice.finalAmount}</span>
+            <span>₹{feeData.data.finalAmount}</span>
           </div>
         </div>
 
@@ -184,7 +220,14 @@ function FeeDetailDialog({ invoiceId }: { invoiceId: string }) {
 }
 
 // ✅ Table Component
-export function TableDemo() {
+type Fee = {
+  id: string;
+  month: string;
+  finalAmount: string;
+  isPaid: boolean;
+};
+
+export function TableDemo({ feesData }: { feesData: any }) {
   return (
     <Table>
       <TableHeader>
@@ -196,13 +239,13 @@ export function TableDemo() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {invoices.map((invoice) => (
-          <TableRow key={invoice.id}>
+        {(feesData as {data: Fee[]} && feesData.data.length > 0) ? feesData.data.map((fee: Fee) => (
+          <TableRow key={fee.id}>
             <TableCell>
-              {`${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][parseInt(invoice.month.split("-")[0], 10) - 1]}, ${invoice.month.split("-")[1]}`}
+              {`${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][parseInt(fee.month.split("-")[0], 10) - 1]}, ${fee.month.split("-")[1]}`}
             </TableCell>
             <TableCell className="text-center">
-              {invoice.isPaid ? (
+              {fee.isPaid ? (
                 <span className="font-semibold text-xs px-4 py-1 border rounded-full bg-green-300/20">
                   Paid
                 </span>
@@ -212,18 +255,31 @@ export function TableDemo() {
                 </span>
               )}
             </TableCell>
-            <TableCell className="text-right">₹{invoice.finalAmount}</TableCell>
+            <TableCell className="text-right">₹{fee.finalAmount}</TableCell>
             <TableCell className="flex items-center justify-end cursor-pointer">
               {/* 🔗 Hook Dialog with this invoice */}
-              <FeeDetailDialog invoiceId={invoice.id} />
+              <FeeDetailDialog feeId={fee.id} />
             </TableCell>
           </TableRow>
-        ))}
+        )) : (
+          <TableRow>
+            <TableCell colSpan={4} className="text-center py-6">
+              No Data Found
+            </TableCell>
+          </TableRow>
+        )}
       </TableBody>
       <TableFooter>
         <TableRow>
           <TableCell colSpan={2}>Total</TableCell>
-          <TableCell className="text-right">₹600.00</TableCell>
+          <TableCell className="text-right">
+            ₹{feesData && feesData.data
+              ? feesData.data.reduce(
+                  (sum: number, fee: Fee) => sum + parseFloat(fee.finalAmount),
+                  0
+                ).toFixed(2)
+              : "0.00"}
+          </TableCell>
           <TableCell></TableCell>
         </TableRow>
       </TableFooter>
