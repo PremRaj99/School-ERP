@@ -4,4 +4,4 @@ import { getTeacherProfile, updateAbout } from '../../controllers/teacher.contro
 export const teacherRouter = Router()
 
 teacherRouter.get("/", getTeacherProfile)
-teacherRouter.get("/change-about", updateAbout)
+teacherRouter.put("/change-about", updateAbout)

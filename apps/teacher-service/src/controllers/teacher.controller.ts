@@ -36,16 +36,16 @@ export const updateAbout = asyncHandler(async (req: Request, res: Response, next
 
     const about = validateSchema(aboutSchema, req.body.about)
 
-    const teacher = await prisma.teacher.update({
-        where: {
-            id: req.user?.id
-        },
-        data: {
-            about: about
-        }
-    })
-
-    if(!teacher) {
+    try {
+        await prisma.teacher.update({
+            where: {
+                id: req.user?.id
+            },
+            data: {
+                about: about
+            }
+        })
+    } catch (error) {
         throw new NotFoundError()
     }
 

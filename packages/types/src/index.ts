@@ -7,7 +7,7 @@ import { subjectNameSchema, subjectCodeSchema, CreateSubjectSchema, UpdateSubjec
 import { teacherIdSchema, studentIdSchema, CreateTeacherAttendanceSchema, UpdateTeacherAttendanceSchema } from "./types/teacherAttendanceSchema"
 import { dateSchema, monthSchema, CreateTeacherSchema, UpdateTeacherSchema, aboutSchema } from "./types/teacherSchema"
 import { weekDaySchema, periodSchema, UpdateTimeTableSchema } from "./types/timeTableSchema"
-import { CreateClassAttendanceSchema } from "./types/createAttendanceSchema"
+import { CreateClassAttendanceSchema, UpdateClassAttendanceSchema } from './types/createAttendanceSchema';
 import { CreateResultSchema, UpdateResultSchema } from "./types/resultSchema"
 import { ObjectIdSchema } from "./types/objectIdSchema"
 import { LoginSchema, ContactUsSchema } from "./types/authSchema"
@@ -25,7 +25,7 @@ export {
     teacherIdSchema, studentIdSchema, CreateTeacherAttendanceSchema, UpdateTeacherAttendanceSchema,
     dateSchema, monthSchema, CreateTeacherSchema, UpdateTeacherSchema, aboutSchema,
     weekDaySchema, periodSchema, UpdateTimeTableSchema,
-    CreateClassAttendanceSchema,
+    CreateClassAttendanceSchema, UpdateClassAttendanceSchema,
     CreateResultSchema, UpdateResultSchema,
     ObjectIdSchema
 }

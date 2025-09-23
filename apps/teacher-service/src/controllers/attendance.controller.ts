@@ -1,12 +1,12 @@
 import prisma from "@repo/db";
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@repo/responsehandler";
 import { NextFunction, Request, Response } from 'express';
-import { validateSchema } from "../../../../packages/libs/errorHandler/src/middlewares/validateSchema";
+import { validateSchema } from "@repo/errorhandler";
 import { CreateClassAttendanceSchema, monthSchema, ObjectIdSchema } from "@repo/types";
 import { getDateString, getMonthStartEnd } from "@repo/helper";
-import { DatabaseError, NotFoundError } from "../../../../packages/libs/errorHandler/src/utils/ApiError";
-import { getCurrentSessionYear } from '../../../../packages/helper/src/helpers/getCurrentSessionYear';
-import { UpdateClassAttendanceSchema } from "../../../../packages/types/src/types/createAttendanceSchema";
+import { DatabaseError, NotFoundError } from "@repo/errorhandler";
+import { getCurrentSessionYear } from '@repo/helper';
+import { UpdateClassAttendanceSchema } from "@repo/types";
 
 export const getTeacherAttendance = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const monthString = validateSchema(monthSchema, req.query.month)
