@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
   CalendarIcon,
-  Plus,
+  Save,
   Upload,
   User,
   Phone,
@@ -22,7 +22,7 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 
-export default function TeacherCreatePage() {
+export default function TeacherEditPage() {
   const items = [
     {
       label: "Admin",
@@ -33,24 +33,26 @@ export default function TeacherCreatePage() {
       href: "/admin/teacher",
     },
     {
-      label: "create",
+      label: "edit",
     },
   ]
 
-  // Form state - empty for create mode
+  // Form state - pre-populated with existing teacher data for edit mode
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    dob: "",
-    address: "",
-    phone: "",
-    teacherAadhar: "",
-    dateOfJoining: "",
-    about: "",
-    salaryPerMonth: "",
-    qualifications: "",
-    subjectsHandled: "",
-    profilePhoto: "",
+    firstName: "Prem",
+    lastName: "Raj",
+    dob: "2004-04-01",
+    address: "xyz abc lmnop",
+    phone: "6200103129",
+    teacherAadhar: "Teacher Aadhar",
+    dateOfJoining: "2022-07-01",
+    about: "A professional teacher done...",
+    salaryPerMonth: "20000.00",
+    qualifications: "Ph.D , B.Tech",
+    subjectsHandled: "Math, Science",
+    profilePhoto:
+      "https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D",
+    teacherId: "XYZ001",
   })
 
   const handleInputChange = (field: string, value: string) => {
@@ -61,8 +63,8 @@ export default function TeacherCreatePage() {
   }
 
   const handleSubmit = () => {
-    console.log("[v0] Creating teacher:", formData)
-    // API call to create teacher
+    console.log("[v0] Updating teacher:", formData)
+    // API call to update teacher
   }
 
   const handlePhotoUpload = () => {
@@ -71,7 +73,6 @@ export default function TeacherCreatePage() {
   }
 
   const getInitials = (firstName: string, lastName: string) => {
-    if (!firstName || !lastName) return "TU"
     return `${firstName.charAt(0)}${lastName.charAt(0)}`
   }
 
@@ -84,12 +85,12 @@ export default function TeacherCreatePage() {
         {/* Page Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-balance">Create New Teacher</h1>
-            <p className="text-muted-foreground mt-2">Add a new teacher to the system</p>
+            <h1 className="text-3xl font-bold text-balance">Edit Teacher</h1>
+            <p className="text-muted-foreground mt-2">Update teacher information and details</p>
           </div>
           <Button onClick={handleSubmit} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Create Teacher
+            <Save className="w-4 h-4" />
+            Update Teacher
           </Button>
         </div>
 
@@ -102,7 +103,7 @@ export default function TeacherCreatePage() {
                 <User className="w-5 h-5" />
                 Profile Photo
               </CardTitle>
-              <CardDescription>Upload teacher profile picture</CardDescription>
+              <CardDescription>Update teacher profile picture</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-4">
               <Avatar className="h-32 w-32">
@@ -120,11 +121,9 @@ export default function TeacherCreatePage() {
               </Button>
               <div className="text-center">
                 <p className="font-medium">
-                  {formData.firstName && formData.lastName
-                    ? `${formData.firstName} ${formData.lastName}`
-                    : "New Teacher"}
+                  {formData.firstName} {formData.lastName}
                 </p>
-                <p className="text-sm text-muted-foreground">Teacher ID will be auto-generated</p>
+                <p className="text-sm text-muted-foreground">Teacher ID: {formData.teacherId}</p>
               </div>
             </CardContent>
           </Card>
@@ -143,23 +142,21 @@ export default function TeacherCreatePage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name *</Label>
+                    <Label htmlFor="firstName">First Name</Label>
                     <Input
                       id="firstName"
                       value={formData.firstName}
                       onChange={(e) => handleInputChange("firstName", e.target.value)}
                       placeholder="Enter first name"
-                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Label htmlFor="lastName">Last Name</Label>
                     <Input
                       id="lastName"
                       value={formData.lastName}
                       onChange={(e) => handleInputChange("lastName", e.target.value)}
                       placeholder="Enter last name"
-                      required
                     />
                   </div>
                 </div>
@@ -167,34 +164,32 @@ export default function TeacherCreatePage() {
                   <div className="space-y-2">
                     <Label htmlFor="dob" className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      Date of Birth *
+                      Date of Birth
                     </Label>
                     <Input
                       id="dob"
                       type="date"
                       value={formData.dob}
                       onChange={(e) => handleInputChange("dob", e.target.value)}
-                      required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="flex items-center gap-2">
                       <Phone className="w-4 h-4" />
-                      Phone Number *
+                      Phone Number
                     </Label>
                     <Input
                       id="phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
                       placeholder="Enter phone number"
-                      required
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address" className="flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
-                    Address *
+                    Address
                   </Label>
                   <Textarea
                     id="address"
@@ -202,20 +197,18 @@ export default function TeacherCreatePage() {
                     onChange={(e) => handleInputChange("address", e.target.value)}
                     placeholder="Enter complete address"
                     rows={3}
-                    required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="teacherAadhar" className="flex items-center gap-2">
                     <FileText className="w-4 h-4" />
-                    Aadhar Number *
+                    Aadhar Number
                   </Label>
                   <Input
                     id="teacherAadhar"
                     value={formData.teacherAadhar}
                     onChange={(e) => handleInputChange("teacherAadhar", e.target.value)}
                     placeholder="Enter Aadhar number"
-                    required
                   />
                 </div>
               </CardContent>
@@ -235,20 +228,19 @@ export default function TeacherCreatePage() {
                   <div className="space-y-2">
                     <Label htmlFor="dateOfJoining" className="flex items-center gap-2">
                       <CalendarIcon className="w-4 h-4" />
-                      Date of Joining *
+                      Date of Joining
                     </Label>
                     <Input
                       id="dateOfJoining"
                       type="date"
                       value={formData.dateOfJoining}
                       onChange={(e) => handleInputChange("dateOfJoining", e.target.value)}
-                      required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="salaryPerMonth" className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
-                      Monthly Salary (₹) *
+                      Monthly Salary (₹)
                     </Label>
                     <Input
                       id="salaryPerMonth"
@@ -256,34 +248,31 @@ export default function TeacherCreatePage() {
                       value={formData.salaryPerMonth}
                       onChange={(e) => handleInputChange("salaryPerMonth", e.target.value)}
                       placeholder="Enter monthly salary"
-                      required
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="qualifications" className="flex items-center gap-2">
                     <GraduationCap className="w-4 h-4" />
-                    Qualifications *
+                    Qualifications
                   </Label>
                   <Input
                     id="qualifications"
                     value={formData.qualifications}
                     onChange={(e) => handleInputChange("qualifications", e.target.value)}
                     placeholder="Enter qualifications (e.g., Ph.D, B.Tech)"
-                    required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="subjectsHandled" className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4" />
-                    Subjects Handled *
+                    Subjects Handled
                   </Label>
                   <Input
                     id="subjectsHandled"
                     value={formData.subjectsHandled}
                     onChange={(e) => handleInputChange("subjectsHandled", e.target.value)}
                     placeholder="Enter subjects (e.g., Math, Science)"
-                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -305,8 +294,8 @@ export default function TeacherCreatePage() {
         <div className="flex justify-end gap-4">
           <Button variant="outline">Cancel</Button>
           <Button onClick={handleSubmit} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Create Teacher
+            <Save className="w-4 h-4" />
+            Update Teacher
           </Button>
         </div>
       </div>

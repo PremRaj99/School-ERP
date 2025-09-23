@@ -1,14 +1,13 @@
 "use client";
+import { BreadcrumbResponsive } from "@/components/custom/BreadCrum";
 import Navigation from "@/components/custom/Student/Home/Navigation";
 import Profile from "@/components/custom/Student/Home/Profile";
-import { BreadcrumbResponsive } from "@/components/custom/BreadCrum";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import StudentService from "@/services/student";
+import { useQuery } from "@tanstack/react-query";
 import { Bell, Calendar, Clock, Eye, FileText } from "lucide-react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import StudentService from "@/services/student";
 
 export default function page() {
   const items = [
@@ -41,107 +40,94 @@ export default function page() {
   }
 
   // Mock data for notices
-  const notices = [
-    {
-      id: 1,
-      title: "Annual Sports Day 2024",
-      description:
-        "Join us for the annual sports day celebration with various competitions and activities...",
-      date: "2024-03-15",
-      priority: "high",
-    },
-    {
-      id: 2,
-      title: "Parent-Teacher Meeting",
-      description:
-        "Scheduled meeting to discuss student progress and academic performance with parents...",
-      date: "2024-03-20",
-      priority: "medium",
-    },
-    {
-      id: 3,
-      title: "Library Book Return Reminder",
-      description:
-        "Please return all borrowed books by the due date to avoid late fees and penalties...",
-      date: "2024-03-10",
-      priority: "low",
-    },
-  ];
+  // const notices = [
+  //   {
+  //     id: 1,
+  //     title: "Annual Sports Day 2024",
+  //     description:
+  //       "Join us for the annual sports day celebration with various competitions and activities...",
+  //     date: "2024-03-15",
+  //     priority: "high",
+  //   },
+  //   {
+  //     id: 2,
+  //     title: "Parent-Teacher Meeting",
+  //     description:
+  //       "Scheduled meeting to discuss student progress and academic performance with parents...",
+  //     date: "2024-03-20",
+  //     priority: "medium",
+  //   },
+  //   {
+  //     id: 3,
+  //     title: "Library Book Return Reminder",
+  //     description:
+  //       "Please return all borrowed books by the due date to avoid late fees and penalties...",
+  //     date: "2024-03-10",
+  //     priority: "low",
+  //   },
+  // ];
 
   // Mock data for upcoming exams
-  const upcomingExams = [
-    {
-      id: 1,
-      subject: "Mathematics",
-      date: "2024-03-25",
-      time: "10:00 AM",
-      duration: "3 hours",
-      type: "Final Exam",
-    },
-    {
-      id: 2,
-      subject: "Science",
-      date: "2024-03-27",
-      time: "2:00 PM",
-      duration: "2 hours",
-      type: "Unit Test",
-    },
-    {
-      id: 3,
-      subject: "English",
-      date: "2024-03-30",
-      time: "9:00 AM",
-      duration: "2.5 hours",
-      type: "Final Exam",
-    },
-  ];
+  // const upcomingExams = [
+  //   {
+  //     id: 1,
+  //     subject: "Mathematics",
+  //     date: "2024-03-25",
+  //     time: "10:00 AM",
+  //     duration: "3 hours",
+  //     type: "Final Exam",
+  //   },
+  //   {
+  //     id: 2,
+  //     subject: "Science",
+  //     date: "2024-03-27",
+  //     time: "2:00 PM",
+  //     duration: "2 hours",
+  //     type: "Unit Test",
+  //   },
+  //   {
+  //     id: 3,
+  //     subject: "English",
+  //     date: "2024-03-30",
+  //     time: "9:00 AM",
+  //     duration: "2.5 hours",
+  //     type: "Final Exam",
+  //   },
+  // ];
 
   // Mock data for today's timetable
-  const todayTimetable = [
-    {
-      period: "1st Period",
-      time: "8:00 - 8:45 AM",
-      subject: "Mathematics",
-      teacher: "Mr. Smith",
-    },
-    {
-      period: "2nd Period",
-      time: "8:45 - 9:30 AM",
-      subject: "English",
-      teacher: "Ms. Johnson",
-    },
-    {
-      period: "3rd Period",
-      time: "9:30 - 10:15 AM",
-      subject: "Science",
-      teacher: "Dr. Brown",
-    },
-    {
-      period: "Break",
-      time: "10:15 - 10:30 AM",
-      subject: "Break Time",
-      teacher: "",
-    },
-    {
-      period: "4th Period",
-      time: "10:30 - 11:15 AM",
-      subject: "History",
-      teacher: "Mr. Davis",
-    },
-  ];
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "low":
-        return "bg-green-100 text-green-800 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
+  // const todayTimetable = [
+  //   {
+  //     period: "1st Period",
+  //     time: "8:00 - 8:45 AM",
+  //     subject: "Mathematics",
+  //     teacher: "Mr. Smith",
+  //   },
+  //   {
+  //     period: "2nd Period",
+  //     time: "8:45 - 9:30 AM",
+  //     subject: "English",
+  //     teacher: "Ms. Johnson",
+  //   },
+  //   {
+  //     period: "3rd Period",
+  //     time: "9:30 - 10:15 AM",
+  //     subject: "Science",
+  //     teacher: "Dr. Brown",
+  //   },
+  //   {
+  //     period: "Break",
+  //     time: "10:15 - 10:30 AM",
+  //     subject: "Break Time",
+  //     teacher: "",
+  //   },
+  //   {
+  //     period: "4th Period",
+  //     time: "10:30 - 11:15 AM",
+  //     subject: "History",
+  //     teacher: "Mr. Davis",
+  //   },
+  // ];
 
   return (
     <div className="container mx-auto gap-6 my-6 px-4">
