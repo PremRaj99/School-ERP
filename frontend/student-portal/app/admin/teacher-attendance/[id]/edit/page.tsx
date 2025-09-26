@@ -6,11 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Calendar, Users, CheckCircle, XCircle, UserCheck, Eye, Edit } from "lucide-react"
+import { Calendar, Users, CheckCircle, XCircle, UserCheck, Save, Edit } from "lucide-react"
 import { useState } from "react"
-import Link from "next/link"
 
-export default function TeacherAttendancePage() {
+export default function TeacherAttendanceEditPage() {
   const items = [
     {
       label: "Admin",
@@ -18,6 +17,10 @@ export default function TeacherAttendancePage() {
     },
     {
       label: "Teacher Attendance",
+      href: "/admin/teacher-attendance",
+    },
+    {
+      label: "Edit",
     },
   ]
 
@@ -26,7 +29,7 @@ export default function TeacherAttendancePage() {
   const [showTeacherTable, setShowTeacherTable] = useState(false)
 
   // Mock teacher data
-  const [teachers] = useState([
+  const [teachers, setTeachers] = useState([
     {
       id: "dfgrdt5345",
       firstName: "Prem",
@@ -69,6 +72,28 @@ export default function TeacherAttendancePage() {
     setShowTeacherTable(!!value)
   }
 
+  const toggleAttendance = (teacherId: string) => {
+    setTeachers((prev) =>
+      prev.map((teacher) =>
+        teacher.id === teacherId
+          ? { ...teacher, status: teacher.status === "Present" ? "Absent" : "Present" }
+          : teacher,
+      ),
+    )
+  }
+
+  const handleSubmit = () => {
+    const attendanceData = {
+      date: selectedDate,
+      attendance: teachers.map((teacher) => ({
+        teacherId: teacher.teacherId,
+        status: teacher.status,
+      })),
+    }
+    console.log("Submitting teacher attendance:", attendanceData)
+    // Here you would typically send the data to your API
+  }
+
   // Calculate statistics
   const totalTeachers = teachers.length
   const presentTeachers = teachers.filter((teacher) => teacher.status === "Present").length
@@ -93,18 +118,18 @@ export default function TeacherAttendancePage() {
 
         {/* Page Header */}
         <div>
-          <h1 className="text-3xl font-bold text-balance">Teacher Attendance</h1>
-          <p className="text-muted-foreground mt-2">View and manage teacher attendance records</p>
+          <h1 className="text-3xl font-bold text-balance">Edit Teacher Attendance</h1>
+          <p className="text-muted-foreground mt-2">Mark or update teacher attendance records</p>
         </div>
 
         {/* Date Selection */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Select Date
+              <Edit className="w-5 h-5" />
+              Attendance Details
             </CardTitle>
-            <CardDescription>Choose a date to view teacher attendance</CardDescription>
+            <CardDescription>Select a date to mark teacher attendance</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-2 max-w-xs">
@@ -191,9 +216,9 @@ export default function TeacherAttendancePage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
-                  Teacher Attendance Records
+                  Mark Teacher Attendance
                 </CardTitle>
-                <CardDescription>View attendance status for all teachers</CardDescription>
+                <CardDescription>Click on the status badges to toggle attendance for each teacher</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -202,7 +227,6 @@ export default function TeacherAttendancePage() {
                       <TableHead>Teacher Name</TableHead>
                       <TableHead>Teacher ID</TableHead>
                       <TableHead>Attendance Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -217,33 +241,30 @@ export default function TeacherAttendancePage() {
                           <span className="text-sm text-muted-foreground">{teacher.teacherId}</span>
                         </TableCell>
                         <TableCell>
-                          {teacher.status === "Present" ? (
-                            <Badge variant="default" className="bg-green-100 text-green-800">
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                              Present
-                            </Badge>
-                          ) : (
-                            <Badge variant="destructive" className="bg-red-100 text-red-800">
-                              <XCircle className="w-3 h-3 mr-1" />
-                              Absent
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href="/admin/teacher-attendance/view">
-                                <Eye className="w-4 h-4 mr-1" />
-                                View
-                              </Link>
-                            </Button>
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href="/admin/teacher-attendance/edit">
-                                <Edit className="w-4 h-4 mr-1" />
-                                Edit
-                              </Link>
-                            </Button>
-                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleAttendance(teacher.id)}
+                            className="p-0 h-auto"
+                          >
+                            {teacher.status === "Present" ? (
+                              <Badge
+                                variant="default"
+                                className="bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer"
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Present
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="destructive"
+                                className="bg-red-100 text-red-800 hover:bg-red-200 cursor-pointer"
+                              >
+                                <XCircle className="w-3 h-3 mr-1" />
+                                Absent
+                              </Badge>
+                            )}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -251,6 +272,13 @@ export default function TeacherAttendancePage() {
                 </Table>
               </CardContent>
             </Card>
+
+            <div className="flex justify-end">
+              <Button onClick={handleSubmit} size="lg" className="flex items-center gap-2">
+                <Save className="w-4 h-4" />
+                Submit Attendance
+              </Button>
+            </div>
           </>
         )}
       </div>

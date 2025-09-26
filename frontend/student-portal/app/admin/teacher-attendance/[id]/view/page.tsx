@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Calendar, Users, CheckCircle, XCircle, UserCheck, Eye, Edit } from "lucide-react"
+import { Calendar, Users, CheckCircle, XCircle, UserCheck, Edit } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
 
-export default function TeacherAttendancePage() {
+export default function TeacherAttendanceViewPage() {
   const items = [
     {
       label: "Admin",
@@ -18,6 +18,10 @@ export default function TeacherAttendancePage() {
     },
     {
       label: "Teacher Attendance",
+      href: "/admin/teacher-attendance",
+    },
+    {
+      label: "View",
     },
   ]
 
@@ -92,9 +96,17 @@ export default function TeacherAttendancePage() {
         <BreadcrumbResponsive items={items} />
 
         {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-balance">Teacher Attendance</h1>
-          <p className="text-muted-foreground mt-2">View and manage teacher attendance records</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-balance">View Teacher Attendance</h1>
+            <p className="text-muted-foreground mt-2">View teacher attendance records for a specific date</p>
+          </div>
+          <Button asChild>
+            <Link href="/admin/teacher-attendance/edit">
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Attendance
+            </Link>
+          </Button>
         </div>
 
         {/* Date Selection */}
@@ -181,7 +193,7 @@ export default function TeacherAttendancePage() {
                   Teacher Attendance - {formatDate(selectedDate) || selectedDate}
                 </CardTitle>
                 <CardDescription>
-                  {totalTeachers} teachers • {presentTeachers} present • {absentTeachers} absent
+                  {totalTeachers} teachers • {presentTeachers} present • {absentTeachers} absent • Read-only view
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -193,7 +205,7 @@ export default function TeacherAttendancePage() {
                   <Users className="w-5 h-5" />
                   Teacher Attendance Records
                 </CardTitle>
-                <CardDescription>View attendance status for all teachers</CardDescription>
+                <CardDescription>View-only attendance status for all teachers</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -202,7 +214,6 @@ export default function TeacherAttendancePage() {
                       <TableHead>Teacher Name</TableHead>
                       <TableHead>Teacher ID</TableHead>
                       <TableHead>Attendance Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -228,22 +239,6 @@ export default function TeacherAttendancePage() {
                               Absent
                             </Badge>
                           )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href="/admin/teacher-attendance/view">
-                                <Eye className="w-4 h-4 mr-1" />
-                                View
-                              </Link>
-                            </Button>
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href="/admin/teacher-attendance/edit">
-                                <Edit className="w-4 h-4 mr-1" />
-                                Edit
-                              </Link>
-                            </Button>
-                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
