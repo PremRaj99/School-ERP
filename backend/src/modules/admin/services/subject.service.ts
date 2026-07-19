@@ -8,16 +8,12 @@ export class AdminSubjectService {
     return getGroupedSubject();
   }
 
+  static async getSubjects() {
+    return await prisma.subject.findMany();
+  }
+
   static async createSubject(data: CreateSubjectInput) {
-    const classRecord = await prisma.class.findFirst({
-      where: { className: data.className },
-    });
-
-    if (!classRecord) {
-      throw new NotFoundError();
-    }
-
-    const subjectCode = generateSubjectCode(data.subjectName);
+    const subjectCode = data.subjectCode || generateSubjectCode(data.subjectName);
 
     try {
       await prisma.subject.create({
@@ -47,11 +43,17 @@ export class AdminSubjectService {
     }
   }
 
-  static async deleteSubject(subjectCode: string) {
+  static async deleteSubject(param: string) {
     try {
-      await prisma.subject.delete({
-        where: { subjectCode },
-      });
+      if (/^[0-9a-fA-F]{24}$/.test(param)) {
+        await prisma.subject.delete({
+          where: { id: param },
+        });
+      } else {
+        await prisma.subject.delete({
+          where: { subjectCode: param },
+        });
+      }
     } catch (_e) {
       throw new NotFoundError();
     }

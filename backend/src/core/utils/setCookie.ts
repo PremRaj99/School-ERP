@@ -1,10 +1,12 @@
 import { Response } from 'express';
 import { NODE_ENV } from '../config/constants';
 
+const isProd = String(NODE_ENV) === 'production';
+
 const options = {
   httpOnly: true,
-  secure: String(NODE_ENV) === 'production',
-  sameSite: 'none' as const,
+  secure: isProd,
+  sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 

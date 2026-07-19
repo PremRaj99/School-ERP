@@ -33,6 +33,11 @@ export class AdminStudentService {
         rollNo: true,
         appId: true,
         profilePhoto: true,
+        user: {
+          select: {
+            username: true,
+          },
+        },
       },
     });
 
@@ -54,10 +59,12 @@ export class AdminStudentService {
       className: student.class?.className,
       section: student.class?.section,
       session: student.class?.session,
+      class: student.class,
       dateOfAdmission: student.dateOfAdmission,
       rollNo: student.rollNo,
       appId: student.appId,
       profilePhoto: student.profilePhoto,
+      username: student.user?.username ?? '',
     }));
   }
 

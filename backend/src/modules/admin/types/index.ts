@@ -104,12 +104,13 @@ export const subjectNameSchema = z
   .trim();
 export const subjectCodeSchema = z
   .string({ message: 'Subject Code is required' })
-  .length(6, { message: 'Subject code must be exactly 6 characters long.' })
-  .regex(/^[A-Z]{3}[0-9]{3}$/, { message: 'Invalid Subject Code.' });
+  .min(3, 'Subject code must be at least 3 characters long')
+  .max(10, 'Subject code must be at most 10 characters long')
+  .trim();
 
 export const CreateSubjectSchema = z.object({
   subjectName: subjectNameSchema,
-  className: classNameSchema,
+  subjectCode: subjectCodeSchema.optional(),
 });
 
 export const UpdateSubjectSchema = z.object({

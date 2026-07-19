@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { ACCESS_TOKEN_SECRET } from '../config/constants';
 import { UnauthorizedError, ForbiddenError } from '../errors';
 import { asyncHandler } from '../responses';
+import { logger } from '../logger/logger';
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -14,8 +15,10 @@ declare module 'express-serve-static-core' {
 }
 
 export const verifyJWT = asyncHandler((req: Request, res: Response, next: NextFunction) => {
-  const header = req.cookies?.['access_token'] || req.headers.authorization;
-  const token = header?.split(' ')[1];
+  let token = req.cookies?.['access_token'];
+  if (!token && req.headers.authorization) {
+    token = req.headers.authorization.split(' ')[1];
+  }
 
   if (!token) {
     throw new UnauthorizedError();
@@ -26,9 +29,13 @@ export const verifyJWT = asyncHandler((req: Request, res: Response, next: NextFu
       id: string;
       role: string;
     };
+    if (!/^[0-9a-fA-F]{24}$/.test(decoded.id)) {
+      throw new UnauthorizedError();
+    }
     req.user = decoded;
     next();
-  } catch (_error) {
+  } catch (error) {
+    logger.warn('Invalid access token', { error });
     throw new UnauthorizedError();
   }
 });

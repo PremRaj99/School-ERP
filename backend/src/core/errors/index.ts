@@ -9,18 +9,32 @@ import {
   DatabaseError,
 } from './ApiError';
 import { validateSchema } from './validateSchema';
+import { logger } from '../logger/logger';
 
 export const errorHandlerMiddleware = (
-  err: ApiError,
+  err: unknown,
   req: Request,
   res: Response,
   _next: NextFunction,
 ) => {
-  console.error('Error : ', err.message);
-  return res.status(err.statusCode || 500).json({
-    statusCode: err.statusCode || 500,
-    data: null,
-    message: err.message || 'Internal Server Error',
+  let statusCode = 500;
+  let message = 'Internal Server Error';
+
+  if (err instanceof ApiError) {
+    statusCode = err.statusCode;
+    message = err.message;
+  }
+
+  logger.error('Unhandled Error', {
+    statusCode,
+    message,
+    method: req.method,
+    url: req.originalUrl,
+    stack: err instanceof Error ? err.stack : undefined,
+  });
+
+  return res.status(statusCode).json({
+    message,
     success: false,
   });
 };

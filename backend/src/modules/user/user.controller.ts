@@ -17,15 +17,39 @@ export const changePassword = asyncHandler(
   },
 );
 
+import jwt from 'jsonwebtoken';
+import { setCookie } from '@/core/utils/setCookie';
+
 export const logout = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  await UserService.logout(req.user!.id);
+  let userId: string | undefined = req.user?.id;
+
+  if (!userId) {
+    const token = req.cookies?.access_token || req.headers.authorization?.split(' ')[1];
+    if (token) {
+      try {
+        const decoded = jwt.decode(token) as { id: string } | null;
+        if (decoded?.id) {
+          userId = decoded.id;
+        }
+      } catch (_) {}
+    }
+  }
+
+  if (userId) {
+    try {
+      await UserService.logout(userId);
+    } catch (_) {}
+  }
+
   res.clearCookie('access_token');
   res.clearCookie('refresh_token');
   res.status(202).json(new AcceptedResponse());
 });
 
 export const refresh = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const token = req.body.refresh;
+  const token = req.body?.refresh || req.cookies?.refresh_token;
   const { accessToken, refreshToken } = await UserService.refresh(token);
+  setCookie(res, 'access_token', accessToken);
+  setCookie(res, 'refresh_token', refreshToken);
   res.status(202).json(new OkResponse({ accessToken, refreshToken }));
 });

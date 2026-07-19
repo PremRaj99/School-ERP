@@ -7,6 +7,9 @@ import { ChangePasswordInput } from '../types';
 
 export class UserService {
   static async getUserById(userId: string) {
+    if (!/^[0-9a-fA-F]{24}$/.test(userId)) {
+      throw new NotFoundError();
+    }
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });

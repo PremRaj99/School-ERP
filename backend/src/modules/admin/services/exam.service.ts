@@ -6,7 +6,7 @@ import { CreateExamSchema } from '../types';
 
 export class AdminExamService {
   static async getExams() {
-    return await prisma.exam.findMany({
+    const exams = await prisma.exam.findMany({
       select: {
         id: true,
         title: true,
@@ -21,6 +21,12 @@ export class AdminExamService {
         },
       },
     });
+
+    return exams.map((exam) => ({
+      ...exam,
+      dateFrom: exam.dateFrom.toISOString().split('T')[0],
+      dateTo: exam.dateTo?.toISOString().split('T')[0],
+    }));
   }
 
   static async createExam(data: z.infer<typeof CreateExamSchema>) {

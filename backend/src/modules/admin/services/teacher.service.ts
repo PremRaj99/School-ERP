@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 
 export class AdminTeacherService {
   static async getTeachers() {
-    return await prisma.teacher.findMany({
+    const teachers = await prisma.teacher.findMany({
       select: {
         id: true,
         teacherId: true,
@@ -25,6 +25,14 @@ export class AdminTeacherService {
         user: { select: { username: true } },
       },
     });
+
+    return teachers.map((t) => ({
+      ...t,
+      username: t.user?.username ?? '',
+      email: t.user?.username ? `${t.user.username}@school.com` : '',
+      phoneNumber: t.phone,
+      salary: t.salaryPerMonth,
+    }));
   }
 
   static async getTeacherById(teacherIdParam: string) {

@@ -4,6 +4,13 @@ import { NextFunction, Request, Response } from 'express';
 import { CreateSubjectSchema, subjectCodeSchema, UpdateSubjectSchema } from '../types';
 import { AdminSubjectService } from '../services/subject.service';
 
+export const getSubjects = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const data = await AdminSubjectService.getSubjects();
+    res.status(200).json(new OkResponse(data));
+  },
+);
+
 export const getAllClassSubjects = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const data = await AdminSubjectService.getAllClassSubjects();
@@ -30,8 +37,8 @@ export const updateSubject = asyncHandler(
 
 export const deleteSubject = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
-    const subjectCode = validateSchema(subjectCodeSchema, String(req.params.subjectCode));
-    await AdminSubjectService.deleteSubject(subjectCode);
+    const param = String(req.params.subjectCode);
+    await AdminSubjectService.deleteSubject(param);
     res.status(202).json(new AcceptedResponse());
   },
 );

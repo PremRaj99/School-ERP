@@ -14,3 +14,7 @@ academicRouter.put('/time-table', updateTimeTable);
 academicRouter.get('/calendar', getAcademicCalendars);
 academicRouter.post('/calendar', createAcademicCalendar);
 academicRouter.delete('/calendar/:calendarId', deleteAcademicCalendar);
+
+academicRouter.get('/', getAcademicCalendars);
+academicRouter.post('/', createAcademicCalendar);
+academicRouter.delete('/:calendarId', deleteAcademicCalendar);
