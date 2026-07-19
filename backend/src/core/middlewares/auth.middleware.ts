@@ -4,14 +4,12 @@ import { ACCESS_TOKEN_SECRET } from '../config/constants';
 import { UnauthorizedError, ForbiddenError } from '../errors';
 import { asyncHandler } from '../responses';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        role: string;
-      };
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: {
+      id: string;
+      role: string;
+    };
   }
 }
 

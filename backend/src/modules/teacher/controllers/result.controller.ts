@@ -49,7 +49,7 @@ export const getResult = asyncHandler(async (req: Request, res: Response, next: 
     subjectName: examSubject.subject.subjectName,
     fullMarks: examSubject.fullMarks,
     isMarked: examSubject.isMarked,
-    marks: examSubject.examResults.map((result: any) => ({
+    marks: examSubject.examResults.map((result) => ({
       id: result.id,
       studentId: result.studentId,
       firstName: result.student.firstName,
@@ -72,7 +72,7 @@ export const createResult = asyncHandler(
     const parseData = validateSchema(CreateResultSchema, req.body);
 
     try {
-      await prisma.$transaction(async (txn: any) => {
+      await prisma.$transaction(async (txn) => {
         const examSubject = await txn.examSubject.update({
           where: {
             examId_subjectId: {
@@ -91,7 +91,7 @@ export const createResult = asyncHandler(
         }
 
         await txn.examResult.createMany({
-          data: parseData.map((d: any) => ({
+          data: parseData.map((d) => ({
             subjectId,
             examSubjectId: examSubject.id,
             studentId: d.studentId,
@@ -129,9 +129,9 @@ export const updateResult = asyncHandler(
     }
 
     try {
-      await prisma.$transaction(async (txn: any) => {
+      await prisma.$transaction(async (txn) => {
         await Promise.all(
-          parseData.map(async (data: any) => {
+          parseData.map(async (data) => {
             await txn.examResult.update({
               where: {
                 examSubjectId_studentId: {

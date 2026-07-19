@@ -24,7 +24,7 @@ export const getStudentFee = asyncHandler(
 
     res.status(200).json(
       new OkResponse(
-        studentFees.map((t: any) => ({
+        studentFees.map((t) => ({
           id: t.id,
           month: t.month,
           finalAmount: t.transaction.finalAmount,
@@ -70,7 +70,7 @@ export const getStudentFeeDetail = asyncHandler(
         rollNo: studentFee.student.rollNo,
         month: studentFee.month,
         session: studentFee.student.class.session,
-        beakDown: studentFee.feeBreakdown.map((b: any) => ({
+        beakDown: studentFee.feeBreakdown.map((b) => ({
           feeType: b.feeType,
           amount: b.amount,
         })),

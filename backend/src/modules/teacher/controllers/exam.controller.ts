@@ -13,7 +13,7 @@ export const getExam = asyncHandler(async (req: Request, res: Response, next: Ne
 
   res.status(200).json(
     new OkResponse(
-      exams.map((e: any) => ({
+      exams.map((e) => ({
         id: e.id,
         className: e.class.className,
         section: e.class.section,
@@ -56,7 +56,7 @@ export const getExamSubject = asyncHandler(
         dateTo: exam.dateTo,
         title: exam.title,
         isResultDecleared: exam.isResultDecleared,
-        subjects: exam.examSubjects.map((s: any) => ({
+        subjects: exam.examSubjects.map((s) => ({
           id: s.id,
           subjectName: s.subject.subjectName,
           subjectCode: s.subject.subjectCode,

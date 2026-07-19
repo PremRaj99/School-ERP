@@ -15,7 +15,7 @@ export const getTeacherSalary = asyncHandler(
 
     res.status(200).json(
       new OkResponse(
-        teacherSalary.map((t: any) => ({
+        teacherSalary.map((t) => ({
           month: t.month,
           amount: t.transaction.finalAmount,
           isPaid: t.transaction.status,

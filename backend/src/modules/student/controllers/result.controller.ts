@@ -86,8 +86,8 @@ export const getResult = asyncHandler(async (req: Request, res: Response, next: 
       section: examWithResults.class.section,
       rollNo: student.rollNo,
       marks: examWithResults.class.students
-        .filter((s: any) => s.id === student.id)[0]
-        .examResults.map((r: any) => ({
+        .filter((s) => s.id === student.id)[0]
+        .examResults.map((r) => ({
           subjectCode: r.examSubject.subject.subjectCode,
           subjectName: r.examSubject.subject.subjectName,
           date: r.examSubject.date,

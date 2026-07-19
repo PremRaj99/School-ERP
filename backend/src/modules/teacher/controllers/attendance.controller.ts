@@ -28,7 +28,7 @@ export const getTeacherAttendance = asyncHandler(
 
     res.status(200).json(
       new OkResponse(
-        teacherAttendance.map((t: any) => ({
+        teacherAttendance.map((t) => ({
           date: t.date,
           status: t.status,
         })),
@@ -56,7 +56,7 @@ export const getClassAttendance = asyncHandler(
 
     res.status(200).json(
       new OkResponse(
-        classAttendance.map((a: any) => ({
+        classAttendance.map((a) => ({
           id: a.id,
           date: a.date,
           className: a.class.className,
@@ -87,7 +87,7 @@ export const getClassAttendanceDetail = asyncHandler(
       throw new NotFoundError('Class attendance record not found.');
     }
 
-    const studentIds = classAttendance.class.students.map((s: any) => s.id);
+    const studentIds = classAttendance.class.students.map((s) => s.id);
     const attendanceDate = classAttendance.date;
 
     const studentAttendances = await prisma.studentAttendance.findMany({
@@ -99,11 +99,11 @@ export const getClassAttendanceDetail = asyncHandler(
       },
     });
 
-    const attendanceStatusMap = new Map<string, { status: any; id: string }>(
-      studentAttendances.map((sa: any) => [sa.studentId, { status: sa.status, id: sa.id }]),
+    const attendanceStatusMap = new Map<string, { status: string; id: string }>(
+      studentAttendances.map((sa) => [sa.studentId, { status: sa.status, id: sa.id }]),
     );
 
-    const studentsWithStatus = classAttendance.class.students.map((student: any) => ({
+    const studentsWithStatus = classAttendance.class.students.map((student) => ({
       id: attendanceStatusMap.get(student.id)?.id,
       rollNo: student.rollNo,
       firstName: student.firstName,
@@ -145,7 +145,7 @@ export const createClassAttendance = asyncHandler(
     }
 
     try {
-      await prisma.$transaction(async (txn: any) => {
+      await prisma.$transaction(async (txn) => {
         await txn.classAttendance.create({
           data: {
             date: getDateString(parseData.date),
@@ -155,7 +155,7 @@ export const createClassAttendance = asyncHandler(
         });
 
         await txn.studentAttendance.createMany({
-          data: parseData.attendance.map((a: any) => ({
+          data: parseData.attendance.map((a) => ({
             studentId: a.studentId,
             status: a.status,
             date: getDateString(parseData.date),
@@ -176,9 +176,9 @@ export const updateClassAttendance = asyncHandler(
     const parseData = validateSchema(UpdateClassAttendanceSchema, req.body);
 
     try {
-      await prisma.$transaction(async (txn: any) => {
+      await prisma.$transaction(async (txn) => {
         await Promise.all(
-          parseData.map(async (data: any) => {
+          parseData.map(async (data) => {
             const studentAttendance = await txn.studentAttendance.update({
               where: {
                 id: data.id,

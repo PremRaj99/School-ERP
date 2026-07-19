@@ -1,10 +1,10 @@
 export class ApiResponse {
   statusCode: number;
-  data: Object | Array<Object> | null;
+  data: object | Array<object> | null;
   message: string;
   success: boolean;
 
-  constructor(statusCode: number, data: Object | Array<Object> | null, message: string) {
+  constructor(statusCode: number, data: object | Array<object> | null, message: string) {
     this.statusCode = statusCode;
     this.data = data;
     this.message = message;
@@ -25,7 +25,7 @@ export class AcceptedResponse extends ApiResponse {
 }
 
 export class OkResponse extends ApiResponse {
-  constructor(data: Object | Array<Object> | null = null) {
+  constructor(data: object | Array<object> | null = null) {
     super(200, data, 'ok');
   }
 }

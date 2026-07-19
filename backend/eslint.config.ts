@@ -38,9 +38,6 @@ export default [
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-namespace': 'off',
-      '@typescript-eslint/no-wrapper-object-types': 'off',
     },
   },
 ];
