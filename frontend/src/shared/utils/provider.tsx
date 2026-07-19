@@ -1,6 +1,6 @@
+import { useState } from 'react';
 import { TooltipProvider } from '@/shared/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export function Providers({ children }: { children: React.ReactNode }) {

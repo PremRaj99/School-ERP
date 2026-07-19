@@ -6,6 +6,8 @@ import { subjectRouter } from './subject.route';
 import { examRouter } from './exam.route';
 import { academicRouter } from './academic.route';
 import { noticeRouter } from './notice.route';
+import { resultRouter } from './result.route';
+import { transactionRouter } from './transaction.route';
 
 const studentRouter = express.Router();
 
@@ -18,5 +20,7 @@ studentRouter.use('/subject', subjectRouter);
 studentRouter.use('/exam', examRouter);
 studentRouter.use('/academic', academicRouter);
 studentRouter.use('/notice', noticeRouter);
+studentRouter.use('/result', resultRouter);
+studentRouter.use('/transaction', transactionRouter);
 
 export { studentRouter };

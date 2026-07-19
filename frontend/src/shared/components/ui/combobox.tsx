@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import * as React from 'react';
 import { Combobox as ComboboxPrimitive } from '@base-ui/react';
 
@@ -250,7 +251,7 @@ function ComboboxChipsInput({ className, ...props }: ComboboxPrimitive.Input.Pro
 }
 
 function useComboboxAnchor() {
-  return React.useRef<HTMLDivElement | null>(null);
+  return useRef<HTMLDivElement | null>(null);
 }
 
 export {

@@ -17,7 +17,15 @@ export const getResult = asyncHandler(async (req: Request, res: Response, _next:
     include: {
       exam: {
         include: {
-          class: true,
+          class: {
+            include: {
+              students: {
+                orderBy: {
+                  rollNo: 'asc',
+                },
+              },
+            },
+          },
         },
       },
       subject: true,
@@ -49,17 +57,30 @@ export const getResult = asyncHandler(async (req: Request, res: Response, _next:
     subjectName: examSubject.subject.subjectName,
     fullMarks: examSubject.fullMarks,
     isMarked: examSubject.isMarked,
-    marks: examSubject.examResults.map((result) => ({
-      id: result.id,
-      studentId: result.studentId,
-      firstName: result.student.firstName,
-      lastName: result.student.lastName,
-      date: examSubject.date,
-      rollNo: result.student.rollNo,
-      marksObtained: result.marksObtained,
-      grade: result.grade,
-      remark: result.remark,
-    })),
+    marks:
+      examSubject.examResults.length > 0
+        ? examSubject.examResults.map((result) => ({
+            id: result.id,
+            studentId: result.studentId,
+            firstName: result.student.firstName,
+            lastName: result.student.lastName,
+            date: examSubject.date,
+            rollNo: result.student.rollNo,
+            marksObtained: result.marksObtained,
+            grade: result.grade,
+            remark: result.remark,
+          }))
+        : examSubject.exam.class.students.map((student) => ({
+            id: '',
+            studentId: student.id,
+            firstName: student.firstName,
+            lastName: student.lastName,
+            date: examSubject.date,
+            rollNo: student.rollNo,
+            marksObtained: 0,
+            grade: '',
+            remark: '',
+          })),
   };
 
   res.status(200).json(new OkResponse(formattedResult));
