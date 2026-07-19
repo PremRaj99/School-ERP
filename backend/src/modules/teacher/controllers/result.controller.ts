@@ -1,0 +1,151 @@
+import prisma from "@/core/db";
+import { DatabaseError, NotFoundError, validateSchema } from "@/core/errors";
+import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from "@/core/responses";
+import { CreateResultSchema, ObjectIdSchema, UpdateResultSchema } from "@/modules/admin/types";
+import { NextFunction, Request, Response } from 'express';
+import { getGrade } from "@/shared";
+
+export const getResult = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const examId = validateSchema(ObjectIdSchema, req.params.examId);
+    const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId);
+
+    const examSubject = await prisma.examSubject.findFirst({
+        where: {
+            examId: examId,
+            subjectId: subjectId,
+        },
+        include: {
+            exam: {
+                include: {
+                    class: true,
+                },
+            },
+            subject: true,
+            examResults: {
+                include: {
+                    student: true,
+                },
+                orderBy: {
+                    student: {
+                        rollNo: 'asc'
+                    }
+                }
+            },
+        },
+    });
+
+    if (!examSubject) {
+        throw new NotFoundError('Result for the specified exam and subject not found.');
+    }
+
+    const formattedResult = {
+        id: examSubject.exam.id,
+        dateFrom: examSubject.exam.dateFrom,
+        dateTo: examSubject.exam.dateTo,
+        title: examSubject.exam.title,
+        className: examSubject.exam.class.className,
+        section: examSubject.exam.class.section,
+        subjectCode: examSubject.subject.subjectCode,
+        subjectName: examSubject.subject.subjectName,
+        fullMarks: examSubject.fullMarks,
+        isMarked: examSubject.isMarked,
+        marks: examSubject.examResults.map((result: any) => ({
+            id: result.id,
+            studentId: result.studentId,
+            firstName: result.student.firstName,
+            lastName: result.student.lastName,
+            date: examSubject.date,
+            rollNo: result.student.rollNo,
+            marksObtained: result.marksObtained,
+            grade: result.grade,
+            remark: result.remark,
+        })),
+    };
+
+    res.status(200).json(new OkResponse(formattedResult));
+});
+
+export const createResult = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const examId = validateSchema(ObjectIdSchema, req.params.examId);
+    const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId);
+    const parseData = validateSchema(CreateResultSchema, req.body);
+
+    try {
+        await prisma.$transaction(async (txn: any) => {
+            const examSubject = await txn.examSubject.update({
+                where: {
+                    examId_subjectId: {
+                        examId,
+                        subjectId
+                    },
+                    teacherId: req.user?.id
+                },
+                data: {
+                    isMarked: true
+                }
+            });
+
+            if (!examSubject) {
+                throw new NotFoundError();
+            }
+
+            await txn.examResult.createMany({
+                data: parseData.map((d: any) => ({
+                    subjectId,
+                    examSubjectId: examSubject.id,
+                    studentId: d.studentId,
+                    marksObtained: d.marksObtained,
+                    grade: getGrade(examSubject.fullMarks, d.marksObtained),
+                    remark: d.remark
+                }))
+            });
+        });
+    } catch (error) {
+        throw new DatabaseError();
+    }
+
+    res.status(201).json(new CreatedResponse());
+});
+
+export const updateResult = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const examId = validateSchema(ObjectIdSchema, req.params.examId);
+    const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId);
+    const parseData = validateSchema(UpdateResultSchema, req.body);
+
+    const examSubject = await prisma.examSubject.findUnique({
+        where: {
+            examId_subjectId: {
+                examId,
+                subjectId
+            }
+        }
+    });
+
+    if (!examSubject) {
+        throw new NotFoundError();
+    }
+
+    try {
+        await prisma.$transaction(async (txn: any) => {
+            await Promise.all(parseData.map(async (data: any) => {
+                await txn.examResult.update({
+                    where: {
+                        examSubjectId_studentId: {
+                            examSubjectId: examSubject.id,
+                            studentId: data.studentId
+                        }
+                    },
+                    data: {
+                        marksObtained: data.marksObtained,
+                        grade: getGrade(examSubject.fullMarks, data.marksObtained),
+                        remark: data.remark
+                    }
+                });
+            }));
+        });
+    } catch (error) {
+        throw new DatabaseError();
+    }
+
+    res.status(202).json(new AcceptedResponse());
+});

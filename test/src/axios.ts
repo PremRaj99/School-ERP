@@ -1,6 +1,6 @@
 import axios2 from "axios"
 
-axios2.defaults.baseURL = "http://localhost:3000/api/v1";
+axios2.defaults.baseURL = "http://localhost:5000/api/v1";
 
 export const axios = {
   get: async (...args: Parameters<typeof axios2.get>) => {

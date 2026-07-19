@@ -1,6 +1,6 @@
 import { axios } from "../axios"; 
 
-describe.skip("Authorization Route", () => {
+describe("Authorization Route", () => {
     const date = new Date()
     const newUser = {
         username: "testuser"+ date.toISOString(),
