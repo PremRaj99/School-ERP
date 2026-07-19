@@ -5,7 +5,7 @@ import { NotFoundError, validateSchema } from '@/core/errors';
 import { ObjectIdSchema, sessionSchema } from '@/types';
 
 export const getStudentFee = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const sessionYear = validateSchema(sessionSchema, req.query.year);
 
     const studentFees = await prisma.studentFee.findMany({
@@ -37,7 +37,7 @@ export const getStudentFee = asyncHandler(
 );
 
 export const getStudentFeeDetail = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const feeId = validateSchema(ObjectIdSchema, req.params.feeId);
 
     const studentFee = await prisma.studentFee.findUnique({

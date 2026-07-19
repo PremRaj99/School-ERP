@@ -4,7 +4,7 @@ import { asyncHandler, OkResponse } from '@/core/responses';
 import { ObjectIdSchema } from '@/types';
 import { NextFunction, Request, Response } from 'express';
 
-export const getExam = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getExam = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
   const exams = await prisma.exam.findMany({
     include: {
       class: true,
@@ -27,7 +27,7 @@ export const getExam = asyncHandler(async (req: Request, res: Response, next: Ne
 });
 
 export const getExamSubject = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const examId = validateSchema(ObjectIdSchema, req.params.examId);
     const exam = await prisma.exam.findUnique({
       where: {

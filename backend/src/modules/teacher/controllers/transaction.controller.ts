@@ -3,7 +3,7 @@ import { asyncHandler, OkResponse } from '@/core/responses';
 import { NextFunction, Request, Response } from 'express';
 
 export const getTeacherSalary = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const teacherSalary = await prisma.teacherSalary.findMany({
       where: {
         teacherId: req.user?.id,

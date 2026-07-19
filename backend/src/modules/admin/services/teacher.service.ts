@@ -126,7 +126,7 @@ export class AdminTeacherService {
           profilePhoto: data.profilePhoto,
         },
       });
-    } catch (e) {
+    } catch (_e) {
       throw new ValidationError();
     }
   }
@@ -146,12 +146,12 @@ export class AdminTeacherService {
       await prisma.teacher.delete({
         where: { id: teacher.id },
       });
-    } catch (e) {
+    } catch (_e) {
       try {
         await prisma.user.delete({
           where: { id: teacher.userId },
         });
-      } catch (err) {
+      } catch (_err) {
         // ignore
       }
     }

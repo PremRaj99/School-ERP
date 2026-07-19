@@ -4,7 +4,7 @@ import { asyncHandler, OkResponse } from '@/core/responses';
 import { ObjectIdSchema } from '@/types';
 import { NextFunction, Request, Response } from 'express';
 
-export const getResult = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getResult = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
   const examId = validateSchema(ObjectIdSchema, req.params.examId);
 
   const student = await prisma.student.findUnique({

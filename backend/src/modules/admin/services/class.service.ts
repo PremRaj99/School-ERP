@@ -16,7 +16,7 @@ export class AdminClassService {
           session: data.session,
         },
       });
-    } catch (e) {
+    } catch (_e) {
       throw new ValidationError('already exist');
     }
   }
@@ -26,7 +26,7 @@ export class AdminClassService {
       await prisma.class.delete({
         where: { id: classId },
       });
-    } catch (error) {
+    } catch (_error) {
       throw new NotFoundError();
     }
   }

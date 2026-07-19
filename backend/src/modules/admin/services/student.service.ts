@@ -236,7 +236,7 @@ export class AdminStudentService {
           classId,
         },
       });
-    } catch (e) {
+    } catch (_e) {
       throw new ValidationError();
     }
   }
@@ -256,12 +256,12 @@ export class AdminStudentService {
       await prisma.user.delete({
         where: { id: student.userId },
       });
-    } catch (e) {
+    } catch (_e) {
       try {
         await prisma.student.delete({
           where: { id: student.id },
         });
-      } catch (err) {
+      } catch (_err) {
         // ignore
       }
     }

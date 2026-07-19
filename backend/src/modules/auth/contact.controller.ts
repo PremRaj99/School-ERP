@@ -5,7 +5,7 @@ import { ContactUsSchema } from './types';
 import { ContactService } from './services/contact.service';
 
 export const submitContact = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const parseData = validateSchema(ContactUsSchema, req.body);
     await ContactService.createContact(parseData);
     res.status(201).json(new CreatedResponse());

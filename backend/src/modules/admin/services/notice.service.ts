@@ -44,7 +44,7 @@ export class AdminNoticeService {
       await prisma.notice.delete({
         where: { id: noticeId },
       });
-    } catch (e) {
+    } catch (_e) {
       throw new NotFoundError();
     }
   }

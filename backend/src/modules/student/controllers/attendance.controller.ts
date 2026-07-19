@@ -5,7 +5,7 @@ import { monthSchema } from '../types';
 import { StudentService } from '../services/student.service';
 
 export const getAttendance = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const month = validateSchema(monthSchema, String(req.query.month));
     const data = await StudentService.getAttendance(req.user!.id, month);
     res.status(200).json(new OkResponse(data));

@@ -23,7 +23,7 @@ export class AdminAcademicCalendarService {
       await prisma.academicCalendar.delete({
         where: { id: calendarId },
       });
-    } catch (e) {
+    } catch (_e) {
       throw new NotFoundError();
     }
   }

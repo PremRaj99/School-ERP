@@ -26,7 +26,7 @@ export class AdminExamService {
   static async createExam(data: z.infer<typeof CreateExamSchema>) {
     try {
       await storeExamData(data);
-    } catch (error) {
+    } catch (_error) {
       throw new ValidationError();
     }
   }
@@ -36,7 +36,7 @@ export class AdminExamService {
       await prisma.exam.delete({
         where: { id: examId },
       });
-    } catch (e) {
+    } catch (_e) {
       throw new NotFoundError();
     }
   }

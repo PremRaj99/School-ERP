@@ -5,7 +5,7 @@ import { CreateResultSchema, ObjectIdSchema, UpdateResultSchema } from '@/module
 import { NextFunction, Request, Response } from 'express';
 import { getGrade } from '@/shared';
 
-export const getResult = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getResult = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
   const examId = validateSchema(ObjectIdSchema, req.params.examId);
   const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId);
 
@@ -66,7 +66,7 @@ export const getResult = asyncHandler(async (req: Request, res: Response, next: 
 });
 
 export const createResult = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const examId = validateSchema(ObjectIdSchema, req.params.examId);
     const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId);
     const parseData = validateSchema(CreateResultSchema, req.body);
@@ -101,7 +101,7 @@ export const createResult = asyncHandler(
           })),
         });
       });
-    } catch (error) {
+    } catch (_error) {
       throw new DatabaseError();
     }
 
@@ -110,7 +110,7 @@ export const createResult = asyncHandler(
 );
 
 export const updateResult = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const examId = validateSchema(ObjectIdSchema, req.params.examId);
     const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId);
     const parseData = validateSchema(UpdateResultSchema, req.body);
@@ -148,7 +148,7 @@ export const updateResult = asyncHandler(
           }),
         );
       });
-    } catch (error) {
+    } catch (_error) {
       throw new DatabaseError();
     }
 

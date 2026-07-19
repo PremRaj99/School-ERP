@@ -5,7 +5,7 @@ import { NextFunction, Request, Response } from 'express';
 import { LoginSchema } from './types';
 import { AuthService } from './services/auth.service';
 
-export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const login = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
   const parseData = validateSchema(LoginSchema, req.body);
   const { accessToken, refreshToken } = await AuthService.login(parseData);
 
@@ -15,7 +15,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
   res.status(200).json(new OkResponse({ accessToken, refreshToken }));
 });
 
-export const signup = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const signup = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
   const { username, password } = req.body;
   await AuthService.signup(username, password);
   res.status(201).json(new CreatedResponse());

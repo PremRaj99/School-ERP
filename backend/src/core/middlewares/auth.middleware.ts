@@ -28,7 +28,7 @@ export const verifyJWT = asyncHandler((req: Request, res: Response, next: NextFu
     };
     req.user = decoded;
     next();
-  } catch (error) {
+  } catch (_error) {
     throw new UnauthorizedError();
   }
 });

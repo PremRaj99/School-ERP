@@ -12,7 +12,7 @@ import { getDateString, getMonthStartEnd, getCurrentSessionYear } from '@/shared
 import { DatabaseError, NotFoundError } from '@/core/errors';
 
 export const getTeacherAttendance = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const monthString = validateSchema(monthSchema, req.query.month);
     const { endDate, startDate } = getMonthStartEnd(monthString);
 
@@ -38,7 +38,7 @@ export const getTeacherAttendance = asyncHandler(
 );
 
 export const getClassAttendance = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const monthString = validateSchema(monthSchema, req.query.month);
     const { endDate, startDate } = getMonthStartEnd(monthString);
 
@@ -69,7 +69,7 @@ export const getClassAttendance = asyncHandler(
 );
 
 export const getClassAttendanceDetail = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const classAttendanceId = validateSchema(ObjectIdSchema, req.params.classAttendanceId);
 
     const classAttendance = await prisma.classAttendance.findUnique({
@@ -126,7 +126,7 @@ export const getClassAttendanceDetail = asyncHandler(
 );
 
 export const createClassAttendance = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const parseData = validateSchema(CreateClassAttendanceSchema, req.body);
     const currentSession = getCurrentSessionYear();
 
@@ -172,7 +172,7 @@ export const createClassAttendance = asyncHandler(
 );
 
 export const updateClassAttendance = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const parseData = validateSchema(UpdateClassAttendanceSchema, req.body);
 
     try {
@@ -194,7 +194,7 @@ export const updateClassAttendance = asyncHandler(
           }),
         );
       });
-    } catch (e) {
+    } catch (_e) {
       throw new DatabaseError();
     }
 

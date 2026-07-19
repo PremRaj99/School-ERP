@@ -72,7 +72,7 @@ export class AdminTimetableService {
           subjectId: subject?.id,
         },
       });
-    } catch (e) {
+    } catch (_e) {
       if (!subject || !teacher) {
         throw new NotFoundError();
       }

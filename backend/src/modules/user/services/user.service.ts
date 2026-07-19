@@ -49,7 +49,7 @@ export class UserService {
     let decoded: { id: string; role: string };
     try {
       decoded = jwt.verify(token, REFRESH_TOKEN_SECRET) as { id: string; role: string };
-    } catch (error) {
+    } catch (_error) {
       throw new ForbiddenError();
     }
 

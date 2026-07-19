@@ -26,7 +26,7 @@ export class AdminSubjectService {
           subjectName: data.subjectName,
         },
       });
-    } catch (e) {
+    } catch (_e) {
       throw new ValidationError();
     }
   }
@@ -42,7 +42,7 @@ export class AdminSubjectService {
           subjectCode: newSubjectCode,
         },
       });
-    } catch (error) {
+    } catch (_error) {
       throw new NotFoundError();
     }
   }
@@ -52,7 +52,7 @@ export class AdminSubjectService {
       await prisma.subject.delete({
         where: { subjectCode },
       });
-    } catch (e) {
+    } catch (_e) {
       throw new NotFoundError();
     }
   }
