@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Add Bun to PATH for non-interactive shells/Git hooks if installed in default home location
+if [ -d "$HOME/.bun/bin" ]; then
+  export PATH="$HOME/.bun/bin:$PATH"
+fi
+
+echo "=== Running Backend pre-commit checks ==="
+cd backend
+bun run format
+bunx lint-staged
+bun run typecheck
+cd ..
+
+echo "=== Running Frontend pre-commit checks ==="
+cd frontend
+npm run format
+npx lint-staged
+npm run typecheck
+cd ..
