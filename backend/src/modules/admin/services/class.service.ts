@@ -1,6 +1,6 @@
-import prisma from "@/core/db";
-import { NotFoundError, ValidationError } from "@/core/errors";
-import { CreateClassInput } from "../types";
+import prisma from '@/core/db';
+import { NotFoundError, ValidationError } from '@/core/errors';
+import { CreateClassInput } from '../types';
 
 export class AdminClassService {
   static async getClasses() {
@@ -17,7 +17,7 @@ export class AdminClassService {
         },
       });
     } catch (e) {
-      throw new ValidationError("already exist");
+      throw new ValidationError('already exist');
     }
   }
 

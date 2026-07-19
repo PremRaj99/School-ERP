@@ -1,8 +1,8 @@
-import prisma from "@/core/db";
-import { NotFoundError, ValidationError } from "@/core/errors";
-import { generateId, getDateString, getNewTeacherSerialNumber } from "../helpers";
-import { CreateTeacherInput, UpdateTeacherInput } from "../types";
-import bcrypt from "bcrypt";
+import prisma from '@/core/db';
+import { NotFoundError, ValidationError } from '@/core/errors';
+import { generateId, getDateString, getNewTeacherSerialNumber } from '../helpers';
+import { CreateTeacherInput, UpdateTeacherInput } from '../types';
+import bcrypt from 'bcrypt';
 
 export class AdminTeacherService {
   static async getTeachers() {
@@ -30,10 +30,7 @@ export class AdminTeacherService {
   static async getTeacherById(teacherIdParam: string) {
     const teacher = await prisma.teacher.findFirst({
       where: {
-        OR: [
-          { id: teacherIdParam },
-          { teacherId: teacherIdParam },
-        ],
+        OR: [{ id: teacherIdParam }, { teacherId: teacherIdParam }],
       },
       select: {
         id: true,
@@ -61,7 +58,7 @@ export class AdminTeacherService {
 
   static async createTeacher(data: CreateTeacherInput) {
     const serialNumber = await getNewTeacherSerialNumber();
-    const teacherId = generateId("Teacher", serialNumber);
+    const teacherId = generateId('Teacher', serialNumber);
     const hashPassword = await bcrypt.hash(teacherId, 10);
 
     try {
@@ -70,7 +67,7 @@ export class AdminTeacherService {
           data: {
             username: teacherId,
             password: hashPassword,
-            role: "Teacher",
+            role: 'Teacher',
           },
         });
 
@@ -103,10 +100,7 @@ export class AdminTeacherService {
   static async updateTeacher(teacherIdParam: string, data: UpdateTeacherInput) {
     const teacher = await prisma.teacher.findFirst({
       where: {
-        OR: [
-          { id: teacherIdParam },
-          { teacherId: teacherIdParam },
-        ],
+        OR: [{ id: teacherIdParam }, { teacherId: teacherIdParam }],
       },
     });
 
@@ -140,10 +134,7 @@ export class AdminTeacherService {
   static async deleteTeacher(teacherIdParam: string) {
     const teacher = await prisma.teacher.findFirst({
       where: {
-        OR: [
-          { id: teacherIdParam },
-          { teacherId: teacherIdParam },
-        ],
+        OR: [{ id: teacherIdParam }, { teacherId: teacherIdParam }],
       },
     });
 

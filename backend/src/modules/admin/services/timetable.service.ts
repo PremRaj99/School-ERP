@@ -1,7 +1,7 @@
-import prisma from "@/core/db";
-import { NotFoundError } from "@/core/errors";
-import { timeTableFormattedData } from "../helpers";
-import { UpdateTimeTableInput } from "../types";
+import prisma from '@/core/db';
+import { NotFoundError } from '@/core/errors';
+import { timeTableFormattedData } from '../helpers';
+import { UpdateTimeTableInput } from '../types';
 
 export class AdminTimetableService {
   static async getTimeTables() {

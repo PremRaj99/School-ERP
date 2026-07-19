@@ -1,7 +1,7 @@
-import prisma from "@/core/db";
-import { NotFoundError, ValidationError } from "@/core/errors";
-import { generateSubjectCode, getGroupedSubject } from "../helpers";
-import { CreateSubjectInput, UpdateSubjectInput } from "../types";
+import prisma from '@/core/db';
+import { NotFoundError, ValidationError } from '@/core/errors';
+import { generateSubjectCode, getGroupedSubject } from '../helpers';
+import { CreateSubjectInput, UpdateSubjectInput } from '../types';
 
 export class AdminSubjectService {
   static async getAllClassSubjects() {

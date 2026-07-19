@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response } from 'express';
 import {
   ForbiddenError,
   NotFoundError,
@@ -7,20 +7,20 @@ import {
   ValidationError,
   ApiError,
   DatabaseError,
-} from "./ApiError";
-import { validateSchema } from "./validateSchema";
+} from './ApiError';
+import { validateSchema } from './validateSchema';
 
 export const errorHandlerMiddleware = (
   err: ApiError,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
-  console.error("Error : ", err.message);
+  console.error('Error : ', err.message);
   return res.status(err.statusCode || 500).json({
     statusCode: err.statusCode || 500,
     data: null,
-    message: err.message || "Internal Server Error",
+    message: err.message || 'Internal Server Error',
     success: false,
   });
 };
@@ -33,5 +33,5 @@ export {
   ValidationError,
   ApiError,
   DatabaseError,
-  validateSchema
+  validateSchema,
 };

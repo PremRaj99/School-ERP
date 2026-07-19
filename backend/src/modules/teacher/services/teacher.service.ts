@@ -1,8 +1,8 @@
-import prisma from "@/core/db";
-import { NotFoundError } from "@/core/errors";
-import { timeTableFormattedData } from "../helpers";
-import { z } from "zod";
-import { CreateClassAttendanceSchema, UpdateClassAttendanceSchema } from "../types";
+import prisma from '@/core/db';
+import { NotFoundError } from '@/core/errors';
+import { timeTableFormattedData } from '../helpers';
+import { z } from 'zod';
+import { CreateClassAttendanceSchema, UpdateClassAttendanceSchema } from '../types';
 
 export class TeacherService {
   static async getTeacherProfile(userId: string) {
@@ -70,7 +70,7 @@ export class TeacherService {
   static async getNotices() {
     return await prisma.notice.findMany({
       where: {
-        targetRole: { in: ["Teacher", "All"] },
+        targetRole: { in: ['Teacher', 'All'] },
       },
       select: {
         id: true,
@@ -85,7 +85,7 @@ export class TeacherService {
     const notice = await prisma.notice.findFirst({
       where: {
         id: noticeId,
-        targetRole: { in: ["Teacher", "All"] },
+        targetRole: { in: ['Teacher', 'All'] },
       },
     });
 
@@ -115,10 +115,7 @@ export class TeacherService {
       for (const item of data.attendance) {
         const student = await tx.student.findFirst({
           where: {
-            OR: [
-              { id: item.studentId },
-              { studentId: item.studentId },
-            ],
+            OR: [{ id: item.studentId }, { studentId: item.studentId }],
           },
         });
 

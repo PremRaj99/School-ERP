@@ -3,4 +3,4 @@ import { getExams } from '../controllers/exam.controller';
 
 export const examRouter = Router();
 
-examRouter.get("/", getExams);
+examRouter.get('/', getExams);

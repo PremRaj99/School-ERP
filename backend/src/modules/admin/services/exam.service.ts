@@ -1,8 +1,8 @@
-import prisma from "@/core/db";
-import { NotFoundError, ValidationError } from "@/core/errors";
-import { storeExamData } from "../helpers";
-import { z } from "zod";
-import { CreateExamSchema } from "../types";
+import prisma from '@/core/db';
+import { NotFoundError, ValidationError } from '@/core/errors';
+import { storeExamData } from '../helpers';
+import { z } from 'zod';
+import { CreateExamSchema } from '../types';
 
 export class AdminExamService {
   static async getExams() {

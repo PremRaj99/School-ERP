@@ -1,7 +1,7 @@
-import prisma from "@/core/db";
-import { NotFoundError } from "@/core/errors";
-import { getDateString } from "../helpers";
-import { CreateAcademicCalendarInput } from "../types";
+import prisma from '@/core/db';
+import { NotFoundError } from '@/core/errors';
+import { getDateString } from '../helpers';
+import { CreateAcademicCalendarInput } from '../types';
 
 export class AdminAcademicCalendarService {
   static async getAcademicCalendars() {

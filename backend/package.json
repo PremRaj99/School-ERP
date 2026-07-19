@@ -8,6 +8,7 @@
     "start": "node dist/index.js",
     "dev": "bun --watch src/index.ts",
     "prisma:generate": "prisma generate",
+    "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "prepare": "cd .. && husky backend/.husky"

@@ -1,6 +1,6 @@
-import prisma from "@/core/db";
-import { NotFoundError } from "@/core/errors";
-import { getMonthStartEnd, timeTableFormattedData } from "../helpers";
+import prisma from '@/core/db';
+import { NotFoundError } from '@/core/errors';
+import { getMonthStartEnd, timeTableFormattedData } from '../helpers';
 
 export class StudentService {
   static async getStudentProfile(userId: string) {
@@ -146,7 +146,7 @@ export class StudentService {
   static async getNotices() {
     return await prisma.notice.findMany({
       where: {
-        targetRole: { in: ["Student", "All"] },
+        targetRole: { in: ['Student', 'All'] },
       },
       select: {
         id: true,
@@ -161,7 +161,7 @@ export class StudentService {
     const notice = await prisma.notice.findFirst({
       where: {
         id: noticeId,
-        targetRole: { in: ["Student", "All"] },
+        targetRole: { in: ['Student', 'All'] },
       },
     });
 

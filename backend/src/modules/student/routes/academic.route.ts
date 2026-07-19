@@ -4,5 +4,5 @@ import { getAcademicCalendars } from '../controllers/academicCalendar.controller
 
 export const academicRouter = Router();
 
-academicRouter.get("/time-table", getTimeTables);
-academicRouter.get("/calendar", getAcademicCalendars);
+academicRouter.get('/time-table', getTimeTables);
+academicRouter.get('/calendar', getAcademicCalendars);

@@ -11,15 +11,15 @@ import { storeExamData } from './helpers/storeExamData';
 import { timeTableFormattedData } from './helpers/timeTableFormattedData';
 
 export {
-    generateId,
-    generateSubjectCode,
-    getCurrentSessionYear,
-    getDateString,
-    getGrade,
-    getGroupedSubject,
-    getMonthStartEnd,
-    getNewStudentSerialNumber,
-    getNewTeacherSerialNumber,
-    storeExamData,
-    timeTableFormattedData
+  generateId,
+  generateSubjectCode,
+  getCurrentSessionYear,
+  getDateString,
+  getGrade,
+  getGroupedSubject,
+  getMonthStartEnd,
+  getNewStudentSerialNumber,
+  getNewTeacherSerialNumber,
+  storeExamData,
+  timeTableFormattedData,
 };

@@ -1,6 +1,6 @@
-import { Router } from "express";
-import { getResult } from "../controllers/result.controller";
+import { Router } from 'express';
+import { getResult } from '../controllers/result.controller';
 
 export const resultRouter = Router();
 
-resultRouter.get("/:examId", getResult);
+resultRouter.get('/:examId', getResult);

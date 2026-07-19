@@ -1,73 +1,73 @@
 export const userSwaggerDocs = {
-  "/user": {
+  '/user': {
     get: {
-      tags: ["User"],
-      summary: "Get current user profile",
+      tags: ['User'],
+      summary: 'Get current user profile',
       security: [{ bearerAuth: [] }],
       responses: {
-        200: { description: "User details retrieved" },
-        401: { description: "Unauthorized" }
-      }
-    }
+        200: { description: 'User details retrieved' },
+        401: { description: 'Unauthorized' },
+      },
+    },
   },
-  "/user/change-password": {
+  '/user/change-password': {
     post: {
-      tags: ["User"],
-      summary: "Change password",
+      tags: ['User'],
+      summary: 'Change password',
       security: [{ bearerAuth: [] }],
       requestBody: {
         required: true,
         content: {
-          "application/json": {
+          'application/json': {
             schema: {
-              type: "object",
-              required: ["oldPassword", "newPassword"],
+              type: 'object',
+              required: ['oldPassword', 'newPassword'],
               properties: {
-                oldPassword: { type: "string" },
-                newPassword: { type: "string" }
-              }
-            }
-          }
-        }
+                oldPassword: { type: 'string' },
+                newPassword: { type: 'string' },
+              },
+            },
+          },
+        },
       },
       responses: {
-        202: { description: "Password changed successfully" },
-        400: { description: "Validation error" }
-      }
-    }
+        202: { description: 'Password changed successfully' },
+        400: { description: 'Validation error' },
+      },
+    },
   },
-  "/user/logout": {
+  '/user/logout': {
     post: {
-      tags: ["User"],
-      summary: "User logout",
+      tags: ['User'],
+      summary: 'User logout',
       security: [{ bearerAuth: [] }],
       responses: {
-        202: { description: "Logged out successfully" }
-      }
-    }
+        202: { description: 'Logged out successfully' },
+      },
+    },
   },
-  "/user/refresh": {
+  '/user/refresh': {
     post: {
-      tags: ["User"],
-      summary: "Refresh Access Token",
+      tags: ['User'],
+      summary: 'Refresh Access Token',
       requestBody: {
         required: true,
         content: {
-          "application/json": {
+          'application/json': {
             schema: {
-              type: "object",
-              required: ["refresh"],
+              type: 'object',
+              required: ['refresh'],
               properties: {
-                refresh: { type: "string" }
-              }
-            }
-          }
-        }
+                refresh: { type: 'string' },
+              },
+            },
+          },
+        },
       },
       responses: {
-        202: { description: "New access and refresh tokens returned" },
-        403: { description: "Invalid or expired refresh token" }
-      }
-    }
-  }
+        202: { description: 'New access and refresh tokens returned' },
+        403: { description: 'Invalid or expired refresh token' },
+      },
+    },
+  },
 };

@@ -1,8 +1,8 @@
-import prisma from "@/core/db";
-import { NotFoundError, ValidationError } from "@/core/errors";
-import { generateId, getDateString, getNewStudentSerialNumber } from "../helpers";
-import { CreateStudentInput, UpdateStudentInput } from "../types";
-import bcrypt from "bcrypt";
+import prisma from '@/core/db';
+import { NotFoundError, ValidationError } from '@/core/errors';
+import { generateId, getDateString, getNewStudentSerialNumber } from '../helpers';
+import { CreateStudentInput, UpdateStudentInput } from '../types';
+import bcrypt from 'bcrypt';
 
 export class AdminStudentService {
   static async getStudents() {
@@ -36,7 +36,7 @@ export class AdminStudentService {
       },
     });
 
-    return students.map(student => ({
+    return students.map((student) => ({
       id: student.id,
       studentId: student.studentId,
       firstName: student.firstName,
@@ -64,10 +64,7 @@ export class AdminStudentService {
   static async getStudentById(studentIdParam: string) {
     const student = await prisma.student.findFirst({
       where: {
-        OR: [
-          { id: studentIdParam },
-          { studentId: studentIdParam },
-        ],
+        OR: [{ id: studentIdParam }, { studentId: studentIdParam }],
       },
       select: {
         id: true,
@@ -143,7 +140,7 @@ export class AdminStudentService {
     }
 
     const serialNumber = await getNewStudentSerialNumber();
-    const studentId = generateId("Student", serialNumber);
+    const studentId = generateId('Student', serialNumber);
     const hashPassword = await bcrypt.hash(studentId, 10);
 
     try {
@@ -152,7 +149,7 @@ export class AdminStudentService {
           data: {
             username: studentId,
             password: hashPassword,
-            role: "Student",
+            role: 'Student',
           },
         });
 
@@ -190,10 +187,7 @@ export class AdminStudentService {
   static async updateStudent(studentIdParam: string, data: UpdateStudentInput) {
     const student = await prisma.student.findFirst({
       where: {
-        OR: [
-          { id: studentIdParam },
-          { studentId: studentIdParam },
-        ],
+        OR: [{ id: studentIdParam }, { studentId: studentIdParam }],
       },
     });
 
@@ -250,10 +244,7 @@ export class AdminStudentService {
   static async deleteStudent(studentIdParam: string) {
     const student = await prisma.student.findFirst({
       where: {
-        OR: [
-          { id: studentIdParam },
-          { studentId: studentIdParam },
-        ],
+        OR: [{ id: studentIdParam }, { studentId: studentIdParam }],
       },
     });
 

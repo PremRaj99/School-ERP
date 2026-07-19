@@ -3,6 +3,6 @@ import { createClass, deleteClass, getClasses } from '../controllers/class.contr
 
 export const classRouter = Router();
 
-classRouter.get("/", getClasses);
-classRouter.post("/", createClass);
-classRouter.delete("/:classId", deleteClass);
+classRouter.get('/', getClasses);
+classRouter.post('/', createClass);
+classRouter.delete('/:classId', deleteClass);

@@ -3,4 +3,4 @@ import { getStudent } from '../controllers/student.controller';
 
 export const studentProfileRouter = Router();
 
-studentProfileRouter.get("/", getStudent);
+studentProfileRouter.get('/', getStudent);

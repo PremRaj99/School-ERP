@@ -1,26 +1,26 @@
 export const teacherSwaggerDocs = {
-  "/teacher": {
+  '/teacher': {
     get: {
-      tags: ["Teacher"],
-      summary: "Get teacher profile",
+      tags: ['Teacher'],
+      summary: 'Get teacher profile',
       security: [{ bearerAuth: [] }],
-      responses: { 200: { description: "Teacher profile details" } }
-    }
+      responses: { 200: { description: 'Teacher profile details' } },
+    },
   },
-  "/teacher/attendance/mark": {
+  '/teacher/attendance/mark': {
     post: {
-      tags: ["Teacher"],
-      summary: "Mark student class attendance",
+      tags: ['Teacher'],
+      summary: 'Mark student class attendance',
       security: [{ bearerAuth: [] }],
-      responses: { 201: { description: "Class attendance marked" } }
-    }
+      responses: { 201: { description: 'Class attendance marked' } },
+    },
   },
-  "/teacher/notice": {
+  '/teacher/notice': {
     get: {
-      tags: ["Teacher"],
-      summary: "Get teacher notices",
+      tags: ['Teacher'],
+      summary: 'Get teacher notices',
       security: [{ bearerAuth: [] }],
-      responses: { 200: { description: "List of notices" } }
-    }
-  }
+      responses: { 200: { description: 'List of notices' } },
+    },
+  },
 };

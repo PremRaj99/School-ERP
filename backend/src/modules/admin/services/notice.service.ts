@@ -1,7 +1,7 @@
-import prisma from "@/core/db";
-import { NotFoundError } from "@/core/errors";
-import { getDateString } from "../helpers";
-import { CreateNoticeInput } from "../types";
+import prisma from '@/core/db';
+import { NotFoundError } from '@/core/errors';
+import { getDateString } from '../helpers';
+import { CreateNoticeInput } from '../types';
 
 export class AdminNoticeService {
   static async getNotices() {

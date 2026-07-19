@@ -1,77 +1,83 @@
-import prisma from "@/core/db";
-import { asyncHandler, OkResponse } from "@/core/responses";
+import prisma from '@/core/db';
+import { asyncHandler, OkResponse } from '@/core/responses';
 import { NextFunction, Request, Response } from 'express';
 import { NotFoundError, validateSchema } from '@/core/errors';
-import { ObjectIdSchema, sessionSchema } from "@/types";
+import { ObjectIdSchema, sessionSchema } from '@/types';
 
-export const getStudentFee = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getStudentFee = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const sessionYear = validateSchema(sessionSchema, req.query.year);
 
     const studentFees = await prisma.studentFee.findMany({
-        where: {
-            studentId: req.user?.id,
-            student: {
-                class: {
-                    session: sessionYear
-                }
-            }
+      where: {
+        studentId: req.user?.id,
+        student: {
+          class: {
+            session: sessionYear,
+          },
         },
-        include: {
-            transaction: true
-        }
+      },
+      include: {
+        transaction: true,
+      },
     });
 
-    res.status(200).json(new OkResponse(
+    res.status(200).json(
+      new OkResponse(
         studentFees.map((t: any) => ({
-            id: t.id,
-            month: t.month,
-            finalAmount: t.transaction.finalAmount,
-            isPaid: t.transaction.status,
-            paidAt: t.transaction.createdAt
-        }))
-    ));
-});
+          id: t.id,
+          month: t.month,
+          finalAmount: t.transaction.finalAmount,
+          isPaid: t.transaction.status,
+          paidAt: t.transaction.createdAt,
+        })),
+      ),
+    );
+  },
+);
 
-export const getStudentFeeDetail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getStudentFeeDetail = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const feeId = validateSchema(ObjectIdSchema, req.params.feeId);
 
     const studentFee = await prisma.studentFee.findUnique({
-        where: {
-            studentId: req.user?.id,
-            id: feeId
+      where: {
+        studentId: req.user?.id,
+        id: feeId,
+      },
+      include: {
+        transaction: true,
+        feeBreakdown: true,
+        student: {
+          include: {
+            class: true,
+          },
         },
-        include: {
-            transaction: true,
-            feeBreakdown: true,
-            student: {
-                include: {
-                    class: true
-                }
-            },
-        }
+      },
     });
 
     if (!studentFee) {
-        throw new NotFoundError();
+      throw new NotFoundError();
     }
 
-    res.status(200).json(new OkResponse(
-        {
-            id: studentFee.id,
-            firstName: studentFee.student.firstName,
-            lastName: studentFee.student.lastName,
-            className: studentFee.student.class.className,
-            section: studentFee.student.class.section,
-            rollNo: studentFee.student.rollNo,
-            month: studentFee.month,
-            session: studentFee.student.class.session,
-            beakDown: studentFee.feeBreakdown.map((b: any) => ({
-                feeType: b.feeType,
-                amount: b.amount,
-            })),
-            finalAmount: studentFee.transaction.finalAmount,
-            isPaid: studentFee.transaction.status,
-            paidAt: studentFee.transaction.createdAt
-        }
-    ));
-});
+    res.status(200).json(
+      new OkResponse({
+        id: studentFee.id,
+        firstName: studentFee.student.firstName,
+        lastName: studentFee.student.lastName,
+        className: studentFee.student.class.className,
+        section: studentFee.student.class.section,
+        rollNo: studentFee.student.rollNo,
+        month: studentFee.month,
+        session: studentFee.student.class.session,
+        beakDown: studentFee.feeBreakdown.map((b: any) => ({
+          feeType: b.feeType,
+          amount: b.amount,
+        })),
+        finalAmount: studentFee.transaction.finalAmount,
+        isPaid: studentFee.transaction.status,
+        paidAt: studentFee.transaction.createdAt,
+      }),
+    );
+  },
+);

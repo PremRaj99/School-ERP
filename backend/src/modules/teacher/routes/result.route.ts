@@ -3,6 +3,6 @@ import { createResult, getResult, updateResult } from '../controllers/result.con
 
 export const resultRouter = Router();
 
-resultRouter.get("/:examId/:subjectId", getResult);
-resultRouter.post("/:examId/:subjectId", createResult);
-resultRouter.put("/:examId/:subjectId", updateResult);
+resultRouter.get('/:examId/:subjectId', getResult);
+resultRouter.post('/:examId/:subjectId', createResult);
+resultRouter.put('/:examId/:subjectId', updateResult);

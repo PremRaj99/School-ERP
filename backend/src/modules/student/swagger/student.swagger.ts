@@ -1,43 +1,43 @@
 export const studentSwaggerDocs = {
-  "/student": {
+  '/student': {
     get: {
-      tags: ["Student"],
-      summary: "Get student profile",
+      tags: ['Student'],
+      summary: 'Get student profile',
       security: [{ bearerAuth: [] }],
-      responses: { 200: { description: "Student profile data" } }
-    }
+      responses: { 200: { description: 'Student profile data' } },
+    },
   },
-  "/student/attendance": {
+  '/student/attendance': {
     get: {
-      tags: ["Student"],
-      summary: "Get student attendance",
+      tags: ['Student'],
+      summary: 'Get student attendance',
       security: [{ bearerAuth: [] }],
-      parameters: [{ name: "month", in: "query", required: true, schema: { type: "string" } }],
-      responses: { 200: { description: "Student attendance records" } }
-    }
+      parameters: [{ name: 'month', in: 'query', required: true, schema: { type: 'string' } }],
+      responses: { 200: { description: 'Student attendance records' } },
+    },
   },
-  "/student/subject/get-all-subject": {
+  '/student/subject/get-all-subject': {
     get: {
-      tags: ["Student"],
-      summary: "Get student subjects",
+      tags: ['Student'],
+      summary: 'Get student subjects',
       security: [{ bearerAuth: [] }],
-      responses: { 200: { description: "List of subjects" } }
-    }
+      responses: { 200: { description: 'List of subjects' } },
+    },
   },
-  "/student/exam": {
+  '/student/exam': {
     get: {
-      tags: ["Student"],
-      summary: "Get student exams",
+      tags: ['Student'],
+      summary: 'Get student exams',
       security: [{ bearerAuth: [] }],
-      responses: { 200: { description: "List of exams" } }
-    }
+      responses: { 200: { description: 'List of exams' } },
+    },
   },
-  "/student/notice": {
+  '/student/notice': {
     get: {
-      tags: ["Student"],
-      summary: "Get student notices",
+      tags: ['Student'],
+      summary: 'Get student notices',
       security: [{ bearerAuth: [] }],
-      responses: { 200: { description: "List of notices" } }
-    }
-  }
+      responses: { 200: { description: 'List of notices' } },
+    },
+  },
 };

@@ -10,37 +10,37 @@ export class ApiError extends Error {
 }
 
 export class ValidationError extends ApiError {
-  constructor(message = "bad request") {
+  constructor(message = 'bad request') {
     super(400, message);
   }
 }
 
 export class UnauthorizedError extends ApiError {
-  constructor(message = "Unauthorized") {
+  constructor(message = 'Unauthorized') {
     super(401, message);
   }
 }
 
 export class NotFoundError extends ApiError {
-  constructor(message = "not found") {
+  constructor(message = 'not found') {
     super(404, message);
   }
 }
 
 export class ForbiddenError extends ApiError {
-  constructor(message = "forbidden") {
+  constructor(message = 'forbidden') {
     super(403, message);
   }
 }
 
 export class TooManyRequestError extends ApiError {
-  constructor(message = "too many request") {
+  constructor(message = 'too many request') {
     super(429, message);
   }
 }
 
 export class DatabaseError extends ApiError {
-  constructor(message = "database failed to do task") {
+  constructor(message = 'database failed to do task') {
     super(502, message);
   }
 }

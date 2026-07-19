@@ -4,11 +4,7 @@ export class ApiResponse {
   message: string;
   success: boolean;
 
-  constructor(
-    statusCode: number,
-    data: Object | Array<Object> | null,
-    message: string
-  ) {
+  constructor(statusCode: number, data: Object | Array<Object> | null, message: string) {
     this.statusCode = statusCode;
     this.data = data;
     this.message = message;
@@ -17,19 +13,19 @@ export class ApiResponse {
 }
 
 export class CreatedResponse extends ApiResponse {
-  constructor(message = "created") {
+  constructor(message = 'created') {
     super(201, null, message);
   }
 }
 
 export class AcceptedResponse extends ApiResponse {
-  constructor(message = "accepted") {
+  constructor(message = 'accepted') {
     super(202, null, message);
   }
 }
 
 export class OkResponse extends ApiResponse {
   constructor(data: Object | Array<Object> | null = null) {
-    super(200, data, "ok");
+    super(200, data, 'ok');
   }
 }

@@ -1,8 +1,8 @@
-import prisma from "@/core/db";
-import { NotFoundError } from "@/core/errors";
-import { getMonthStartEnd } from "../helpers";
-import { z } from "zod";
-import { CreateTeacherAttendanceSchema, UpdateTeacherAttendanceSchema } from "../types";
+import prisma from '@/core/db';
+import { NotFoundError } from '@/core/errors';
+import { getMonthStartEnd } from '../helpers';
+import { z } from 'zod';
+import { CreateTeacherAttendanceSchema, UpdateTeacherAttendanceSchema } from '../types';
 
 export class AdminTeacherAttendanceService {
   static async getTeacherAttendanceByDate(date: string) {
@@ -22,7 +22,7 @@ export class AdminTeacherAttendanceService {
       },
     });
 
-    const teachers = records.map(r => ({
+    const teachers = records.map((r) => ({
       id: r.id,
       teacherId: r.teacher.teacherId,
       firstName: r.teacher.firstName,
@@ -66,7 +66,10 @@ export class AdminTeacherAttendanceService {
     };
   }
 
-  static async markTeacherAttendance(date: string, attendance: z.infer<typeof CreateTeacherAttendanceSchema>) {
+  static async markTeacherAttendance(
+    date: string,
+    attendance: z.infer<typeof CreateTeacherAttendanceSchema>,
+  ) {
     await prisma.$transaction(async (tx) => {
       for (const item of attendance) {
         const teacher = await tx.teacher.findUnique({
