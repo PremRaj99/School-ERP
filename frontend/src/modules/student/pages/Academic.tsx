@@ -17,8 +17,13 @@ import {
 } from '@/shared/components/ui/table';
 import { Loader2, CalendarRange } from 'lucide-react';
 
-interface AcademicEventItem { id: string; title: string; date: string; category: string; description?: string; }
-
+interface AcademicEventItem {
+  id: string;
+  title: string;
+  date: string;
+  category: string;
+  description?: string;
+}
 
 export default function Academic() {
   const { data: events, isLoading } = useQuery({

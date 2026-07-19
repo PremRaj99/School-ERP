@@ -17,8 +17,11 @@ import {
 } from '@/shared/components/ui/table';
 import { Loader2, DollarSign } from 'lucide-react';
 
-interface SalarySlipItem { id: string; month: string; transaction?: { title: string; finalAmount: number; status: string; }; }
-
+interface SalarySlipItem {
+  id: string;
+  month: string;
+  transaction?: { title: string; finalAmount: number; status: string };
+}
 
 export default function Salary() {
   const { data: salaries, isLoading } = useQuery({

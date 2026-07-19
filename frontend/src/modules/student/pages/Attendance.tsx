@@ -20,8 +20,11 @@ import { Label } from '@/shared/components/ui/label';
 import { Input } from '@/shared/components/ui/input';
 import { Loader2, ClipboardCheck } from 'lucide-react';
 
-interface AttendanceLogItem { id: string; date: string; status: 'Present' | 'Absent' | 'Leave'; }
-
+interface AttendanceLogItem {
+  id: string;
+  date: string;
+  status: 'Present' | 'Absent' | 'Leave';
+}
 
 export default function Attendance() {
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));

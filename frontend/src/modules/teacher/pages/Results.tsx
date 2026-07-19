@@ -25,9 +25,14 @@ import {
 import { Loader2, Award } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface ExamItem { id: string; title: string; class?: { className: string; section: string }; }
-interface ApiError { response?: { data?: { message?: string } } }
-
+interface ExamItem {
+  id: string;
+  title: string;
+  class?: { className: string; section: string };
+}
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
 
 const marksFormSchema = z.object({
   marks: z.array(
@@ -89,14 +94,23 @@ export default function Results() {
     if (resultDetails && resultDetails.marks) {
       setValue(
         'marks',
-        resultDetails.marks.map((m: { studentId: string; firstName: string; lastName?: string | null; rollNo: number; marksObtained: number; remark?: string; }) => ({
-          studentId: m.studentId,
-          firstName: m.firstName,
-          lastName: m.lastName,
-          rollNo: m.rollNo,
-          marksObtained: m.marksObtained,
-          remark: m.remark || '',
-        })),
+        resultDetails.marks.map(
+          (m: {
+            studentId: string;
+            firstName: string;
+            lastName?: string | null;
+            rollNo: number;
+            marksObtained: number;
+            remark?: string;
+          }) => ({
+            studentId: m.studentId,
+            firstName: m.firstName,
+            lastName: m.lastName,
+            rollNo: m.rollNo,
+            marksObtained: m.marksObtained,
+            remark: m.remark || '',
+          }),
+        ),
       );
     }
   }, [resultDetails, setValue]);

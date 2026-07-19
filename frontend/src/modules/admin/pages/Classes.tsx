@@ -28,9 +28,15 @@ import {
 import { Trash2, PlusCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface ClassItem { id: string; className: string; section: string; session: string; }
-interface ApiError { response?: { data?: { message?: string } } }
-
+interface ClassItem {
+  id: string;
+  className: string;
+  section: string;
+  session: string;
+}
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
 
 const classSchema = z.object({
   className: z.string().min(1, 'Class name is required'),

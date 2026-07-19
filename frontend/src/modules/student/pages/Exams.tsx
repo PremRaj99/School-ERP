@@ -19,8 +19,12 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Loader2, Award, Clipboard } from 'lucide-react';
 
-interface ExamItem { id: string; title: string; dateFrom: string; isResultDecleared: boolean; }
-
+interface ExamItem {
+  id: string;
+  title: string;
+  dateFrom: string;
+  isResultDecleared: boolean;
+}
 
 export default function Exams() {
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
@@ -156,22 +160,33 @@ export default function Exams() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {results.marks?.map((m: { subjectName: string; marksObtained: number; fullMarks: number; grade: string; remark?: string; }, idx: number) => (
-                        <TableRow key={idx}>
-                          <TableCell className="font-semibold">{m.subjectName}</TableCell>
-                          <TableCell>
-                            {m.marksObtained} / {m.fullMarks}
-                          </TableCell>
-                          <TableCell>
-                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                              {m.grade}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground text-sm">
-                            {m.remark || '-'}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {results.marks?.map(
+                        (
+                          m: {
+                            subjectName: string;
+                            marksObtained: number;
+                            fullMarks: number;
+                            grade: string;
+                            remark?: string;
+                          },
+                          idx: number,
+                        ) => (
+                          <TableRow key={idx}>
+                            <TableCell className="font-semibold">{m.subjectName}</TableCell>
+                            <TableCell>
+                              {m.marksObtained} / {m.fullMarks}
+                            </TableCell>
+                            <TableCell>
+                              <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                                {m.grade}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {m.remark || '-'}
+                            </TableCell>
+                          </TableRow>
+                        ),
+                      )}
                     </TableBody>
                   </Table>
                 </div>

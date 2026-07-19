@@ -16,10 +16,22 @@ import {
 import { Loader2, ClipboardCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface TeacherItem { id: string; firstName: string; lastName: string; username: string; phoneNumber: string; }
-interface AttendanceItem { id: string; teacherId: string; status: 'Present' | 'Absent' | 'Leave'; date: string; }
-interface ApiError { response?: { data?: { message?: string } } }
-
+interface TeacherItem {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  phoneNumber: string;
+}
+interface AttendanceItem {
+  id: string;
+  teacherId: string;
+  status: 'Present' | 'Absent' | 'Leave';
+  date: string;
+}
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
 
 export default function Attendance() {
   const queryClient = useQueryClient();
@@ -205,7 +217,12 @@ export default function Attendance() {
                         <select
                           className="border-input focus-visible:ring-ring ml-auto flex h-9 w-36 rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                           value={localStatuses[teach.id] || 'Present'}
-                          onChange={(e) => handleStatusChange(teach.id, e.target.value as 'Present' | 'Absent' | 'Leave')}
+                          onChange={(e) =>
+                            handleStatusChange(
+                              teach.id,
+                              e.target.value as 'Present' | 'Absent' | 'Leave',
+                            )
+                          }
                         >
                           <option value="Present">Present</option>
                           <option value="Absent">Absent</option>

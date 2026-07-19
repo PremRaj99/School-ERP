@@ -20,8 +20,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 
-interface ApiError { response?: { data?: { message?: string } } }
-
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
 
 const loginSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),

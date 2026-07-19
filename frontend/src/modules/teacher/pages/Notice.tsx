@@ -9,8 +9,12 @@ import {
 } from '@/shared/components/ui/card';
 import { Loader2, Bell } from 'lucide-react';
 
-interface NoticeItem { id: string; title: string; date: string; description?: string; }
-
+interface NoticeItem {
+  id: string;
+  title: string;
+  date: string;
+  description?: string;
+}
 
 export default function Notices() {
   const { data: notices, isLoading } = useQuery({

@@ -17,8 +17,11 @@ import {
 } from '@/shared/components/ui/table';
 import { Loader2, BookOpen } from 'lucide-react';
 
-interface SubjectItem { id: string; subjectName: string; subjectCode: string; }
-
+interface SubjectItem {
+  id: string;
+  subjectName: string;
+  subjectCode: string;
+}
 
 export default function Subjects() {
   const { data: subjects, isLoading } = useQuery({

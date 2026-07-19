@@ -28,8 +28,11 @@ import {
 } from '@/shared/components/ui/dialog';
 import { Loader2, Receipt } from 'lucide-react';
 
-interface TransactionItem { id: string; month: string; transaction?: { title: string; finalAmount: number; status: string; }; }
-
+interface TransactionItem {
+  id: string;
+  month: string;
+  transaction?: { title: string; finalAmount: number; status: string };
+}
 
 export default function Fees() {
   const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear().toString());
@@ -169,12 +172,14 @@ export default function Fees() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {detail.feeBreakdown?.map((item: { id: string; feeType: string; amount: number; }) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.feeType}</TableCell>
-                        <TableCell className="text-right">${item.amount}</TableCell>
-                      </TableRow>
-                    ))}
+                    {detail.feeBreakdown?.map(
+                      (item: { id: string; feeType: string; amount: number }) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">{item.feeType}</TableCell>
+                          <TableCell className="text-right">${item.amount}</TableCell>
+                        </TableRow>
+                      ),
+                    )}
                     <TableRow className="bg-muted/30 border-t font-bold">
                       <TableCell>Total Billing</TableCell>
                       <TableCell className="text-right">

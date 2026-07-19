@@ -17,8 +17,14 @@ import {
 } from '@/shared/components/ui/table';
 import { Loader2, ShieldAlert } from 'lucide-react';
 
-interface ExamItem { id: string; title: string; class?: { className: string; section: string }; dateFrom: string; dateTo: string; isResultDecleared: boolean; }
-
+interface ExamItem {
+  id: string;
+  title: string;
+  class?: { className: string; section: string };
+  dateFrom: string;
+  dateTo: string;
+  isResultDecleared: boolean;
+}
 
 export default function Exams() {
   const { data: exams, isLoading } = useQuery({

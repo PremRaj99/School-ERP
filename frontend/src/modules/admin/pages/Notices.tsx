@@ -20,9 +20,16 @@ import {
 import { Trash2, PlusCircle, Loader2, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface NoticeItem { id: string; title: string; content?: string; description?: string; date: string; }
-interface ApiError { response?: { data?: { message?: string } } }
-
+interface NoticeItem {
+  id: string;
+  title: string;
+  content?: string;
+  description?: string;
+  date: string;
+}
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
 
 const noticeSchema = z.object({
   title: z.string().min(1, 'Title is required'),

@@ -28,9 +28,17 @@ import {
 import { Trash2, PlusCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface StudentItem { id: string; firstName: string; lastName: string; username: string; rollNo: number; class?: { className: string; section: string }; }
-interface ApiError { response?: { data?: { message?: string } } }
-
+interface StudentItem {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  rollNo: number;
+  class?: { className: string; section: string };
+}
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
 
 const studentSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),

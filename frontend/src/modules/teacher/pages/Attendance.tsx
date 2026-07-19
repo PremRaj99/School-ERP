@@ -35,10 +35,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui
 import { Loader2, Plus, Trash2, CalendarRange } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface AttendanceLogItem { id: string; date: string; status: 'Present' | 'Absent' | 'Leave'; }
-interface ClassLogItem { id: string; date: string; class: { className: string; section: string; session: string }; }
-interface ApiError { response?: { data?: { message?: string } } }
-
+interface AttendanceLogItem {
+  id: string;
+  date: string;
+  status: 'Present' | 'Absent' | 'Leave';
+}
+interface ClassLogItem {
+  id: string;
+  date: string;
+  class: { className: string; section: string; session: string };
+}
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
 
 const markAttendanceSchema = z.object({
   className: z.string().min(1, 'Class name is required'),
@@ -125,7 +134,7 @@ export default function Attendance() {
   // Sync loaded details to field array for pre-population
   useEffect(() => {
     if (classDetails && classDetails.class?.students) {
-      const formatted = classDetails.class.students.map((student: { id: string; }) => ({
+      const formatted = classDetails.class.students.map((student: { id: string }) => ({
         studentId: student.id,
         status: 'Present' as const,
       }));

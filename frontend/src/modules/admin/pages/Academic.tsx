@@ -28,9 +28,17 @@ import {
 import { Trash2, PlusCircle, Loader2, CalendarRange } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface AcademicEventItem { id: string; title: string; date: string; category: string; type: string; description?: string; }
-interface ApiError { response?: { data?: { message?: string } } }
-
+interface AcademicEventItem {
+  id: string;
+  title: string;
+  date: string;
+  category: string;
+  type: string;
+  description?: string;
+}
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
 
 const eventSchema = z.object({
   date: z.string().min(1, 'Date is required'),

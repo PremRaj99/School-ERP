@@ -28,9 +28,14 @@ import {
 import { Trash2, PlusCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface SubjectItem { id: string; subjectName: string; subjectCode: string; }
-interface ApiError { response?: { data?: { message?: string } } }
-
+interface SubjectItem {
+  id: string;
+  subjectName: string;
+  subjectCode: string;
+}
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
 
 const subjectSchema = z.object({
   subjectName: z.string().min(1, 'Subject name is required'),

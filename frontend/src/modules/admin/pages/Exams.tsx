@@ -28,9 +28,17 @@ import {
 import { Trash2, PlusCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface ExamItem { id: string; title: string; dateFrom: string; dateTo: string; isResultDecleared: boolean; class?: { className: string; section: string }; }
-interface ApiError { response?: { data?: { message?: string } } }
-
+interface ExamItem {
+  id: string;
+  title: string;
+  dateFrom: string;
+  dateTo: string;
+  isResultDecleared: boolean;
+  class?: { className: string; section: string };
+}
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
 
 const examFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
