@@ -9,9 +9,7 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/lib/*": ["./src/shared/lib/*"],
-      "@/components/*": ["./src/shared/components/*"]
+      "@/*": ["./src/*"]
     },
 
     /* Bundler mode */
@@ -30,5 +28,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.spec.tsx", "src/test-utils/**"]
 }

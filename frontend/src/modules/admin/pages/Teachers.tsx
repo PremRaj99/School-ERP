@@ -1,249 +1,232 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { adminService } from '../services/adminService';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
-import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
+import React, { useState } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/shared/components/ui/dialog';
-import { Trash2, PlusCircle, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
-interface TeacherItem {
-  id: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-  phoneNumber: string;
-  salary: number;
-}
-interface ApiError {
-  response?: { data?: { message?: string } };
-}
-
-const teacherSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  username: z.string().min(3, 'Username must be at least 3 characters'),
-  email: z.string().email('Invalid email address'),
-  phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
-  salary: z.number().min(1, 'Salary must be greater than 0'),
-});
-
-type TeacherFormValues = z.infer<typeof teacherSchema>;
-
-export default function Teachers() {
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-
-  const { data: teachers, isLoading } = useQuery({
-    queryKey: ['admin', 'teachers'],
-    queryFn: adminService.getTeachers,
+export const AdminTeachers: React.FC = () => {
+  const [searchId, setSearchId] = useState('');
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    dob: '',
+    address: '',
+    phone: '',
+    teacherAadhar: '',
+    dateOfJoining: '',
+    about: '',
+    salaryPerMonth: '',
+    qualifications: '',
+    subjectsHandled: '',
+    profilePhoto: '',
   });
 
-  const createMutation = useMutation({
-    mutationFn: adminService.createTeacher,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'teachers'] });
-      toast.success('Teacher created successfully!');
-      setOpen(false);
-      reset();
-    },
-    onError: (err: ApiError) => {
-      toast.error(err.response?.data?.message || 'Failed to create teacher.');
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: adminService.deleteTeacher,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'teachers'] });
-      toast.success('Teacher deleted successfully!');
-    },
-    onError: (err: ApiError) => {
-      toast.error(err.response?.data?.message || 'Failed to delete teacher.');
-    },
-  });
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<TeacherFormValues>({
-    resolver: zodResolver(teacherSchema),
-  });
-
-  const onSubmit = (data: TeacherFormValues) => {
-    createMutation.mutate(data);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this teacher?')) {
-      deleteMutation.mutate(id);
-    }
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Create Teacher:', formData);
+  };
+
+  const handleSearch = () => {
+    console.log('Search Teacher ID:', searchId);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-7xl space-y-6 p-6">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Teachers Manager</h2>
-          <p className="text-muted-foreground">
-            Manage accounts, contacts, and payroll for faculty members.
+          <h1 className="text-2xl font-bold tracking-tight">Teacher Management</h1>
+          <p className="text-muted-foreground text-xs">
+            Create, edit, search, and delete teacher records.
           </p>
         </div>
-
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <PlusCircle className="h-5 w-5" />
-              Add Teacher
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New Teacher</DialogTitle>
-              <DialogDescription>Create a teacher account and specify details.</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="Jane" {...register('firstName')} />
-                  {errors.firstName && (
-                    <p className="text-destructive text-xs">{errors.firstName.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Doe" {...register('lastName')} />
-                  {errors.lastName && (
-                    <p className="text-destructive text-xs">{errors.lastName.message}</p>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input id="username" placeholder="janedoe" {...register('username')} />
-                {errors.username && (
-                  <p className="text-destructive text-xs">{errors.username.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="jane@school.com"
-                  {...register('email')}
-                />
-                {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Phone Number</Label>
-                <Input id="phoneNumber" placeholder="9876543210" {...register('phoneNumber')} />
-                {errors.phoneNumber && (
-                  <p className="text-destructive text-xs">{errors.phoneNumber.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="salary">Monthly Salary</Label>
-                <Input
-                  id="salary"
-                  type="number"
-                  placeholder="50000"
-                  {...register('salary', { valueAsNumber: true })}
-                />
-                {errors.salary && (
-                  <p className="text-destructive text-xs">{errors.salary.message}</p>
-                )}
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? 'Creating...' : 'Create Account'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <Input
+            placeholder="Search Teacher ID (TCH...)"
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+            className="w-full sm:w-64"
+          />
+          <Button onClick={handleSearch} type="button">
+            Search
+          </Button>
+        </div>
       </div>
 
-      <Card className="border-border">
+      <Card>
         <CardHeader>
-          <CardTitle>Teachers List</CardTitle>
+          <CardTitle>Create / Edit Teacher Form</CardTitle>
+          <CardDescription>
+            Enter teacher personal, professional, and subject details.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center p-8">
-              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+        <form onSubmit={handleCreate}>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  placeholder="e.g. Priya"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name (opt)</Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  placeholder="e.g. Singh"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dob">Date of Birth (DD-MM-YYYY)</Label>
+                <Input
+                  id="dob"
+                  name="dob"
+                  placeholder="DD-MM-YYYY"
+                  value={formData.dob}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
-          ) : !teachers || teachers.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">
-              No teachers registered yet.
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Mobile Number</Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  placeholder="10-digit mobile number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="teacherAadhar">Teacher Aadhar (opt)</Label>
+                <Input
+                  id="teacherAadhar"
+                  name="teacherAadhar"
+                  placeholder="12-digit Aadhar"
+                  value={formData.teacherAadhar}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dateOfJoining">Date of Joining (DD-MM-YYYY)</Label>
+                <Input
+                  id="dateOfJoining"
+                  name="dateOfJoining"
+                  placeholder="DD-MM-YYYY"
+                  value={formData.dateOfJoining}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
-          ) : (
-            <div className="overflow-x-auto rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Username</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone Number</TableHead>
-                    <TableHead>Salary</TableHead>
-                    <TableHead className="w-[100px] text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {teachers.map((teach: TeacherItem) => (
-                    <TableRow key={teach.id}>
-                      <TableCell className="font-medium whitespace-nowrap">
-                        {teach.firstName} {teach.lastName}
-                      </TableCell>
-                      <TableCell>{teach.username}</TableCell>
-                      <TableCell>{teach.email}</TableCell>
-                      <TableCell>{teach.phoneNumber}</TableCell>
-                      <TableCell>${teach.salary}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDelete(teach.id)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="salaryPerMonth">Salary Per Month</Label>
+                <Input
+                  id="salaryPerMonth"
+                  name="salaryPerMonth"
+                  type="number"
+                  placeholder="e.g. 45000"
+                  value={formData.salaryPerMonth}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="qualifications">Qualifications</Label>
+                <Input
+                  id="qualifications"
+                  name="qualifications"
+                  placeholder="e.g. M.Sc. Mathematics, B.Ed"
+                  value={formData.qualifications}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subjectsHandled">Subjects Handled (comma-separated)</Label>
+                <Input
+                  id="subjectsHandled"
+                  name="subjectsHandled"
+                  placeholder="e.g. MATH10, SCI10"
+                  value={formData.subjectsHandled}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
-          )}
-        </CardContent>
+
+            <div className="space-y-2">
+              <Label htmlFor="profilePhoto">Profile Photo URL (opt)</Label>
+              <Input
+                id="profilePhoto"
+                name="profilePhoto"
+                placeholder="https://example.com/photo.jpg"
+                value={formData.profilePhoto}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="about">About (opt)</Label>
+              <Textarea
+                id="about"
+                name="about"
+                placeholder="Brief description about the teacher (min 20 characters)"
+                value={formData.about}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address">Address (opt)</Label>
+              <Textarea
+                id="address"
+                name="address"
+                placeholder="Residential address (min 10 characters)"
+                value={formData.address}
+                onChange={handleChange}
+              />
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-wrap gap-2 pt-4">
+            <Button type="submit">Create Teacher</Button>
+            <Button type="button" variant="secondary">
+              Update Teacher
+            </Button>
+            <Button type="button" variant="destructive">
+              Delete Teacher
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );
-}
+};
+
+export default AdminTeachers;

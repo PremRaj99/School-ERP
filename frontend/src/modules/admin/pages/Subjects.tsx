@@ -1,195 +1,103 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { adminService } from '../services/adminService';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
-import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
+import React, { useState } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/shared/components/ui/dialog';
-import { Trash2, PlusCircle, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
-interface SubjectItem {
-  id: string;
-  subjectName: string;
-  subjectCode: string;
-}
-interface ApiError {
-  response?: { data?: { message?: string } };
-}
-
-const subjectSchema = z.object({
-  subjectName: z.string().min(1, 'Subject name is required'),
-  subjectCode: z.string().min(1, 'Subject code is required'),
-});
-
-type SubjectFormValues = z.infer<typeof subjectSchema>;
-
-export default function Subjects() {
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-
-  const { data: subjects, isLoading } = useQuery({
-    queryKey: ['admin', 'subjects'],
-    queryFn: adminService.getSubjects,
+export const AdminSubjects: React.FC = () => {
+  const [formData, setFormData] = useState({
+    subjectName: '',
+    subjectCode: '',
   });
 
-  const createMutation = useMutation({
-    mutationFn: adminService.createSubject,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'subjects'] });
-      toast.success('Subject created successfully!');
-      setOpen(false);
-      reset();
-    },
-    onError: (err: ApiError) => {
-      toast.error(err.response?.data?.message || 'Failed to create subject.');
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: adminService.deleteSubject,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'subjects'] });
-      toast.success('Subject deleted successfully!');
-    },
-    onError: (err: ApiError) => {
-      toast.error(err.response?.data?.message || 'Failed to delete subject.');
-    },
-  });
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<SubjectFormValues>({
-    resolver: zodResolver(subjectSchema),
-  });
-
-  const onSubmit = (data: SubjectFormValues) => {
-    createMutation.mutate(data);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this subject?')) {
-      deleteMutation.mutate(id);
-    }
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Create Subject:', formData);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Subjects Manager</h2>
-          <p className="text-muted-foreground">Manage and assign school courses and subjects.</p>
-        </div>
-
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <PlusCircle className="h-5 w-5" />
-              Add Subject
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New Subject</DialogTitle>
-              <DialogDescription>
-                Enter details to add a new subject to curriculum.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="subjectName">Subject Name</Label>
-                <Input id="subjectName" placeholder="Mathematics" {...register('subjectName')} />
-                {errors.subjectName && (
-                  <p className="text-destructive text-xs">{errors.subjectName.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subjectCode">Subject Code</Label>
-                <Input id="subjectCode" placeholder="MATH101" {...register('subjectCode')} />
-                {errors.subjectCode && (
-                  <p className="text-destructive text-xs">{errors.subjectCode.message}</p>
-                )}
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? 'Creating...' : 'Create Subject'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+    <div className="mx-auto max-w-7xl space-y-6 p-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Subject Management</h1>
+        <p className="text-muted-foreground text-xs">Create, update, and manage subjects.</p>
       </div>
 
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle>Subject List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center p-8">
-              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Add New Subject</CardTitle>
+            <CardDescription>Enter subject name and optional custom subject code.</CardDescription>
+          </CardHeader>
+          <form onSubmit={handleCreate}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="subjectName">Subject Name</Label>
+                <Input
+                  id="subjectName"
+                  name="subjectName"
+                  placeholder="e.g. Mathematics"
+                  value={formData.subjectName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subjectCode">Subject Code (opt - auto-generated if omitted)</Label>
+                <Input
+                  id="subjectCode"
+                  name="subjectCode"
+                  placeholder="e.g. MATH10"
+                  value={formData.subjectCode}
+                  onChange={handleChange}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-wrap gap-2 pt-4">
+              <Button type="submit">Add Subject</Button>
+              <Button type="button" variant="secondary">
+                Update Subject
+              </Button>
+              <Button type="button" variant="destructive">
+                Delete Subject
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Search Subjects</CardTitle>
+            <CardDescription>Look up subjects by name or code</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="searchCode">Subject Code / Name</Label>
+              <Input id="searchCode" placeholder="e.g. SCI10 or Science" />
             </div>
-          ) : !subjects || subjects.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">
-              No subjects found. Add one to get started.
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Subject Name</TableHead>
-                    <TableHead>Subject Code</TableHead>
-                    <TableHead className="w-[100px] text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {subjects.map((sub: SubjectItem) => (
-                    <TableRow key={sub.id}>
-                      <TableCell className="font-medium">{sub.subjectName}</TableCell>
-                      <TableCell>{sub.subjectCode}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDelete(sub.id)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+          <CardFooter className="flex gap-2 pt-4">
+            <Button type="button" className="w-full">
+              Search Subjects
+            </Button>
+            <Button type="button" variant="outline" className="w-full">
+              Get Class-wise Subjects
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
-}
+};
+
+export default AdminSubjects;

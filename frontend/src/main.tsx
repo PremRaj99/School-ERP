@@ -1,10 +1,11 @@
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import '@/shared/css/index.css';
-import { Providers } from '@/shared/utils/provider';
-import { AppRouter } from '@/routes';
+import './shared/common/styles/index.css';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './routes';
 
 createRoot(document.getElementById('root')!).render(
-  <Providers>
-    <AppRouter />
-  </Providers>,
+  <StrictMode>
+    <RouterProvider router={router} />
+  </StrictMode>,
 );

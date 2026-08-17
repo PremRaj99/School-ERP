@@ -1,80 +1,55 @@
-import { useQuery } from '@tanstack/react-query';
-import { studentService } from '../services/studentService';
+import React, { useState } from 'react';
 import {
   Card,
-  CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '@/shared/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/components/ui/table';
-import { Loader2, BookOpen } from 'lucide-react';
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
-interface SubjectItem {
-  id: string;
-  subjectName: string;
-  subjectCode: string;
-}
-
-export default function Subjects() {
-  const { data: subjects, isLoading } = useQuery({
-    queryKey: ['student', 'subjects'],
-    queryFn: studentService.getSubjects,
-  });
+export const StudentSubjects: React.FC = () => {
+  const [search, setSearch] = useState('');
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6 p-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">My Subjects</h2>
-        <p className="text-muted-foreground">
-          List of academic courses enrolled in the current class group.
+        <h1 className="text-2xl font-bold tracking-tight">Enrolled Subjects</h1>
+        <p className="text-muted-foreground text-xs">
+          View all curriculum subjects and codes for your class.
         </p>
       </div>
 
-      <Card className="border-border shadow-sm">
-        <CardHeader className="flex flex-row items-center gap-2">
-          <BookOpen className="h-5 w-5 text-blue-600" />
-          <div>
-            <CardTitle>Enrolled Subjects</CardTitle>
-            <CardDescription>Courses, codes, and details.</CardDescription>
-          </div>
+      <Card className="max-w-md">
+        <CardHeader>
+          <CardTitle>Subject Search</CardTitle>
+          <CardDescription>Filter your registered subjects</CardDescription>
         </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center p-8">
-              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-            </div>
-          ) : !subjects || subjects.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">No subjects enrolled.</div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Subject Name</TableHead>
-                    <TableHead className="text-right">Subject Code</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {subjects.map((sub: SubjectItem) => (
-                    <TableRow key={sub.id}>
-                      <TableCell className="font-semibold">{sub.subjectName}</TableCell>
-                      <TableCell className="text-right">{sub.subjectCode}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="search">Search Subject Name or Code</Label>
+            <Input
+              id="search"
+              placeholder="e.g. Science, MATH10"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
         </CardContent>
+        <CardFooter className="flex gap-2 pt-4">
+          <Button type="button" className="w-full">
+            Search Subjects
+          </Button>
+          <Button type="button" variant="outline" className="w-full">
+            Refresh
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );
-}
+};
+
+export default StudentSubjects;

@@ -1,11 +1,11 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "radix-vega",
+  "style": "base-lyra",
   "rsc": false,
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/shared/css/index.css",
+    "css": "src/shared/common/styles/index.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""

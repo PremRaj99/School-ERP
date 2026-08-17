@@ -1,154 +1,111 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/shared/hooks/useAuth';
+import { createBrowserRouter } from 'react-router-dom';
 
-// Layouts
-import AdminLayout from '@/modules/admin/layouts/AdminLayout';
-import StudentLayout from '@/modules/student/layouts/StudentLayout';
-import TeacherLayout from '@/modules/teacher/layouts/TeacherLayout';
+// Public / Home / Contact / Auth
+import HomePage from '@/modules/Home/pages/HomePage';
+import ContactPage from '@/modules/Contact/pages/ContactPage';
+import LoginPage from '@/modules/Auth/pages/LoginPage';
+import ChangePasswordPage from '@/modules/Auth/pages/ChangePasswordPage';
 
-// Pages
-import LoginPage from '@/modules/auth/pages/LoginPage';
-import AdminDashboard from '@/modules/admin/pages/Dashboard';
-import AdminClasses from '@/modules/admin/pages/Classes';
-import AdminSubjects from '@/modules/admin/pages/Subjects';
-import AdminTeachers from '@/modules/admin/pages/Teachers';
-import AdminStudents from '@/modules/admin/pages/Students';
-import AdminExams from '@/modules/admin/pages/Exams';
-import AdminNotices from '@/modules/admin/pages/Notices';
-import AdminAcademic from '@/modules/admin/pages/Academic';
-import AdminAttendance from '@/modules/admin/pages/Attendance';
+// Admin Module Pages
+import AdminDashboard from '@/modules/Admin/pages/Dashboard';
+import AdminStudents from '@/modules/Admin/pages/Students';
+import AdminTeachers from '@/modules/Admin/pages/Teachers';
+import AdminClasses from '@/modules/Admin/pages/Classes';
+import AdminSubjects from '@/modules/Admin/pages/Subjects';
+import AdminExams from '@/modules/Admin/pages/Exams';
+import AdminNotices from '@/modules/Admin/pages/Notices';
+import AdminAcademic from '@/modules/Admin/pages/Academic';
+import AdminFinance from '@/modules/Admin/pages/Finance';
+import AdminContactMessages from '@/modules/Admin/pages/ContactMessages';
+import AdminAttendance from '@/modules/Admin/pages/Attendance';
 
-// Protected Route Guard
-import TeacherDashboard from '@/modules/teacher/pages/Dashboard';
-import TeacherAttendance from '@/modules/teacher/pages/Attendance';
-import TeacherExams from '@/modules/teacher/pages/Exams';
-import TeacherResults from '@/modules/teacher/pages/Results';
-import TeacherNotices from '@/modules/teacher/pages/Notice';
-import TeacherSalary from '@/modules/teacher/pages/Salary';
+// Student Module Pages
+import StudentDashboard from '@/modules/Student/pages/Dashboard';
+import StudentAttendance from '@/modules/Student/pages/Attendance';
+import StudentSubjects from '@/modules/Student/pages/Subjects';
+import StudentExams from '@/modules/Student/pages/Exams';
+import StudentNotices from '@/modules/Student/pages/Notices';
+import StudentAcademic from '@/modules/Student/pages/Academic';
+import StudentFees from '@/modules/Student/pages/Fees';
+import StudentProfile from '@/modules/Student/pages/Profile';
 
-// Student Pages
-import StudentDashboard from '@/modules/student/pages/Dashboard';
-import StudentAttendance from '@/modules/student/pages/Attendance';
-import StudentSubjects from '@/modules/student/pages/Subjects';
-import StudentExams from '@/modules/student/pages/Exams';
-import StudentNotices from '@/modules/student/pages/Notice';
-import StudentAcademic from '@/modules/student/pages/Academic';
-import StudentFees from '@/modules/student/pages/Fees';
+// Teacher Module Pages
+import TeacherDashboard from '@/modules/Teacher/pages/Dashboard';
+import TeacherAttendance from '@/modules/Teacher/pages/Attendance';
+import TeacherExams from '@/modules/Teacher/pages/Exams';
+import TeacherResults from '@/modules/Teacher/pages/Results';
+import TeacherNotices from '@/modules/Teacher/pages/Notices';
+import TeacherSalary from '@/modules/Teacher/pages/Salary';
+import TeacherProfile from '@/modules/Teacher/pages/Profile';
 
-function ProtectedRoute({ allowedRoles }: { allowedRoles: ('Admin' | 'Teacher' | 'Student')[] }) {
-  const { user, isAuthenticated, isLoading, fetchUser } = useAuth();
+export const router = createBrowserRouter([
+  // Public & Auth
+  {
+    path: '/',
+    element: <HomePage />,
+  },
+  {
+    path: '/contact',
+    element: <ContactPage />,
+  },
+  {
+    path: '/auth/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/auth/change-password',
+    element: <ChangePasswordPage />,
+  },
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      fetchUser();
-    }
-  }, [isAuthenticated, fetchUser]);
+  // Admin Routes
+  {
+    path: '/admin',
+    children: [
+      { path: '', element: <AdminDashboard /> },
+      { path: 'dashboard', element: <AdminDashboard /> },
+      { path: 'students', element: <AdminStudents /> },
+      { path: 'teachers', element: <AdminTeachers /> },
+      { path: 'classes', element: <AdminClasses /> },
+      { path: 'subjects', element: <AdminSubjects /> },
+      { path: 'exams', element: <AdminExams /> },
+      { path: 'notices', element: <AdminNotices /> },
+      { path: 'academic', element: <AdminAcademic /> },
+      { path: 'finance', element: <AdminFinance /> },
+      { path: 'contact', element: <AdminContactMessages /> },
+      { path: 'attendance', element: <AdminAttendance /> },
+    ],
+  },
 
-  if (isLoading) {
-    return (
-      <div className="bg-background flex h-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-          <p className="text-muted-foreground text-sm font-medium">Loading session...</p>
-        </div>
-      </div>
-    );
-  }
+  // Student Routes
+  {
+    path: '/student',
+    children: [
+      { path: '', element: <StudentDashboard /> },
+      { path: 'dashboard', element: <StudentDashboard /> },
+      { path: 'attendance', element: <StudentAttendance /> },
+      { path: 'subjects', element: <StudentSubjects /> },
+      { path: 'exams', element: <StudentExams /> },
+      { path: 'notices', element: <StudentNotices /> },
+      { path: 'academic', element: <StudentAcademic /> },
+      { path: 'fees', element: <StudentFees /> },
+      { path: 'profile', element: <StudentProfile /> },
+    ],
+  },
 
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
-  }
+  // Teacher Routes
+  {
+    path: '/teacher',
+    children: [
+      { path: '', element: <TeacherDashboard /> },
+      { path: 'dashboard', element: <TeacherDashboard /> },
+      { path: 'attendance', element: <TeacherAttendance /> },
+      { path: 'exams', element: <TeacherExams /> },
+      { path: 'results', element: <TeacherResults /> },
+      { path: 'notices', element: <TeacherNotices /> },
+      { path: 'salary', element: <TeacherSalary /> },
+      { path: 'profile', element: <TeacherProfile /> },
+    ],
+  },
+]);
 
-  if (!allowedRoles.includes(user.role)) {
-    // Redirect to their default dashboard if role not allowed
-    return <Navigate to={`/${user.role.toLowerCase()}`} replace />;
-  }
-
-  return <Outlet />;
-}
-
-// Redirect handler for root route "/"
-function RootRedirect() {
-  const { user, isAuthenticated, isLoading, fetchUser } = useAuth();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      fetchUser();
-    }
-  }, [isAuthenticated, fetchUser]);
-
-  if (isLoading) {
-    return (
-      <div className="bg-background flex h-screen items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <Navigate to={`/${user.role.toLowerCase()}`} replace />;
-}
-
-export function AppRouter() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<LoginPage />} />
-
-        {/* Root Redirect */}
-        <Route path="/" element={<RootRedirect />} />
-
-        {/* Admin Portal Protected Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="classes" element={<AdminClasses />} />
-            <Route path="subjects" element={<AdminSubjects />} />
-            <Route path="teachers" element={<AdminTeachers />} />
-            <Route path="students" element={<AdminStudents />} />
-            <Route path="exams" element={<AdminExams />} />
-            <Route path="notices" element={<AdminNotices />} />
-            <Route path="academic" element={<AdminAcademic />} />
-            <Route path="attendance" element={<AdminAttendance />} />
-          </Route>
-        </Route>
-
-        {/* Student Portal Protected Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['Student']} />}>
-          <Route path="/student" element={<StudentLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<StudentDashboard />} />
-            <Route path="attendance" element={<StudentAttendance />} />
-            <Route path="subjects" element={<StudentSubjects />} />
-            <Route path="exams" element={<StudentExams />} />
-            <Route path="notices" element={<StudentNotices />} />
-            <Route path="academic" element={<StudentAcademic />} />
-            <Route path="fees" element={<StudentFees />} />
-          </Route>
-        </Route>
-
-        {/* Teacher Portal Protected Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['Teacher']} />}>
-          <Route path="/teacher" element={<TeacherLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<TeacherDashboard />} />
-            <Route path="attendance" element={<TeacherAttendance />} />
-            <Route path="exams" element={<TeacherExams />} />
-            <Route path="notices" element={<TeacherNotices />} />
-            <Route path="results" element={<TeacherResults />} />
-            <Route path="salary" element={<TeacherSalary />} />
-          </Route>
-        </Route>
-
-        {/* Fallback Catch All */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
-  );
-}
+export default router;
