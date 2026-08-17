@@ -46,4 +46,29 @@ export class AdminExamService {
       throw new NotFoundError();
     }
   }
+
+  static async setResultDeclaration(examId: string, isResultDecleared: boolean) {
+    const exam = await prisma.exam.findUnique({
+      where: { id: examId },
+      include: { examSubjects: { select: { isMarked: true } } },
+    });
+
+    if (!exam) {
+      throw new NotFoundError();
+    }
+
+    if (isResultDecleared) {
+      const hasUnmarkedSubject = exam.examSubjects.some((subject) => !subject.isMarked);
+      if (exam.examSubjects.length === 0 || hasUnmarkedSubject) {
+        throw new ValidationError(
+          'All subjects for this exam must be marked before the result can be declared.',
+        );
+      }
+    }
+
+    await prisma.exam.update({
+      where: { id: examId },
+      data: { isResultDecleared },
+    });
+  }
 }

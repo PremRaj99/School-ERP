@@ -1,8 +1,15 @@
 import prisma from '@/core/db';
 import { NotFoundError } from '@/core/errors';
-import { timeTableFormattedData } from '../helpers';
+import {
+  getCurrentMonthString,
+  getMonthStartEnd,
+  getTodayDate,
+  timeTableFormattedData,
+} from '../helpers';
 import { z } from 'zod';
 import { CreateClassAttendanceSchema, UpdateClassAttendanceSchema } from '../types';
+
+const WEEKDAY_BY_JS_DAY = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'] as const;
 
 export class TeacherService {
   static async getTeacherProfile(userId: string) {
@@ -169,5 +176,112 @@ export class TeacherService {
         });
       }
     });
+  }
+
+  static async getDashboard(userId: string) {
+    const teacher = await prisma.teacher.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        teacherId: true,
+        firstName: true,
+        lastName: true,
+        subjectHandled: true,
+        profilePhoto: true,
+      },
+    });
+
+    if (!teacher) {
+      throw new NotFoundError();
+    }
+
+    const today = getTodayDate();
+    const { startDate, endDate } = getMonthStartEnd(getCurrentMonthString());
+    const todayWeekday = WEEKDAY_BY_JS_DAY[today.getUTCDay()];
+
+    const [attendanceGroups, todaySchedule, pendingResultEntries, recentNotices, pendingSalary] =
+      await Promise.all([
+        prisma.teacherAttendance.groupBy({
+          by: ['status'],
+          where: { teacherId: teacher.id, date: { gte: startDate, lt: endDate } },
+          _count: { _all: true },
+        }),
+        todayWeekday === 'SUN'
+          ? Promise.resolve([])
+          : prisma.timeTable.findMany({
+              where: { teacherId: teacher.id, weekday: todayWeekday },
+              orderBy: { period: 'asc' },
+              select: {
+                period: true,
+                class: { select: { className: true, section: true } },
+                subject: { select: { subjectCode: true, subjectName: true } },
+              },
+            }),
+        prisma.examSubject.findMany({
+          where: { teacherId: teacher.id, isMarked: false },
+          orderBy: { date: 'asc' },
+          take: 5,
+          select: {
+            id: true,
+            date: true,
+            exam: {
+              select: {
+                id: true,
+                title: true,
+                class: { select: { className: true, section: true } },
+              },
+            },
+            subject: { select: { subjectCode: true, subjectName: true } },
+          },
+        }),
+        prisma.notice.findMany({
+          where: { targetRole: { in: ['Teacher', 'All'] } },
+          orderBy: { date: 'desc' },
+          take: 5,
+          select: { id: true, title: true, date: true, targetRole: true },
+        }),
+        prisma.transaction.aggregate({
+          where: { status: 'Pending', teacherSalary: { teacherId: teacher.id } },
+          _count: { _all: true },
+          _sum: { finalAmount: true },
+        }),
+      ]);
+
+    const present = attendanceGroups.find((a) => a.status === 'Present')?._count._all ?? 0;
+    const absent = attendanceGroups.find((a) => a.status === 'Absent')?._count._all ?? 0;
+    const leave = attendanceGroups.find((a) => a.status === 'Leave')?._count._all ?? 0;
+
+    return {
+      profile: {
+        teacherId: teacher.teacherId,
+        firstName: teacher.firstName,
+        lastName: teacher.lastName,
+        subjectHandled: teacher.subjectHandled,
+        profilePhoto: teacher.profilePhoto,
+      },
+      attendanceThisMonth: { present, absent, leave, total: present + absent + leave },
+      todaySchedule: todaySchedule.map((entry) => ({
+        periodNumber: entry.period,
+        className: entry.class.className,
+        section: entry.class.section,
+        subjectCode: entry.subject.subjectCode,
+        subjectName: entry.subject.subjectName,
+      })),
+      pendingResultEntries: pendingResultEntries.map((entry) => ({
+        examSubjectId: entry.id,
+        examId: entry.exam.id,
+        examTitle: entry.exam.title,
+        className: entry.exam.class.className,
+        section: entry.exam.class.section,
+        subjectCode: entry.subject.subjectCode,
+        subjectName: entry.subject.subjectName,
+        date: entry.date,
+      })),
+      recentNotices,
+      pendingSalary: {
+        count: pendingSalary._count._all,
+        totalAmount: pendingSalary._sum.finalAmount ?? 0,
+      },
+    };
   }
 }

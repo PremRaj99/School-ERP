@@ -1,7 +1,7 @@
 import { validateSchema } from '@/core/errors';
 import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from '@/core/responses';
 import { NextFunction, Request, Response } from 'express';
-import { CreateExamSchema, ObjectIdSchema } from '../types';
+import { CreateExamSchema, DeclareResultSchema, ObjectIdSchema } from '../types';
 import { AdminExamService } from '../services/exam.service';
 
 export const getExams = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
@@ -20,3 +20,12 @@ export const deleteExam = asyncHandler(async (req: Request, res: Response, _next
   await AdminExamService.deleteExam(examId);
   res.status(202).json(new AcceptedResponse());
 });
+
+export const updateExamResultStatus = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const examId = validateSchema(ObjectIdSchema, String(req.params.examId));
+    const { isResultDecleared } = validateSchema(DeclareResultSchema, req.body);
+    await AdminExamService.setResultDeclaration(examId, isResultDecleared);
+    res.status(202).json(new AcceptedResponse());
+  },
+);

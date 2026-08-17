@@ -1,5 +1,6 @@
 export * from './generateId';
 export * from './generateSubjectCode';
+export * from './getCurrentMonthString';
 export * from './getCurrentSessionYear';
 export * from './getDateString';
 export * from './getGrade';
@@ -7,5 +8,6 @@ export * from './getGroupedSubject';
 export * from './getMonthStartEnd';
 export * from './getNewStudentSerialNumber';
 export * from './getNewTeacherSerialNumber';
+export * from './getTodayDate';
 export * from './storeExamData';
 export * from './timeTableFormattedData';

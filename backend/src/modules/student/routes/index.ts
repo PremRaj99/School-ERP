@@ -1,6 +1,7 @@
 import express from 'express';
 import { verifyJWT, StudentOnly } from '@/core/middlewares/auth.middleware';
 import { getStudent } from '../controllers/student.controller';
+import { getDashboard } from '../controllers/dashboard.controller';
 import { attendanceRouter } from './attendance.route';
 import { subjectRouter } from './subject.route';
 import { examRouter } from './exam.route';
@@ -15,6 +16,7 @@ studentRouter.use(verifyJWT);
 studentRouter.use(StudentOnly);
 
 studentRouter.get('/', getStudent);
+studentRouter.get('/dashboard', getDashboard);
 studentRouter.use('/attendance', attendanceRouter);
 studentRouter.use('/subject', subjectRouter);
 studentRouter.use('/exam', examRouter);

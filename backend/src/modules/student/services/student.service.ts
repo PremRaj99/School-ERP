@@ -1,6 +1,11 @@
 import prisma from '@/core/db';
 import { NotFoundError } from '@/core/errors';
-import { getMonthStartEnd, timeTableFormattedData } from '../helpers';
+import {
+  getCurrentMonthString,
+  getMonthStartEnd,
+  getTodayDate,
+  timeTableFormattedData,
+} from '../helpers';
 
 export class StudentService {
   static async getStudentProfile(userId: string) {
@@ -212,5 +217,77 @@ export class StudentService {
 
   static async getAcademicCalendar() {
     return await prisma.academicCalendar.findMany();
+  }
+
+  static async getDashboard(userId: string) {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: {
+        studentId: true,
+        firstName: true,
+        lastName: true,
+        rollNo: true,
+        profilePhoto: true,
+        classId: true,
+        id: true,
+        class: { select: { className: true, section: true, session: true } },
+      },
+    });
+
+    if (!student) {
+      throw new NotFoundError();
+    }
+
+    const today = getTodayDate();
+    const { startDate, endDate } = getMonthStartEnd(getCurrentMonthString());
+
+    const [attendanceGroups, upcomingExams, recentNotices, pendingFees] = await Promise.all([
+      prisma.studentAttendance.groupBy({
+        by: ['status'],
+        where: { studentId: student.id, date: { gte: startDate, lt: endDate } },
+        _count: { _all: true },
+      }),
+      prisma.exam.findMany({
+        where: { classId: student.classId, dateFrom: { gte: today } },
+        orderBy: { dateFrom: 'asc' },
+        take: 5,
+        select: { id: true, title: true, dateFrom: true, dateTo: true },
+      }),
+      prisma.notice.findMany({
+        where: { targetRole: { in: ['Student', 'All'] } },
+        orderBy: { date: 'desc' },
+        take: 5,
+        select: { id: true, title: true, date: true, targetRole: true },
+      }),
+      prisma.transaction.aggregate({
+        where: { status: 'Pending', studentFee: { studentId: student.id } },
+        _count: { _all: true },
+        _sum: { finalAmount: true },
+      }),
+    ]);
+
+    const present = attendanceGroups.find((a) => a.status === 'Present')?._count._all ?? 0;
+    const absent = attendanceGroups.find((a) => a.status === 'Absent')?._count._all ?? 0;
+    const leave = attendanceGroups.find((a) => a.status === 'Leave')?._count._all ?? 0;
+
+    return {
+      profile: {
+        studentId: student.studentId,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        rollNo: student.rollNo,
+        profilePhoto: student.profilePhoto,
+        className: student.class?.className,
+        section: student.class?.section,
+        session: student.class?.session,
+      },
+      attendanceThisMonth: { present, absent, leave, total: present + absent + leave },
+      upcomingExams,
+      recentNotices,
+      pendingFees: {
+        count: pendingFees._count._all,
+        totalAmount: pendingFees._sum.finalAmount ?? 0,
+      },
+    };
   }
 }

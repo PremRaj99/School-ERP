@@ -247,6 +247,59 @@ export const UpdateTimeTableSchema = z.object({
   teacherId: teacherIdSchema.optional(),
 });
 
+// Result Declaration
+export const DeclareResultSchema = z.object({
+  isResultDecleared: z.boolean({ message: 'isResultDecleared is required.' }),
+});
+
+// Finance — Transaction / StudentFee / TeacherSalary
+export const txnStatusSchema = z.enum(['Paid', 'Pending', 'Failed']);
+export const txnCategorySchema = z.enum(['Utility', 'Infrastructure', 'Fee', 'Salary', 'Other']);
+
+const feeBreakdownItemSchema = z.object({
+  feeType: z
+    .string({ message: 'Fee type is required.' })
+    .min(2, 'Fee type must be at least 2 characters long.'),
+  amount: z
+    .number({ message: 'Amount is required.' })
+    .positive('Amount must be a positive number.'),
+});
+
+export const CreateStudentFeeSchema = z.object({
+  studentId: studentIdSchema,
+  month: monthSchema,
+  title: z.string().min(2, 'Title must be at least 2 characters long.').optional(),
+  feeBreakdown: z
+    .array(feeBreakdownItemSchema, { message: 'Fee breakdown is required.' })
+    .min(1, 'At least one fee breakdown item is required.'),
+});
+
+export const CreateTeacherSalarySchema = z.object({
+  teacherId: teacherIdSchema,
+  month: monthSchema,
+  amount: z
+    .number({ message: 'Amount must be a number.' })
+    .positive('Amount must be a positive number.')
+    .optional(),
+});
+
+export const UpdateTransactionStatusSchema = z.object({
+  status: txnStatusSchema,
+});
+
+export const CreateTransactionSchema = z.object({
+  title: z
+    .string({ message: 'Title is required.' })
+    .min(2, 'Title must be at least 2 characters long.'),
+  finalAmount: z
+    .number({ message: 'Amount is required.' })
+    .positive('Amount must be a positive number.'),
+  category: txnCategorySchema,
+  status: txnStatusSchema.optional(),
+});
+
+export const UpdateTransactionSchema = CreateTransactionSchema.partial();
+
 // TypeScript types
 export type CreateTeacherInput = z.infer<typeof CreateTeacherSchema>;
 export type UpdateTeacherInput = z.infer<typeof UpdateTeacherSchema>;
@@ -258,3 +311,9 @@ export type UpdateSubjectInput = z.infer<typeof UpdateSubjectSchema>;
 export type CreateNoticeInput = z.infer<typeof CreateNoticeSchema>;
 export type CreateAcademicCalendarInput = z.infer<typeof CreatAacademicCalendarSchema>;
 export type UpdateTimeTableInput = z.infer<typeof UpdateTimeTableSchema>;
+export type DeclareResultInput = z.infer<typeof DeclareResultSchema>;
+export type CreateStudentFeeInput = z.infer<typeof CreateStudentFeeSchema>;
+export type CreateTeacherSalaryInput = z.infer<typeof CreateTeacherSalarySchema>;
+export type UpdateTransactionStatusInput = z.infer<typeof UpdateTransactionStatusSchema>;
+export type CreateTransactionInput = z.infer<typeof CreateTransactionSchema>;
+export type UpdateTransactionInput = z.infer<typeof UpdateTransactionSchema>;

@@ -159,6 +159,8 @@ model TeacherSalary {
   transaction   Transaction @relation(fields: [transactionId], references: [id])
   transactionId String      @unique @db.ObjectId
   month         DateTime
+
+  @@unique([teacherId, month])
 }
 
 model Transaction {
