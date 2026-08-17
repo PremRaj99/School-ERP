@@ -271,7 +271,17 @@ Admin-only ledger covering student fee records, teacher salary records, and gene
 - `PUT /admin/finance/transaction/:transactionId` — update title/amount/category/status.
 - `DELETE /admin/finance/transaction/:transactionId` — 400 if the transaction is linked to a fee/salary record.
 
-### 2.10 Attendance — `Attendance.tsx`
+### 2.10 Contact Messages *(new — no page scaffolded yet, API ready)*
+Admin-only inbox for messages submitted via the public Contact Us form (§1.2). Read + delete only — messages are created by the public endpoint, not by Admin.
+
+**List/Detail fields**: `name`, `email`, `mobile`, `message`.
+
+**APIs**
+- `GET /admin/contact` — list all submitted messages.
+- `GET /admin/contact/:contactId` — detail.
+- `DELETE /admin/contact/:contactId` — delete (e.g. once handled).
+
+### 2.11 Attendance — `Attendance.tsx`
 **Teacher attendance** management by Admin (class-wise *student* attendance is marked by Teachers themselves — see §4.2).
 
 | Field | Type | Validation |
@@ -452,15 +462,3 @@ Read-only salary/payment history.
 
 ### Session refresh *(silent, axios interceptor)*
 **API**: `POST /user/refresh` (also `POST /auth/refresh` alias).
-
----
-
-## 6. Known Gaps vs. current backend
-
-1. ~~No Finance module~~ — **Done.** `Admin → Finance` API added: `/admin/finance/student-fee`, `/admin/finance/teacher-salary`, `/admin/finance/transaction` (§2.9). No frontend page built yet (backend-only per current scope) — `Students`/`Teacher` fee/salary views (§3.7, §4.6) now have real data to point at.
-2. ~~No "declare result" action~~ — **Done.** `PUT /admin/exam/:examId/declare-result` added (§2.6), gated on all subjects being marked.
-3. ~~No dashboard aggregate endpoints~~ — **Done.** `GET /admin/dashboard`, `GET /student/dashboard`, `GET /teacher/dashboard` added (§2.1, §3.1, §4.1).
-4. **Dev-only Log Viewer** — `GET /log` (EJS-rendered, `NODE_ENV=development` only) with `page`, `limit`, `search` query params — an internal request-log inspector, not part of the end-user app; mentioned here for completeness since it's the "real-time log monitoring" feature from an earlier commit.
-5. **Contact Us page** — `POST /auth/contact` is implemented backend-side but has no corresponding public frontend page yet (deferred — not selected for this round).
-6. **No frontend for the three new backend features above** — routes/services/controllers exist and are typechecked, but no React pages/services were built (out of scope for this pass — "backend API only").
-7. **Schema change needs a push** — `TeacherSalary` gained `@@unique([teacherId, month])` to stop duplicate salary rows for the same teacher/month. Run `npx prisma generate && npx prisma db push` against your Mongo instance to apply it before using the finance endpoints.

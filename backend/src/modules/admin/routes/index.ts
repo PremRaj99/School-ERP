@@ -10,6 +10,7 @@ import { noticeRouter } from './notice.route';
 import { academicRouter } from './academic.route';
 import { attendanceRouter } from './attendance.route';
 import { financeRouter } from './finance.route';
+import { contactRouter } from './contact.route';
 
 const adminRouter = express.Router();
 
@@ -27,5 +28,6 @@ adminRouter.use('/notice', noticeRouter);
 adminRouter.use('/academic', academicRouter);
 adminRouter.use('/attendance', attendanceRouter);
 adminRouter.use('/finance', financeRouter);
+adminRouter.use('/contact', contactRouter);
 
 export { adminRouter };
