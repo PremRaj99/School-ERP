@@ -1,166 +1,114 @@
 import React, { useState } from 'react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { teacherService } from '@/lib/services/teacher.service';
-import type { Notice } from '@/lib/types';
-import { getErrorMessage } from '@/lib/api';
-import { toast } from 'sonner';
+import { Calendar, Search, Pin } from 'lucide-react';
+
+const facultyNotices = [
+  {
+    title: 'Curriculum Progress Review & Department Meeting',
+    desc: 'All department heads are requested to assemble in Conference Room B for syllabus progression and examination question paper submission.',
+    date: '10-04-2025',
+    target: 'Teacher',
+    isPinned: true,
+  },
+  {
+    title: 'Annual Sports & Athletics Meet 2026',
+    desc: 'Faculty members assigned to track and field duty are requested to attend the briefing session in the sports pavilion this Friday.',
+    date: '08-04-2025',
+    target: 'All',
+    isPinned: true,
+  },
+  {
+    title: 'Digital Evaluation Portal Guidelines',
+    desc: 'Instructions on uploading term marks and entering letter grades via the Teacher Portal before the result declaration deadline.',
+    date: '02-04-2025',
+    target: 'Teacher',
+    isPinned: false,
+  },
+];
 
 export const TeacherNotices: React.FC = () => {
-  const [noticeId, setNoticeId] = useState('');
-  const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [notices, setNotices] = useState<Notice[] | null>(null);
-  const [activeNotice, setActiveNotice] = useState<Notice | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const handleFetchNotices = async () => {
-    setLoading(true);
-    try {
-      const res = await teacherService.getNotices();
-      setNotices(Array.isArray(res.data) ? res.data : []);
-      toast.success(res.message || 'Staff notices retrieved');
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFetchDetail = async () => {
-    if (!noticeId) {
-      toast.error('Enter Notice ID');
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await teacherService.getNoticeById(noticeId);
-      setActiveNotice(res.data);
-      toast.success('Notice loaded');
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filtered = notices?.filter((n) => {
-    const q = search.toLowerCase();
-    return n.title?.toLowerCase().includes(q) || n.description?.toLowerCase().includes(q);
-  });
+  const filteredNotices = facultyNotices.filter((n) =>
+    `${n.title} ${n.desc}`.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Staff Notice Board</h1>
-        <p className="text-muted-foreground text-xs">
-          Official communications, administrative announcements, and guidelines.
-        </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-extrabold tracking-tight">
+              Faculty Circulars & Directives
+            </h1>
+            <Badge variant="outline" className="border-indigo-500/30 text-xs text-indigo-600">
+              Staff Notice Board
+            </Badge>
+          </div>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            Official administrative announcements and academic directives for teaching faculty.
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Search & Load Notices</CardTitle>
-            <CardDescription>Filter notices targeted to Teachers and Staff</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="search">Search Keywords</Label>
-              <Input
-                id="search"
-                placeholder="e.g. Meeting, Schedule, Holiday"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <Button onClick={handleFetchNotices} disabled={loading} className="w-full">
-              {loading ? 'Loading...' : 'Fetch Staff Notices'}
-            </Button>
-            {notices && (
-              <div className="max-h-48 space-y-2 overflow-y-auto pt-2">
-                {filtered && filtered.length > 0 ? (
-                  filtered.map((n, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between rounded border p-2 text-xs"
-                    >
-                      <div>
-                        <p className="font-semibold">{n.title}</p>
-                        <p className="text-muted-foreground">{n.date}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setNoticeId(n.id || n._id || '')}
-                      >
-                        Select
-                      </Button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground text-xs">No matching circulars.</p>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Search Bar */}
+      <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+        <CardContent className="p-4">
+          <div className="relative w-full">
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+            <Input
+              placeholder="Search faculty circulars..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-9 pl-9 text-xs"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>View Notice Detail</CardTitle>
-            <CardDescription>
-              Open notice by ID to read circular description and download attachments
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="noticeId">Notice ID</Label>
-              <Input
-                id="noticeId"
-                placeholder="24-character ObjectId"
-                value={noticeId}
-                onChange={(e) => setNoticeId(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-            {activeNotice && (
-              <div className="bg-muted/40 space-y-2 rounded border p-3 text-xs">
-                <h4 className="text-sm font-bold">{activeNotice.title}</h4>
-                <p className="text-muted-foreground">Published: {activeNotice.date}</p>
-                <p>{activeNotice.description || 'No description provided.'}</p>
-                {activeNotice.fileUrl && (
-                  <a
-                    href={activeNotice.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary underline"
+      {/* Notices Grid */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {filteredNotices.map((notice, idx) => (
+          <Card
+            key={idx}
+            className="border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Badge
+                    variant="secondary"
+                    className="bg-emerald-50 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
                   >
-                    Download Attachment
-                  </a>
-                )}
+                    Target: {notice.target}
+                  </Badge>
+                  {notice.isPinned && (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-500/30 text-[10px] text-amber-600"
+                    >
+                      <Pin className="mr-1 h-2.5 w-2.5" />
+                      Pinned
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
+                  <Calendar className="h-3 w-3 text-indigo-500" />
+                  <span>{notice.date}</span>
+                </span>
               </div>
-            )}
-          </CardContent>
-          <CardFooter className="pt-4">
-            <Button
-              onClick={handleFetchDetail}
-              disabled={loading}
-              variant="secondary"
-              className="w-full"
-            >
-              {loading ? 'Loading...' : 'View Notice'}
-            </Button>
-          </CardFooter>
-        </Card>
+              <CardTitle className="mt-2 text-base font-bold text-slate-900 dark:text-white">
+                {notice.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground text-xs leading-relaxed">
+              {notice.desc}
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

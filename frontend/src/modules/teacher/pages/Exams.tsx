@@ -1,178 +1,132 @@
-import React, { useState } from 'react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { teacherService } from '@/lib/services/teacher.service';
-import type { Exam, ExamClassGroup, ExamSubjectInfo } from '@/lib/types';
-import { getErrorMessage } from '@/lib/api';
-import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
+import { Award, ArrowRight } from 'lucide-react';
+
+const teacherExamSchedule = [
+  {
+    examTitle: 'Mid-Term Assessment 2025-2026',
+    subject: 'Mathematics (MATH101)',
+    class: 'Class 10-A',
+    date: '15-10-2025',
+    time: '09:00 - 12:00 PM',
+    room: 'Hall 1',
+    status: 'Ready for Grading',
+  },
+  {
+    examTitle: 'Mid-Term Assessment 2025-2026',
+    subject: 'Applied Calculus (CAL201)',
+    class: 'Class 11-A',
+    date: '18-10-2025',
+    time: '09:00 - 12:00 PM',
+    room: 'Hall 3',
+    status: 'Grading Completed',
+  },
+  {
+    examTitle: 'Pre-Board Examination Series 1',
+    subject: 'Mathematics (MATH101)',
+    class: 'Class 10-A',
+    date: '10-12-2025',
+    time: '09:00 - 12:00 PM',
+    room: 'Hall 1',
+    status: 'Upcoming Exam',
+  },
+];
 
 export const TeacherExams: React.FC = () => {
-  const [examId, setExamId] = useState('');
-  const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [exams, setExams] = useState<Exam[] | null>(null);
-  const [examDetail, setExamDetail] = useState<Exam | null>(null);
-
-  const handleFetchExams = async () => {
-    setLoading(true);
-    try {
-      const res = await teacherService.getExams();
-      setExams(Array.isArray(res.data) ? res.data : []);
-      toast.success(res.message || 'Exams refreshed');
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFetchExamDetail = async () => {
-    if (!examId) {
-      toast.error('Enter Exam ID to inspect');
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await teacherService.getExamDetail(examId);
-      setExamDetail(res.data);
-      toast.success('Exam details loaded');
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filtered = exams?.filter((e) => {
-    const q = search.toLowerCase();
-    return e.title?.toLowerCase().includes(q);
-  });
+  const navigate = useNavigate();
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Assigned Examinations</h1>
-        <p className="text-muted-foreground text-xs">
-          View assigned exam schedules and grading deadlines.
-        </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-extrabold tracking-tight">
+              Faculty Examination Duty & Schedules
+            </h1>
+            <Badge variant="outline" className="border-indigo-500/30 text-xs text-indigo-600">
+              Invigilation & Evaluation
+            </Badge>
+          </div>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            Monitor assigned exam dates, invigilation duty halls, and evaluate submission sheets.
+          </p>
+        </div>
+
+        <Button
+          onClick={() => navigate('/teacher/results')}
+          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+        >
+          <Award className="h-3.5 w-3.5" />
+          <span>Open Grading Sheet</span>
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Assigned Exams</CardTitle>
-            <CardDescription>Search and filter exam datesheets</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="search">Search Exams</Label>
-              <Input
-                id="search"
-                placeholder="e.g. Mid-Term, Class 10"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <Button onClick={handleFetchExams} disabled={loading} className="w-full">
-              {loading ? 'Refreshing...' : 'Load Assigned Exams'}
-            </Button>
-            {exams && (
-              <div className="max-h-48 space-y-2 overflow-y-auto pt-2">
-                {filtered && filtered.length > 0 ? (
-                  filtered.map((e, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between rounded border p-2 text-xs"
-                    >
-                      <div>
-                        <p className="font-semibold">{e.title}</p>
-                        <p className="text-muted-foreground">
-                          {e.dateFrom} - {e.dateTo}
-                        </p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setExamId(e.id || e._id || '')}
-                      >
-                        Select
-                      </Button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground text-xs">No assigned exams found.</p>
-                )}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {teacherExamSchedule.map((item, idx) => (
+          <Card
+            key={idx}
+            className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <Badge variant="secondary" className="text-[10px]">
+                  {item.class}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] ${
+                    item.status === 'Grading Completed'
+                      ? 'border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                      : item.status === 'Ready for Grading'
+                        ? 'border-indigo-500/30 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
+                        : 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300'
+                  }`}
+                >
+                  {item.status}
+                </Badge>
               </div>
-            )}
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Exam Detail & Subject Schedule</CardTitle>
-            <CardDescription>Check subject marking status for a specific Exam ID</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="examId">Exam ID</Label>
-              <Input
-                id="examId"
-                placeholder="24-character Exam ObjectId"
-                value={examId}
-                onChange={(e) => setExamId(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-            {examDetail && (
-              <div className="bg-muted/40 space-y-2 rounded border p-3 text-xs">
-                <h4 className="font-bold">{examDetail.title}</h4>
-                <p>
-                  Status:{' '}
-                  {examDetail.isResultDecleared ? 'Results Declared' : 'Grading in Progress'}
-                </p>
-                {examDetail.exams && (
-                  <div className="space-y-1 border-t pt-1">
-                    <p className="font-semibold">Classes & Subjects:</p>
-                    {examDetail.exams.map((ex: ExamClassGroup, idx: number) => (
-                      <div key={idx} className="rounded border p-1">
-                        <p className="font-medium">
-                          Class {ex.className}-{ex.section}
-                        </p>
-                        {ex.subjects?.map((sub: ExamSubjectInfo, sIdx: number) => (
-                          <p key={sIdx} className="text-muted-foreground flex justify-between">
-                            <span>
-                              {sub.subjectCode} ({sub.date})
-                            </span>
-                            <span>{sub.isMarked ? 'Graded' : 'Pending'}</span>
-                          </p>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <CardTitle className="mt-2 text-base font-bold text-slate-900 dark:text-white">
+                {item.examTitle}
+              </CardTitle>
+              <CardDescription className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                {item.subject}
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="flex-1 space-y-3 pt-0 text-xs">
+              <div className="space-y-1 rounded-lg bg-slate-50 p-2.5 dark:bg-zinc-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Exam Date:</span>
+                  <span className="font-semibold">{item.date}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Timing:</span>
+                  <span>{item.time}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Assigned Venue:</span>
+                  <span className="font-semibold">{item.room}</span>
+                </div>
               </div>
-            )}
-          </CardContent>
-          <CardFooter className="pt-4">
-            <Button
-              onClick={handleFetchExamDetail}
-              disabled={loading}
-              variant="secondary"
-              className="w-full"
-            >
-              {loading ? 'Fetching...' : 'View Exam Subjects'}
-            </Button>
-          </CardFooter>
-        </Card>
+
+              <div className="border-t border-slate-100 pt-2 dark:border-zinc-800">
+                <Button
+                  size="sm"
+                  className="h-8 w-full bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                  onClick={() => navigate('/teacher/results')}
+                >
+                  <span>Evaluate & Enter Marks</span>
+                  <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

@@ -1,4 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
+import {
+  PublicRouteWrapper,
+  AdminRouteWrapper,
+  TeacherRouteWrapper,
+  StudentRouteWrapper,
+} from '@/components/layout/route-wrappers';
 
 // Public / Home / Contact / Auth
 import HomePage from '@/modules/Home/pages/HomePage';
@@ -39,15 +45,17 @@ import TeacherSalary from '@/modules/Teacher/pages/Salary';
 import TeacherProfile from '@/modules/Teacher/pages/Profile';
 
 export const router = createBrowserRouter([
-  // Public & Auth
+  // Public Pages (Home, Contact)
   {
     path: '/',
-    element: <HomePage />,
+    element: <PublicRouteWrapper />,
+    children: [
+      { path: '', element: <HomePage /> },
+      { path: 'contact', element: <ContactPage /> },
+    ],
   },
-  {
-    path: '/contact',
-    element: <ContactPage />,
-  },
+
+  // Auth Pages
   {
     path: '/auth/login',
     element: <LoginPage />,
@@ -57,9 +65,10 @@ export const router = createBrowserRouter([
     element: <ChangePasswordPage />,
   },
 
-  // Admin Routes
+  // Admin Portal Routes
   {
     path: '/admin',
+    element: <AdminRouteWrapper />,
     children: [
       { path: '', element: <AdminDashboard /> },
       { path: 'dashboard', element: <AdminDashboard /> },
@@ -76,9 +85,26 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Student Routes
+  // Teacher Portal Routes
+  {
+    path: '/teacher',
+    element: <TeacherRouteWrapper />,
+    children: [
+      { path: '', element: <TeacherDashboard /> },
+      { path: 'dashboard', element: <TeacherDashboard /> },
+      { path: 'attendance', element: <TeacherAttendance /> },
+      { path: 'exams', element: <TeacherExams /> },
+      { path: 'results', element: <TeacherResults /> },
+      { path: 'notices', element: <TeacherNotices /> },
+      { path: 'salary', element: <TeacherSalary /> },
+      { path: 'profile', element: <TeacherProfile /> },
+    ],
+  },
+
+  // Student Portal Routes
   {
     path: '/student',
+    element: <StudentRouteWrapper />,
     children: [
       { path: '', element: <StudentDashboard /> },
       { path: 'dashboard', element: <StudentDashboard /> },
@@ -89,21 +115,6 @@ export const router = createBrowserRouter([
       { path: 'academic', element: <StudentAcademic /> },
       { path: 'fees', element: <StudentFees /> },
       { path: 'profile', element: <StudentProfile /> },
-    ],
-  },
-
-  // Teacher Routes
-  {
-    path: '/teacher',
-    children: [
-      { path: '', element: <TeacherDashboard /> },
-      { path: 'dashboard', element: <TeacherDashboard /> },
-      { path: 'attendance', element: <TeacherAttendance /> },
-      { path: 'exams', element: <TeacherExams /> },
-      { path: 'results', element: <TeacherResults /> },
-      { path: 'notices', element: <TeacherNotices /> },
-      { path: 'salary', element: <TeacherSalary /> },
-      { path: 'profile', element: <TeacherProfile /> },
     ],
   },
 ]);

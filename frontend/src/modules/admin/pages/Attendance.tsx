@@ -1,200 +1,208 @@
 import React, { useState } from 'react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { adminService } from '@/lib/services/admin.service';
-import { getErrorMessage } from '@/lib/api';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { toast } from 'sonner';
 
+const sampleClassAttendance = [
+  {
+    className: '10',
+    section: 'A',
+    total: 42,
+    present: 40,
+    absent: 2,
+    leave: 0,
+    markedBy: 'Meenakshi S.',
+  },
+  {
+    className: '10',
+    section: 'B',
+    total: 40,
+    present: 38,
+    absent: 1,
+    leave: 1,
+    markedBy: 'Vikram C.',
+  },
+  {
+    className: '9',
+    section: 'A',
+    total: 38,
+    present: 36,
+    absent: 2,
+    leave: 0,
+    markedBy: 'Anjali K.',
+  },
+  {
+    className: '9',
+    section: 'B',
+    total: 39,
+    present: 38,
+    absent: 0,
+    leave: 1,
+    markedBy: 'Rajesh N.',
+  },
+  { className: '8', section: 'A', total: 35, present: 34, absent: 1, leave: 0, markedBy: 'Staff' },
+  {
+    className: '11',
+    section: 'A',
+    total: 44,
+    present: 41,
+    absent: 2,
+    leave: 1,
+    markedBy: 'Meenakshi S.',
+  },
+  {
+    className: '12',
+    section: 'A',
+    total: 45,
+    present: 44,
+    absent: 1,
+    leave: 0,
+    markedBy: 'Vikram C.',
+  },
+];
+
 export const AdminAttendance: React.FC = () => {
-  const [loading, setLoading] = useState(false);
-  const [filterDate, setFilterDate] = useState('');
-  const [filterTeacherId, setFilterTeacherId] = useState('');
-  const [filterMonth, setFilterMonth] = useState('');
-  const [markData, setMarkData] = useState({
-    teacherId: '',
-    status: 'Present',
-    date: '',
-  });
-
-  const handleMark = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const payload = [
-        {
-          teacherId: markData.teacherId,
-          status: markData.status,
-        },
-      ];
-      const res = await adminService.markTeacherAttendance(markData.date, payload);
-      toast.success(res.message || 'Teacher attendance marked successfully!');
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFetchDateRoster = async () => {
-    if (!filterDate) {
-      toast.error('Enter a date to fetch roster');
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await adminService.getTeacherAttendanceDate(filterDate);
-      toast.success(res.message || `Loaded attendance for ${filterDate}`);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFetchMonthHistory = async () => {
-    if (!filterTeacherId || !filterMonth) {
-      toast.error('Enter both Teacher ID and Month (MM-YYYY)');
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await adminService.getTeacherAttendanceMonth(filterTeacherId, filterMonth);
-      toast.success(res.message || `Loaded monthly history for ${filterTeacherId}`);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [selectedDate, setSelectedDate] = useState('18-08-2026');
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Teacher Attendance Management</h1>
-        <p className="text-muted-foreground text-xs">
-          Record daily teacher attendance and view monthly staff history.
-        </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-extrabold tracking-tight">
+              Institutional Attendance Central
+            </h1>
+            <Badge variant="outline" className="text-xs">
+              Daily Aggregation
+            </Badge>
+          </div>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            Monitor daily section-wise student attendance registers and faculty check-ins.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Input
+            type="text"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="h-9 w-36 text-xs font-semibold"
+            placeholder="DD-MM-YYYY"
+          />
+          <Button
+            size="sm"
+            onClick={() => toast.success(`Synced records for ${selectedDate}`)}
+            className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+          >
+            <span>Sync Records</span>
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Mark Teacher Attendance</CardTitle>
-            <CardDescription>Submit attendance entry for a teacher.</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleMark}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="markDate">Date (DD-MM-YYYY)</Label>
-                <Input
-                  id="markDate"
-                  placeholder="DD-MM-YYYY"
-                  value={markData.date}
-                  onChange={(e) => setMarkData({ ...markData, date: e.target.value })}
-                  required
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="teacherId">Teacher ID</Label>
-                <Input
-                  id="teacherId"
-                  placeholder="e.g. TCH12345678"
-                  value={markData.teacherId}
-                  onChange={(e) => setMarkData({ ...markData, teacherId: e.target.value })}
-                  required
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Input
-                  id="status"
-                  placeholder="Present | Absent"
-                  value={markData.status}
-                  onChange={(e) => setMarkData({ ...markData, status: e.target.value })}
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="flex gap-2 pt-4">
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Submitting...' : 'Mark Attendance'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Attendance Query & History</CardTitle>
-            <CardDescription>Filter daily rosters or monthly teacher history.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="filterDate">Filter by Date (DD-MM-YYYY)</Label>
-              <Input
-                id="filterDate"
-                placeholder="DD-MM-YYYY"
-                value={filterDate}
-                onChange={(e) => setFilterDate(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="filterTeacherId">Teacher ID (for monthly history)</Label>
-              <Input
-                id="filterTeacherId"
-                placeholder="TCH12345678"
-                value={filterTeacherId}
-                onChange={(e) => setFilterTeacherId(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="filterMonth">Month (MM-YYYY)</Label>
-              <Input
-                id="filterMonth"
-                placeholder="MM-YYYY"
-                value={filterMonth}
-                onChange={(e) => setFilterMonth(e.target.value)}
-                disabled={loading}
-              />
-            </div>
+      {/* Aggregate Metrics */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+          <CardContent className="p-4">
+            <span className="text-muted-foreground text-xs font-semibold">
+              Total Enrolled Strength
+            </span>
+            <p className="mt-1 text-2xl font-bold">283 Students</p>
+            <span className="text-muted-foreground text-[11px]">7 Active sections</span>
           </CardContent>
-          <CardFooter className="flex flex-col gap-2 pt-4 sm:flex-row">
-            <Button
-              type="button"
-              onClick={handleFetchDateRoster}
-              disabled={loading}
-              className="w-full"
-            >
-              Fetch Day Roster
-            </Button>
-            <Button
-              type="button"
-              onClick={handleFetchMonthHistory}
-              disabled={loading}
-              variant="outline"
-              className="w-full"
-            >
-              Fetch Monthly History
-            </Button>
-          </CardFooter>
+        </Card>
+
+        <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+          <CardContent className="p-4">
+            <span className="text-muted-foreground text-xs font-semibold">Present Today</span>
+            <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              271 (95.8%)
+            </p>
+            <span className="text-[11px] text-emerald-600">Optimal attendance</span>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+          <CardContent className="p-4">
+            <span className="text-muted-foreground text-xs font-semibold">Absent Unexcused</span>
+            <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-400">9 Students</p>
+            <span className="text-muted-foreground text-[11px]">SMS alerts dispatched</span>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+          <CardContent className="p-4">
+            <span className="text-muted-foreground text-xs font-semibold">Approved Leave</span>
+            <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">3 Students</p>
+            <span className="text-muted-foreground text-[11px]">Medical / Leave slips</span>
+          </CardContent>
         </Card>
       </div>
+
+      {/* Class Wise Roster Status Table */}
+      <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-bold">
+            Section-Wise Attendance Logs ({selectedDate})
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Class teacher submissions for morning roll calls.
+          </CardDescription>
+        </CardHeader>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
+              <TableHead className="text-xs font-bold">Class & Sec</TableHead>
+              <TableHead className="text-xs font-bold">Total Strength</TableHead>
+              <TableHead className="text-xs font-bold">Present</TableHead>
+              <TableHead className="text-xs font-bold">Absent</TableHead>
+              <TableHead className="text-xs font-bold">Leave</TableHead>
+              <TableHead className="text-xs font-bold">Rate %</TableHead>
+              <TableHead className="text-right text-xs font-bold">Recorded By</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sampleClassAttendance.map((row, idx) => {
+              const rate = ((row.present / row.total) * 100).toFixed(1);
+              return (
+                <TableRow key={idx} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30">
+                  <TableCell className="text-xs font-bold text-slate-900 dark:text-white">
+                    Class {row.className}-{row.section}
+                  </TableCell>
+                  <TableCell className="text-xs">{row.total}</TableCell>
+                  <TableCell className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    {row.present}
+                  </TableCell>
+                  <TableCell className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                    {row.absent}
+                  </TableCell>
+                  <TableCell className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                    {row.leave}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    <Badge variant="secondary" className="text-[10px] font-semibold">
+                      {rate}%
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-right text-xs">
+                    {row.markedBy}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 };
