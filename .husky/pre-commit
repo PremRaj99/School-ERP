@@ -5,12 +5,16 @@ fi
 
 echo "=== Running Backend pre-commit checks ==="
 cd backend
+bun run format
+bun run format
 bunx lint-staged
 bun run typecheck
 cd ..
 
 echo "=== Running Frontend pre-commit checks ==="
+npm run format
 cd frontend
+npm run format
 npx lint-staged
 npm run typecheck
 cd ..
