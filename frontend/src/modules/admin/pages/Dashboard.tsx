@@ -241,9 +241,9 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Visual Analytics Charts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Weekly Attendance Trend */}
-        <Card className="border border-slate-200/80 bg-white/90 shadow-xs lg:col-span-7 dark:border-zinc-800 dark:bg-zinc-900/90">
+        <Card className="min-w-0 overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs lg:col-span-7 dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
@@ -264,9 +264,9 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-4">
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
+          <CardContent className="min-w-0 pt-4">
+            <div className="h-64 w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart
                   data={attendanceTrendData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
@@ -291,16 +291,16 @@ export const AdminDashboard: React.FC = () => {
         </Card>
 
         {/* Student Enrollment Distribution */}
-        <Card className="border border-slate-200/80 bg-white/90 shadow-xs lg:col-span-5 dark:border-zinc-800 dark:bg-zinc-900/90">
+        <Card className="min-w-0 overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs lg:col-span-5 dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold">Grade Tier Distribution</CardTitle>
             <CardDescription className="text-xs">
               Enrolled strength segmented by academic levels
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-2">
-            <div className="h-48 w-full">
-              <ResponsiveContainer width="100%" height="100%">
+          <CardContent className="min-w-0 pt-2">
+            <div className="h-48 w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={classDistributionData}
@@ -344,9 +344,9 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Financial Health & Upcoming Schedules */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Fee Collection vs Payroll Trend */}
-        <Card className="border border-slate-200/80 bg-white/90 shadow-xs lg:col-span-8 dark:border-zinc-800 dark:bg-zinc-900/90">
+        <Card className="min-w-0 overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs lg:col-span-8 dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
@@ -366,9 +366,9 @@ export const AdminDashboard: React.FC = () => {
               </button>
             </div>
           </CardHeader>
-          <CardContent className="pt-4">
-            <div className="h-56 w-full">
-              <ResponsiveContainer width="100%" height="100%">
+          <CardContent className="min-w-0 pt-4">
+            <div className="h-56 w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <AreaChart
                   data={financialTrendData}
                   margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
