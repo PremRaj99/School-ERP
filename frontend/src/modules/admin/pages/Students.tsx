@@ -11,9 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { adminService } from '@/lib/services/admin.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const AdminStudents: React.FC = () => {
   const [searchId, setSearchId] = useState('');
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -40,13 +44,98 @@ export const AdminStudents: React.FC = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Create Student:', formData);
+    setLoading(true);
+    try {
+      const payload = {
+        ...formData,
+        rollNo: Number(formData.rollNo),
+      };
+      const res = await adminService.createStudent(payload);
+      toast.success(res.message || 'Student created successfully!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSearch = () => {
-    console.log('Search Student ID:', searchId);
+  const handleUpdate = async () => {
+    if (!searchId) {
+      toast.error('Enter Student ID to update');
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload: Record<string, unknown> = {};
+      Object.entries(formData).forEach(([k, v]) => {
+        if (v) payload[k] = k === 'rollNo' ? Number(v) : v;
+      });
+      const res = await adminService.updateStudent(searchId, payload);
+      toast.success(res.message || 'Student updated successfully!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!searchId) {
+      toast.error('Enter Student ID to delete');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.deleteStudent(searchId);
+      toast.success(res.message || 'Student deleted successfully!');
+      setSearchId('');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchId) {
+      toast.error('Enter a Student ID to search');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.getStudentById(searchId);
+      const student = res.data;
+      if (student) {
+        setFormData({
+          firstName: student.firstName || '',
+          lastName: student.lastName || '',
+          dob: student.dob || '',
+          address: student.address || '',
+          phone: student.phone || '',
+          fatherName: student.fatherName || '',
+          motherName: student.motherName || '',
+          fatherOccupation: student.fatherOccupation || '',
+          motherOccupation: student.motherOccupation || '',
+          studentAadhar: student.studentAadhar || '',
+          fatherAadhar: student.fatherAadhar || '',
+          motherAadhar: student.motherAadhar || '',
+          className: student.className || '',
+          section: student.section || '',
+          session: student.session || '',
+          dateOfAdmission: student.dateOfAdmission || '',
+          rollNo: student.rollNo ? String(student.rollNo) : '',
+          appId: student.appId || '',
+          profilePhoto: student.profilePhoto || '',
+        });
+        toast.success('Student record loaded');
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,7 +154,7 @@ export const AdminStudents: React.FC = () => {
             onChange={(e) => setSearchId(e.target.value)}
             className="w-full sm:w-64"
           />
-          <Button onClick={handleSearch} type="button">
+          <Button onClick={handleSearch} disabled={loading} type="button">
             Search
           </Button>
         </div>
@@ -303,11 +392,13 @@ export const AdminStudents: React.FC = () => {
           </CardContent>
 
           <CardFooter className="flex flex-wrap gap-2 pt-4">
-            <Button type="submit">Create Student</Button>
-            <Button type="button" variant="secondary">
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Processing...' : 'Create Student'}
+            </Button>
+            <Button type="button" variant="secondary" onClick={handleUpdate} disabled={loading}>
               Update Student
             </Button>
-            <Button type="button" variant="destructive">
+            <Button type="button" variant="destructive" onClick={handleDelete} disabled={loading}>
               Delete Student
             </Button>
           </CardFooter>

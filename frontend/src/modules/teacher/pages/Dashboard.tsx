@@ -1,29 +1,53 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { teacherService } from '@/lib/services/teacher.service';
 
 export const TeacherDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const { data, isLoading, refetch, isRefetching } = useQuery({
+    queryKey: ['teacherDashboard'],
+    queryFn: teacherService.getDashboard,
+  });
+
+  const dashboard = data?.data;
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Teacher Dashboard</h1>
           <p className="text-muted-foreground text-xs">
-            Welcome to your teacher portal. View schedule, mark class attendance, and grade exams.
+            {dashboard?.profile?.firstName
+              ? `Welcome, ${dashboard.profile.firstName}!`
+              : 'Welcome to your teacher portal.'}{' '}
+            View schedule, mark class attendance, and grade exams.
           </p>
         </div>
-        <Button type="button">Refresh Dashboard</Button>
+        <Button onClick={() => refetch()} disabled={isLoading || isRefetching} type="button">
+          {isLoading || isRefetching ? 'Refreshing...' : 'Refresh Dashboard'}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
-            <CardTitle>Class Attendance</CardTitle>
-            <CardDescription>Mark daily student attendance</CardDescription>
+            <CardTitle>My Attendance</CardTitle>
+            <CardDescription>
+              {isLoading
+                ? 'Loading...'
+                : `Present: ${dashboard?.attendanceThisMonth?.present ?? 0} / ${dashboard?.attendanceThisMonth?.total ?? 0}`}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full">
-              Mark Attendance
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/teacher/attendance')}
+            >
+              Mark / View Attendance
             </Button>
           </CardContent>
         </Card>
@@ -31,10 +55,18 @@ export const TeacherDashboard: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>Grading & Results</CardTitle>
-            <CardDescription>Enter exam marks for subjects</CardDescription>
+            <CardDescription>
+              {isLoading
+                ? 'Loading...'
+                : `${dashboard?.pendingResultEntries?.length ?? 0} subject(s) pending grading`}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/teacher/results')}
+            >
               Enter Results
             </Button>
           </CardContent>
@@ -42,24 +74,38 @@ export const TeacherDashboard: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Assigned Exams</CardTitle>
-            <CardDescription>View upcoming test dates</CardDescription>
+            <CardTitle>Today's Schedule</CardTitle>
+            <CardDescription>
+              {isLoading
+                ? 'Loading...'
+                : `${dashboard?.todaySchedule?.length ?? 0} periods scheduled`}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full">
-              View Exams
+            <Button variant="outline" className="w-full" onClick={() => navigate('/teacher/exams')}>
+              View Assigned Exams
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Salary & Payroll</CardTitle>
-            <CardDescription>Disbursed salary history</CardDescription>
+            <CardTitle>Salary Disbursals</CardTitle>
+            <CardDescription>
+              {isLoading
+                ? 'Loading...'
+                : dashboard?.pendingSalary?.count
+                  ? `Pending: ₹${dashboard.pendingSalary.totalAmount}`
+                  : 'All salaries cleared'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full">
-              View Salary
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/teacher/salary')}
+            >
+              View Salary Slips
             </Button>
           </CardContent>
         </Card>

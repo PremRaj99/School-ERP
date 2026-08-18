@@ -1,19 +1,41 @@
 import React, { useState } from 'react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { studentService } from '@/lib/services/student.service';
+import type { TimeTableSlot, CalendarEvent } from '@/lib/types';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const StudentAcademic: React.FC = () => {
-  const [session, setSession] = useState('');
-  const [month, setMonth] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [timetable, setTimetable] = useState<TimeTableSlot[] | null>(null);
+  const [calendar, setCalendar] = useState<CalendarEvent[] | null>(null);
+
+  const handleFetchTimetable = async () => {
+    setLoading(true);
+    try {
+      const res = await studentService.getTimetable();
+      setTimetable(Array.isArray(res.data) ? res.data : []);
+      toast.success(res.message || 'Timetable retrieved');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFetchCalendar = async () => {
+    setLoading(true);
+    try {
+      const res = await studentService.getCalendar();
+      setCalendar(Array.isArray(res.data) ? res.data : []);
+      toast.success(res.message || 'Academic calendar retrieved');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
@@ -31,21 +53,28 @@ export const StudentAcademic: React.FC = () => {
             <CardDescription>View your daily period schedule and assigned teachers</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="session">Session</Label>
-              <Input
-                id="session"
-                placeholder="e.g. 2025-2026"
-                value={session}
-                onChange={(e) => setSession(e.target.value)}
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="pt-4">
-            <Button type="button" className="w-full">
-              View Timetable
+            <Button onClick={handleFetchTimetable} disabled={loading} className="w-full">
+              {loading ? 'Fetching...' : 'Load Class Timetable'}
             </Button>
-          </CardFooter>
+            {timetable && (
+              <div className="max-h-56 space-y-2 overflow-y-auto pt-2">
+                {timetable.length > 0 ? (
+                  timetable.map((slot, i) => (
+                    <div key={i} className="flex justify-between rounded border p-2 text-xs">
+                      <span>
+                        <strong>{slot.weekday}</strong> (Period {slot.period})
+                      </span>
+                      <span>
+                        {slot.subjectCode || 'Free'} — {slot.teacherId || 'TBA'}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-xs">No timetable slots configured.</p>
+                )}
+              </div>
+            )}
+          </CardContent>
         </Card>
 
         <Card>
@@ -56,21 +85,34 @@ export const StudentAcademic: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="month">Filter Month (MM-YYYY)</Label>
-              <Input
-                id="month"
-                placeholder="e.g. 08-2026"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="pt-4">
-            <Button type="button" variant="outline" className="w-full">
-              View Calendar
+            <Button
+              onClick={handleFetchCalendar}
+              disabled={loading}
+              variant="outline"
+              className="w-full"
+            >
+              {loading ? 'Fetching...' : 'Load Academic Calendar'}
             </Button>
-          </CardFooter>
+            {calendar && (
+              <div className="max-h-56 space-y-2 overflow-y-auto pt-2">
+                {calendar.length > 0 ? (
+                  calendar.map((event, i) => (
+                    <div key={i} className="flex justify-between rounded border p-2 text-xs">
+                      <div>
+                        <p className="font-semibold">{event.title}</p>
+                        <p className="text-muted-foreground">{event.date}</p>
+                      </div>
+                      <span className="bg-muted self-center rounded px-2 py-0.5 font-mono text-xs">
+                        {event.category}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-xs">No calendar events found.</p>
+                )}
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
     </div>

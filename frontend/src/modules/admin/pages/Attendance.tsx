@@ -10,9 +10,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { adminService } from '@/lib/services/admin.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const AdminAttendance: React.FC = () => {
+  const [loading, setLoading] = useState(false);
   const [filterDate, setFilterDate] = useState('');
+  const [filterTeacherId, setFilterTeacherId] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
   const [markData, setMarkData] = useState({
     teacherId: '',
@@ -20,9 +25,55 @@ export const AdminAttendance: React.FC = () => {
     date: '',
   });
 
-  const handleMark = (e: React.FormEvent) => {
+  const handleMark = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Mark Teacher Attendance:', markData);
+    setLoading(true);
+    try {
+      const payload = [
+        {
+          teacherId: markData.teacherId,
+          status: markData.status,
+        },
+      ];
+      const res = await adminService.markTeacherAttendance(markData.date, payload);
+      toast.success(res.message || 'Teacher attendance marked successfully!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFetchDateRoster = async () => {
+    if (!filterDate) {
+      toast.error('Enter a date to fetch roster');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.getTeacherAttendanceDate(filterDate);
+      toast.success(res.message || `Loaded attendance for ${filterDate}`);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFetchMonthHistory = async () => {
+    if (!filterTeacherId || !filterMonth) {
+      toast.error('Enter both Teacher ID and Month (MM-YYYY)');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.getTeacherAttendanceMonth(filterTeacherId, filterMonth);
+      toast.success(res.message || `Loaded monthly history for ${filterTeacherId}`);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,6 +101,7 @@ export const AdminAttendance: React.FC = () => {
                   value={markData.date}
                   onChange={(e) => setMarkData({ ...markData, date: e.target.value })}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -61,6 +113,7 @@ export const AdminAttendance: React.FC = () => {
                   value={markData.teacherId}
                   onChange={(e) => setMarkData({ ...markData, teacherId: e.target.value })}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -72,15 +125,13 @@ export const AdminAttendance: React.FC = () => {
                   value={markData.status}
                   onChange={(e) => setMarkData({ ...markData, status: e.target.value })}
                   required
+                  disabled={loading}
                 />
               </div>
             </CardContent>
             <CardFooter className="flex gap-2 pt-4">
-              <Button type="submit" className="w-full">
-                Mark Attendance
-              </Button>
-              <Button type="button" variant="secondary" className="w-full">
-                Bulk Update
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Submitting...' : 'Mark Attendance'}
               </Button>
             </CardFooter>
           </form>
@@ -99,23 +150,46 @@ export const AdminAttendance: React.FC = () => {
                 placeholder="DD-MM-YYYY"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="filterMonth">Filter Teacher History by Month (MM-YYYY)</Label>
+              <Label htmlFor="filterTeacherId">Teacher ID (for monthly history)</Label>
+              <Input
+                id="filterTeacherId"
+                placeholder="TCH12345678"
+                value={filterTeacherId}
+                onChange={(e) => setFilterTeacherId(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="filterMonth">Month (MM-YYYY)</Label>
               <Input
                 id="filterMonth"
                 placeholder="MM-YYYY"
                 value={filterMonth}
                 onChange={(e) => setFilterMonth(e.target.value)}
+                disabled={loading}
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-2 pt-4 sm:flex-row">
-            <Button type="button" className="w-full">
+            <Button
+              type="button"
+              onClick={handleFetchDateRoster}
+              disabled={loading}
+              className="w-full"
+            >
               Fetch Day Roster
             </Button>
-            <Button type="button" variant="outline" className="w-full">
+            <Button
+              type="button"
+              onClick={handleFetchMonthHistory}
+              disabled={loading}
+              variant="outline"
+              className="w-full"
+            >
               Fetch Monthly History
             </Button>
           </CardFooter>

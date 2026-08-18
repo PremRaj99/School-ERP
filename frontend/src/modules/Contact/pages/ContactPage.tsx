@@ -11,8 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { contactService } from '@/lib/services/contact.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const ContactPage: React.FC = () => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,9 +28,18 @@ export const ContactPage: React.FC = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Contact form submitted:', formData);
+    setLoading(true);
+    try {
+      const res = await contactService.submitContact(formData);
+      toast.success(res.message || 'Your inquiry has been submitted successfully!');
+      setFormData({ name: '', email: '', mobile: '', message: '' });
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,6 +61,7 @@ export const ContactPage: React.FC = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -60,6 +74,7 @@ export const ContactPage: React.FC = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -72,6 +87,7 @@ export const ContactPage: React.FC = () => {
                 value={formData.mobile}
                 onChange={handleChange}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -84,12 +100,13 @@ export const ContactPage: React.FC = () => {
                 value={formData.message}
                 onChange={handleChange}
                 required
+                disabled={loading}
               />
             </div>
           </CardContent>
           <CardFooter className="pt-4">
-            <Button type="submit" className="w-full">
-              Send Message
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Sending message...' : 'Send Message'}
             </Button>
           </CardFooter>
         </form>

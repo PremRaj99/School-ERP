@@ -10,12 +10,65 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { adminService } from '@/lib/services/admin.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const AdminContactMessages: React.FC = () => {
   const [searchId, setSearchId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [currentMessage, setCurrentMessage] = useState<{
+    name?: string;
+    email?: string;
+    mobile?: string;
+    message?: string;
+  } | null>(null);
 
-  const handleDelete = () => {
-    console.log('Delete contact message:', searchId);
+  const handleFetchMessage = async () => {
+    if (!searchId) {
+      toast.error('Enter Contact Message ID');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.getContactMessageById(searchId);
+      setCurrentMessage(res.data);
+      toast.success('Inquiry details loaded');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFetchAll = async () => {
+    setLoading(true);
+    try {
+      const res = await adminService.getContactMessages();
+      toast.success(`Retrieved ${res.data?.length ?? 0} public inquiries`);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!searchId) {
+      toast.error('Enter Contact Message ID to delete');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.deleteContactMessage(searchId);
+      toast.success(res.message || 'Inquiry message deleted!');
+      setCurrentMessage(null);
+      setSearchId('');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,14 +94,39 @@ export const AdminContactMessages: React.FC = () => {
                 placeholder="24-character Contact ObjectId"
                 value={searchId}
                 onChange={(e) => setSearchId(e.target.value)}
+                disabled={loading}
               />
             </div>
+            {currentMessage && (
+              <div className="bg-muted/40 space-y-1 rounded border p-3 text-xs">
+                <p>
+                  <strong>From:</strong> {currentMessage.name} ({currentMessage.email})
+                </p>
+                <p>
+                  <strong>Mobile:</strong> {currentMessage.mobile}
+                </p>
+                <p>
+                  <strong>Message:</strong> {currentMessage.message}
+                </p>
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col gap-2 pt-4 sm:flex-row">
-            <Button type="button" className="w-full">
-              Fetch Message
+            <Button
+              type="button"
+              onClick={handleFetchMessage}
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? 'Fetching...' : 'Fetch Message'}
             </Button>
-            <Button onClick={handleDelete} type="button" variant="destructive" className="w-full">
+            <Button
+              onClick={handleDelete}
+              disabled={loading}
+              type="button"
+              variant="destructive"
+              className="w-full"
+            >
               Delete Message
             </Button>
           </CardFooter>
@@ -65,7 +143,13 @@ export const AdminContactMessages: React.FC = () => {
             </p>
           </CardContent>
           <CardFooter className="pt-4">
-            <Button type="button" variant="outline" className="w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleFetchAll}
+              disabled={loading}
+              className="w-full"
+            >
               Refresh All Inquiries
             </Button>
           </CardFooter>

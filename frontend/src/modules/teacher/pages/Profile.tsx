@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardHeader,
@@ -10,20 +11,71 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { teacherService } from '@/lib/services/teacher.service';
+import { authService } from '@/lib/services/auth.service';
+import type { Teacher } from '@/lib/types';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const TeacherProfile: React.FC = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState<Teacher | null>(null);
   const [formData, setFormData] = useState({
     oldPassword: '',
     newPassword: '',
   });
 
+  useEffect(() => {
+    teacherService
+      .getProfile()
+      .then((res) => {
+        setProfile(res.data);
+      })
+      .catch(() => {});
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Update teacher password:', formData);
+    setLoading(true);
+    try {
+      const res = await authService.changePassword(formData);
+      toast.success(res.message || 'Password changed successfully!');
+      setFormData({ oldPassword: '', newPassword: '' });
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefreshSession = async () => {
+    setLoading(true);
+    try {
+      const res = await authService.refresh();
+      toast.success(res.message || 'Session tokens refreshed');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      await authService.logout();
+      toast.success('Logged out successfully');
+      navigate('/auth/login');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,7 +83,9 @@ export const TeacherProfile: React.FC = () => {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Teacher Profile & Settings</h1>
         <p className="text-muted-foreground text-xs">
-          Manage your account credentials and security settings.
+          {profile
+            ? `Logged in as ${profile.firstName} ${profile.lastName || ''} (Teacher ID: ${profile.teacherId})`
+            : 'Manage your account credentials and security settings.'}
         </p>
       </div>
 
@@ -55,6 +109,7 @@ export const TeacherProfile: React.FC = () => {
                   value={formData.oldPassword}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -67,12 +122,13 @@ export const TeacherProfile: React.FC = () => {
                   value={formData.newPassword}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
             </CardContent>
             <CardFooter className="pt-4">
-              <Button type="submit" className="w-full">
-                Update Password
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Updating...' : 'Update Password'}
               </Button>
             </CardFooter>
           </form>
@@ -89,10 +145,22 @@ export const TeacherProfile: React.FC = () => {
             </p>
           </CardContent>
           <CardFooter className="flex gap-2 pt-4">
-            <Button type="button" variant="outline" className="w-full">
+            <Button
+              type="button"
+              onClick={handleRefreshSession}
+              disabled={loading}
+              variant="outline"
+              className="w-full"
+            >
               Refresh Session
             </Button>
-            <Button type="button" variant="destructive" className="w-full">
+            <Button
+              type="button"
+              onClick={handleLogout}
+              disabled={loading}
+              variant="destructive"
+              className="w-full"
+            >
               Log Out
             </Button>
           </CardFooter>

@@ -10,8 +10,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { adminService } from '@/lib/services/admin.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const AdminClasses: React.FC = () => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     className: '',
     section: '',
@@ -23,13 +27,35 @@ export const AdminClasses: React.FC = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Create Class:', formData);
+    setLoading(true);
+    try {
+      const res = await adminService.createClass(formData);
+      toast.success(res.message || 'Class created successfully!');
+      setFormData({ className: '', section: '', session: '' });
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = () => {
-    console.log('Delete Class ID:', deleteClassId);
+  const handleDelete = async () => {
+    if (!deleteClassId) {
+      toast.error('Enter Class ID to delete');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.deleteClass(deleteClassId);
+      toast.success(res.message || 'Class deleted successfully!');
+      setDeleteClassId('');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,6 +82,7 @@ export const AdminClasses: React.FC = () => {
                   value={formData.className}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -67,6 +94,7 @@ export const AdminClasses: React.FC = () => {
                   value={formData.section}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -78,12 +106,13 @@ export const AdminClasses: React.FC = () => {
                   value={formData.session}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
             </CardContent>
             <CardFooter className="pt-4">
-              <Button type="submit" className="w-full">
-                Create Class
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Creating...' : 'Create Class'}
               </Button>
             </CardFooter>
           </form>
@@ -102,12 +131,18 @@ export const AdminClasses: React.FC = () => {
                 placeholder="24-character Mongo ObjectId"
                 value={deleteClassId}
                 onChange={(e) => setDeleteClassId(e.target.value)}
+                disabled={loading}
               />
             </div>
           </CardContent>
           <CardFooter className="flex gap-2 pt-4">
-            <Button onClick={handleDelete} variant="destructive" className="w-full">
-              Delete Class
+            <Button
+              onClick={handleDelete}
+              variant="destructive"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? 'Deleting...' : 'Delete Class'}
             </Button>
           </CardFooter>
         </Card>

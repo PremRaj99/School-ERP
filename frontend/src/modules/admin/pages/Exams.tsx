@@ -10,8 +10,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { adminService } from '@/lib/services/admin.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const AdminExams: React.FC = () => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     dateFrom: '',
@@ -20,7 +24,7 @@ export const AdminExams: React.FC = () => {
     section: '',
     subjectCode: '',
     examDate: '',
-    fullMarks: '',
+    fullMarks: '100',
   });
 
   const [declareExamId, setDeclareExamId] = useState('');
@@ -29,9 +33,68 @@ export const AdminExams: React.FC = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Create Exam:', formData);
+    setLoading(true);
+    try {
+      const payload = {
+        title: formData.title,
+        dateFrom: formData.dateFrom,
+        dateTo: formData.dateTo,
+        exams: [
+          {
+            className: formData.className,
+            section: formData.section,
+            subjects: [
+              {
+                subjectCode: formData.subjectCode,
+                date: formData.examDate,
+                fullMarks: Number(formData.fullMarks),
+              },
+            ],
+          },
+        ],
+      };
+      const res = await adminService.createExam(payload);
+      toast.success(res.message || 'Exam schedule created successfully!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!declareExamId) {
+      toast.error('Enter Exam ID to delete');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.deleteExam(declareExamId);
+      toast.success(res.message || 'Exam deleted successfully!');
+      setDeclareExamId('');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeclare = async (status: boolean) => {
+    if (!declareExamId) {
+      toast.error('Enter Exam ID to update result declaration');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.declareResult(declareExamId, status);
+      toast.success(res.message || `Results ${status ? 'declared' : 'un-declared'} successfully!`);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,6 +125,7 @@ export const AdminExams: React.FC = () => {
                   value={formData.title}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -75,6 +139,7 @@ export const AdminExams: React.FC = () => {
                     value={formData.dateFrom}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -86,6 +151,7 @@ export const AdminExams: React.FC = () => {
                     value={formData.dateTo}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -100,6 +166,7 @@ export const AdminExams: React.FC = () => {
                     value={formData.className}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -111,6 +178,7 @@ export const AdminExams: React.FC = () => {
                     value={formData.section}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -125,6 +193,7 @@ export const AdminExams: React.FC = () => {
                     value={formData.subjectCode}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -136,6 +205,7 @@ export const AdminExams: React.FC = () => {
                     value={formData.examDate}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -148,14 +218,14 @@ export const AdminExams: React.FC = () => {
                     value={formData.fullMarks}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex gap-2 pt-4">
-              <Button type="submit">Create Exam</Button>
-              <Button type="button" variant="destructive">
-                Delete Exam
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Scheduling...' : 'Create Exam'}
               </Button>
             </CardFooter>
           </form>
@@ -163,7 +233,7 @@ export const AdminExams: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Declare / Publish Exam Results</CardTitle>
+            <CardTitle>Declare / Manage Exam Results</CardTitle>
             <CardDescription>
               Publish results once all teachers have completed marks entry.
             </CardDescription>
@@ -176,15 +246,36 @@ export const AdminExams: React.FC = () => {
                 placeholder="24-character Exam Mongo ObjectId"
                 value={declareExamId}
                 onChange={(e) => setDeclareExamId(e.target.value)}
+                disabled={loading}
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-2 pt-4 sm:flex-row">
-            <Button type="button" className="w-full">
+          <CardFooter className="flex flex-col gap-2 pt-4">
+            <Button
+              onClick={() => handleDeclare(true)}
+              disabled={loading}
+              type="button"
+              className="w-full"
+            >
               Declare Results
             </Button>
-            <Button type="button" variant="outline" className="w-full">
+            <Button
+              onClick={() => handleDeclare(false)}
+              disabled={loading}
+              type="button"
+              variant="outline"
+              className="w-full"
+            >
               Un-declare Results
+            </Button>
+            <Button
+              onClick={handleDelete}
+              disabled={loading}
+              type="button"
+              variant="destructive"
+              className="w-full"
+            >
+              Delete Exam
             </Button>
           </CardFooter>
         </Card>

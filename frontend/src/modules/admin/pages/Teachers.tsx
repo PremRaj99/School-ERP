@@ -11,9 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { adminService } from '@/lib/services/admin.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const AdminTeachers: React.FC = () => {
   const [searchId, setSearchId] = useState('');
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -33,13 +37,110 @@ export const AdminTeachers: React.FC = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Create Teacher:', formData);
+    setLoading(true);
+    try {
+      const subjects = formData.subjectsHandled
+        ? formData.subjectsHandled
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+      const payload = {
+        ...formData,
+        salaryPerMonth: Number(formData.salaryPerMonth),
+        subjectsHandled: subjects,
+      };
+      const res = await adminService.createTeacher(payload);
+      toast.success(res.message || 'Teacher created successfully!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSearch = () => {
-    console.log('Search Teacher ID:', searchId);
+  const handleUpdate = async () => {
+    if (!searchId) {
+      toast.error('Enter Teacher ID to update');
+      return;
+    }
+    setLoading(true);
+    try {
+      const subjects = formData.subjectsHandled
+        ? formData.subjectsHandled
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+      const payload: Record<string, unknown> = {};
+      Object.entries(formData).forEach(([k, v]) => {
+        if (v) {
+          if (k === 'salaryPerMonth') payload[k] = Number(v);
+          else if (k === 'subjectsHandled') payload[k] = subjects;
+          else payload[k] = v;
+        }
+      });
+      const res = await adminService.updateTeacher(searchId, payload);
+      toast.success(res.message || 'Teacher updated successfully!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!searchId) {
+      toast.error('Enter Teacher ID to delete');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.deleteTeacher(searchId);
+      toast.success(res.message || 'Teacher deleted successfully!');
+      setSearchId('');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchId) {
+      toast.error('Enter Teacher ID to search');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.getTeacherById(searchId);
+      const teacher = res.data;
+      if (teacher) {
+        setFormData({
+          firstName: teacher.firstName || '',
+          lastName: teacher.lastName || '',
+          dob: teacher.dob || '',
+          address: teacher.address || '',
+          phone: teacher.phone || '',
+          teacherAadhar: teacher.teacherAadhar || '',
+          dateOfJoining: teacher.dateOfJoining || '',
+          about: teacher.about || '',
+          salaryPerMonth: teacher.salaryPerMonth ? String(teacher.salaryPerMonth) : '',
+          qualifications: teacher.qualifications || '',
+          subjectsHandled: Array.isArray(teacher.subjectsHandled)
+            ? teacher.subjectsHandled.join(', ')
+            : '',
+          profilePhoto: teacher.profilePhoto || '',
+        });
+        toast.success('Teacher record loaded');
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -58,7 +159,7 @@ export const AdminTeachers: React.FC = () => {
             onChange={(e) => setSearchId(e.target.value)}
             className="w-full sm:w-64"
           />
-          <Button onClick={handleSearch} type="button">
+          <Button onClick={handleSearch} disabled={loading} type="button">
             Search
           </Button>
         </div>
@@ -215,11 +316,13 @@ export const AdminTeachers: React.FC = () => {
           </CardContent>
 
           <CardFooter className="flex flex-wrap gap-2 pt-4">
-            <Button type="submit">Create Teacher</Button>
-            <Button type="button" variant="secondary">
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Processing...' : 'Create Teacher'}
+            </Button>
+            <Button type="button" variant="secondary" onClick={handleUpdate} disabled={loading}>
               Update Teacher
             </Button>
-            <Button type="button" variant="destructive">
+            <Button type="button" variant="destructive" onClick={handleDelete} disabled={loading}>
               Delete Teacher
             </Button>
           </CardFooter>

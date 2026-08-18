@@ -10,8 +10,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { adminService } from '@/lib/services/admin.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const AdminFinance: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const [feeId, setFeeId] = useState('');
   const [feeData, setFeeData] = useState({
     studentId: '',
     month: '',
@@ -21,6 +26,7 @@ export const AdminFinance: React.FC = () => {
     status: 'Pending',
   });
 
+  const [salaryId, setSalaryId] = useState('');
   const [salaryData, setSalaryData] = useState({
     teacherId: '',
     month: '',
@@ -28,6 +34,7 @@ export const AdminFinance: React.FC = () => {
     status: 'Pending',
   });
 
+  const [txId, setTxId] = useState('');
   const [transactionData, setTransactionData] = useState({
     title: '',
     finalAmount: '',
@@ -35,19 +42,153 @@ export const AdminFinance: React.FC = () => {
     status: 'Pending',
   });
 
-  const handleFeeSubmit = (e: React.FormEvent) => {
+  // Student Fee Handlers
+  const handleFeeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Create Student Fee:', feeData);
+    setLoading(true);
+    try {
+      const payload: Record<string, unknown> = {
+        studentId: feeData.studentId,
+        month: feeData.month,
+        feeBreakdown: [
+          {
+            feeType: feeData.feeType,
+            amount: Number(feeData.amount),
+          },
+        ],
+      };
+      if (feeData.title) payload.title = feeData.title;
+
+      const res = await adminService.createStudentFee(payload);
+      toast.success(res.message || 'Student fee record created!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSalarySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Create Teacher Salary:', salaryData);
+  const handleUpdateFeeStatus = async () => {
+    if (!feeId) {
+      toast.error('Enter Fee ID to update');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.updateStudentFeeStatus(feeId, feeData.status);
+      toast.success(res.message || 'Fee status updated successfully!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleTxSubmit = (e: React.FormEvent) => {
+  const handleDeleteFee = async () => {
+    if (!feeId) {
+      toast.error('Enter Fee ID to delete');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.deleteStudentFee(feeId);
+      toast.success(res.message || 'Fee record deleted successfully!');
+      setFeeId('');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Teacher Salary Handlers
+  const handleSalarySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Create General Transaction:', transactionData);
+    setLoading(true);
+    try {
+      const payload: Record<string, unknown> = {
+        teacherId: salaryData.teacherId,
+        month: salaryData.month,
+      };
+      if (salaryData.amount) payload.amount = Number(salaryData.amount);
+
+      const res = await adminService.createTeacherSalary(payload);
+      toast.success(res.message || 'Teacher salary record created!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateSalaryStatus = async () => {
+    if (!salaryId) {
+      toast.error('Enter Salary ID to update');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.updateTeacherSalaryStatus(salaryId, salaryData.status);
+      toast.success(res.message || 'Salary status updated successfully!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSalary = async () => {
+    if (!salaryId) {
+      toast.error('Enter Salary ID to delete');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.deleteTeacherSalary(salaryId);
+      toast.success(res.message || 'Salary record deleted successfully!');
+      setSalaryId('');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // General Transaction Handlers
+  const handleTxSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        title: transactionData.title,
+        finalAmount: Number(transactionData.finalAmount),
+        category: transactionData.category,
+        status: transactionData.status,
+      };
+      const res = await adminService.createTransaction(payload);
+      toast.success(res.message || 'Transaction recorded successfully!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTx = async () => {
+    if (!txId) {
+      toast.error('Enter Transaction ID to delete');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.deleteTransaction(txId);
+      toast.success(res.message || 'Transaction deleted successfully!');
+      setTxId('');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -76,6 +217,7 @@ export const AdminFinance: React.FC = () => {
                   value={feeData.studentId}
                   onChange={(e) => setFeeData({ ...feeData, studentId: e.target.value })}
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -86,6 +228,7 @@ export const AdminFinance: React.FC = () => {
                   value={feeData.month}
                   onChange={(e) => setFeeData({ ...feeData, month: e.target.value })}
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -95,6 +238,7 @@ export const AdminFinance: React.FC = () => {
                   placeholder="Fee title"
                   value={feeData.title}
                   onChange={(e) => setFeeData({ ...feeData, title: e.target.value })}
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -105,6 +249,7 @@ export const AdminFinance: React.FC = () => {
                   value={feeData.feeType}
                   onChange={(e) => setFeeData({ ...feeData, feeType: e.target.value })}
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -116,15 +261,41 @@ export const AdminFinance: React.FC = () => {
                   value={feeData.amount}
                   onChange={(e) => setFeeData({ ...feeData, amount: e.target.value })}
                   required
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2 pt-2">
+                <Label htmlFor="feeId">Fee Record ID (for update/delete)</Label>
+                <Input
+                  id="feeId"
+                  placeholder="24-char ObjectId"
+                  value={feeId}
+                  onChange={(e) => setFeeId(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-2 pt-4">
-              <Button type="submit" className="w-full">
-                Create Student Fee
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Processing...' : 'Create Student Fee'}
               </Button>
-              <Button type="button" variant="outline" className="w-full">
-                Update Fee Status
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleUpdateFeeStatus}
+                disabled={loading}
+                className="w-full"
+              >
+                Update Fee Status ({feeData.status})
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDeleteFee}
+                disabled={loading}
+                className="w-full"
+              >
+                Delete Fee Record
               </Button>
             </CardFooter>
           </form>
@@ -146,6 +317,7 @@ export const AdminFinance: React.FC = () => {
                   value={salaryData.teacherId}
                   onChange={(e) => setSalaryData({ ...salaryData, teacherId: e.target.value })}
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -156,6 +328,7 @@ export const AdminFinance: React.FC = () => {
                   value={salaryData.month}
                   onChange={(e) => setSalaryData({ ...salaryData, month: e.target.value })}
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -166,6 +339,7 @@ export const AdminFinance: React.FC = () => {
                   placeholder="Defaults to salaryPerMonth"
                   value={salaryData.amount}
                   onChange={(e) => setSalaryData({ ...salaryData, amount: e.target.value })}
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -175,15 +349,41 @@ export const AdminFinance: React.FC = () => {
                   placeholder="Paid | Pending | Failed"
                   value={salaryData.status}
                   onChange={(e) => setSalaryData({ ...salaryData, status: e.target.value })}
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2 pt-2">
+                <Label htmlFor="salaryId">Salary Record ID (for update/delete)</Label>
+                <Input
+                  id="salaryId"
+                  placeholder="24-char ObjectId"
+                  value={salaryId}
+                  onChange={(e) => setSalaryId(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-2 pt-4">
-              <Button type="submit" className="w-full">
-                Create Teacher Salary
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Processing...' : 'Create Teacher Salary'}
               </Button>
-              <Button type="button" variant="outline" className="w-full">
-                Update Salary Status
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleUpdateSalaryStatus}
+                disabled={loading}
+                className="w-full"
+              >
+                Update Salary Status ({salaryData.status})
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDeleteSalary}
+                disabled={loading}
+                className="w-full"
+              >
+                Delete Salary Record
               </Button>
             </CardFooter>
           </form>
@@ -194,7 +394,7 @@ export const AdminFinance: React.FC = () => {
           <CardHeader>
             <CardTitle>General Transactions</CardTitle>
             <CardDescription>
-              Record utility, infrastructure, and other operational expenses.
+              Record utility, infrastructure, and operational expenses.
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleTxSubmit}>
@@ -209,6 +409,7 @@ export const AdminFinance: React.FC = () => {
                     setTransactionData({ ...transactionData, title: e.target.value })
                   }
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -222,6 +423,7 @@ export const AdminFinance: React.FC = () => {
                     setTransactionData({ ...transactionData, finalAmount: e.target.value })
                   }
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -234,6 +436,7 @@ export const AdminFinance: React.FC = () => {
                     setTransactionData({ ...transactionData, category: e.target.value })
                   }
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -245,14 +448,31 @@ export const AdminFinance: React.FC = () => {
                   onChange={(e) =>
                     setTransactionData({ ...transactionData, status: e.target.value })
                   }
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2 pt-2">
+                <Label htmlFor="txId">Transaction ID (for deletion)</Label>
+                <Input
+                  id="txId"
+                  placeholder="24-char ObjectId"
+                  value={txId}
+                  onChange={(e) => setTxId(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-2 pt-4">
-              <Button type="submit" className="w-full">
-                Record Transaction
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Recording...' : 'Record Transaction'}
               </Button>
-              <Button type="button" variant="destructive" className="w-full">
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDeleteTx}
+                disabled={loading}
+                className="w-full"
+              >
                 Delete Transaction
               </Button>
             </CardFooter>

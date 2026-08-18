@@ -10,13 +10,46 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { studentService } from '@/lib/services/student.service';
+import type { Exam, ExamResult } from '@/lib/types';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const StudentExams: React.FC = () => {
   const [examId, setExamId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [resultData, setResultData] = useState<ExamResult | null>(null);
+  const [examsList, setExamsList] = useState<Exam[] | null>(null);
 
-  const handleFetchResults = (e: React.FormEvent) => {
+  const handleFetchResults = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Fetch result for Exam ID:', examId);
+    if (!examId) {
+      toast.error('Please enter an Exam ID');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await studentService.getResult(examId);
+      setResultData(res.data);
+      toast.success(res.message || 'Exam results retrieved');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFetchExams = async () => {
+    setLoading(true);
+    try {
+      const res = await studentService.getExams();
+      setExamsList(Array.isArray(res.data) ? res.data : []);
+      toast.success(res.message || 'Exams list refreshed');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,7 +64,7 @@ export const StudentExams: React.FC = () => {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>View Exam Schedule & Results</CardTitle>
+            <CardTitle>View Declared Exam Results</CardTitle>
             <CardDescription>
               Enter an Exam ID to view your marks breakdown and grade.
             </CardDescription>
@@ -46,15 +79,26 @@ export const StudentExams: React.FC = () => {
                   value={examId}
                   onChange={(e) => setExamId(e.target.value)}
                   required
+                  disabled={loading}
                 />
               </div>
+              {resultData && (
+                <div className="bg-muted/40 space-y-1 rounded border p-3 text-xs">
+                  <p>
+                    <strong>Marks:</strong> {resultData.marksObtained ?? 'N/A'}
+                  </p>
+                  <p>
+                    <strong>Grade:</strong> {resultData.grade ?? 'N/A'}
+                  </p>
+                  <p>
+                    <strong>Remark:</strong> {resultData.remark ?? 'None'}
+                  </p>
+                </div>
+              )}
             </CardContent>
-            <CardFooter className="flex flex-col gap-2 pt-4 sm:flex-row">
-              <Button type="submit" className="w-full">
-                View Results
-              </Button>
-              <Button type="button" variant="outline" className="w-full">
-                View Schedule
+            <CardFooter className="pt-4">
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Fetching...' : 'View Results'}
               </Button>
             </CardFooter>
           </form>
@@ -63,20 +107,46 @@ export const StudentExams: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>Active Examinations</CardTitle>
-            <CardDescription>
-              Quickly refresh the list of upcoming exams for your class.
-            </CardDescription>
+            <CardDescription>Scheduled exams for your class</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-muted-foreground text-xs">
-              Exams scheduled by your school administration will appear here automatically.
-            </p>
-          </CardContent>
-          <CardFooter className="pt-4">
-            <Button type="button" variant="secondary" className="w-full">
-              Refresh Exam List
+            <Button
+              onClick={handleFetchExams}
+              disabled={loading}
+              variant="outline"
+              className="w-full"
+            >
+              {loading ? 'Refreshing...' : 'Load Scheduled Exams'}
             </Button>
-          </CardFooter>
+            {examsList && (
+              <div className="max-h-48 space-y-2 overflow-y-auto">
+                {examsList.length > 0 ? (
+                  examsList.map((exam, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between rounded border p-2 text-xs"
+                    >
+                      <div>
+                        <p className="font-semibold">{exam.title}</p>
+                        <p className="text-muted-foreground">
+                          {exam.dateFrom} to {exam.dateTo}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setExamId(exam.id || exam._id || '')}
+                      >
+                        Select ID
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-xs">No scheduled exams found.</p>
+                )}
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
     </div>

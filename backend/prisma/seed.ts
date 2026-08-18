@@ -22,6 +22,7 @@ async function main() {
   await prisma.subject.deleteMany();
   await prisma.notice.deleteMany();
   await prisma.academicCalendar.deleteMany();
+  await prisma.contact.deleteMany();
   await prisma.user.deleteMany();
 
   console.log('Seeding database...');
@@ -170,6 +171,7 @@ async function main() {
       phone: '9876543212',
       classId: class10A.id,
       rollNo: 1,
+      appId: 'APP101',
     },
   });
 
@@ -185,6 +187,7 @@ async function main() {
       phone: '9876543213',
       classId: class10A.id,
       rollNo: 2,
+      appId: 'APP102',
     },
   });
 
@@ -200,6 +203,7 @@ async function main() {
       phone: '9876543214',
       classId: class10A.id,
       rollNo: 3,
+      appId: 'APP103',
     },
   });
 

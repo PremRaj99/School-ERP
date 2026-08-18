@@ -7,16 +7,27 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { teacherService } from '@/lib/services/teacher.service';
+import type { TeacherSalary as ITeacherSalary } from '@/lib/types';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const TeacherSalary: React.FC = () => {
-  const [month, setMonth] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [salaries, setSalaries] = useState<ITeacherSalary[] | null>(null);
 
-  const handleFilter = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Filter salary for month:', month);
+  const handleFetchSalaries = async () => {
+    setLoading(true);
+    try {
+      const res = await teacherService.getSalaryTransactions();
+      setSalaries(Array.isArray(res.data) ? res.data : []);
+      toast.success(res.message || 'Salary slips loaded');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,33 +39,53 @@ export const TeacherSalary: React.FC = () => {
         </p>
       </div>
 
-      <Card className="max-w-md">
-        <CardHeader>
-          <CardTitle>Filter Salary Slips</CardTitle>
-          <CardDescription>Select a disbursement month to check payment status</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleFilter}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="month">Month (MM-YYYY)</Label>
-              <Input
-                id="month"
-                placeholder="e.g. 08-2026"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex gap-2 pt-4">
-            <Button type="submit" className="w-full">
-              Filter Salary
-            </Button>
-            <Button type="button" variant="outline" className="w-full">
-              Refresh
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Salary Statements</CardTitle>
+            <CardDescription>Fetch your monthly payroll disbursement statements</CardDescription>
+          </CardHeader>
+          <CardFooter className="pt-4">
+            <Button onClick={handleFetchSalaries} disabled={loading} className="w-full">
+              {loading ? 'Loading...' : 'Fetch Salary Slips'}
             </Button>
           </CardFooter>
-        </form>
-      </Card>
+        </Card>
+
+        {salaries && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Payroll History</CardTitle>
+              <CardDescription>{salaries.length} statement(s) found</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-56 space-y-2 overflow-y-auto">
+                {salaries.length > 0 ? (
+                  salaries.map((sal, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between rounded border p-2 text-xs"
+                    >
+                      <div>
+                        <p className="font-semibold">
+                          {sal.month} — ₹{sal.amount}
+                        </p>
+                        <p className={sal.isPaid ? 'text-green-600' : 'text-amber-600'}>
+                          {sal.isPaid ? `Paid on ${sal.paidAt || 'N/A'}` : 'Pending Disbursement'}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-xs">
+                    No salary disbursement records found.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardHeader,
@@ -10,8 +11,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { authService } from '@/lib/services/auth.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -21,9 +27,27 @@ export const LoginPage: React.FC = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login submitted:', formData);
+    setLoading(true);
+    try {
+      const response = await authService.login(formData);
+      toast.success(response.message || 'Login successful!');
+      const role = response.data?.user?.role;
+      if (role === 'Admin') {
+        navigate('/admin/dashboard');
+      } else if (role === 'Teacher') {
+        navigate('/teacher/dashboard');
+      } else if (role === 'Student') {
+        navigate('/student/dashboard');
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,6 +71,7 @@ export const LoginPage: React.FC = () => {
                 value={formData.username}
                 onChange={handleChange}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -59,12 +84,13 @@ export const LoginPage: React.FC = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                disabled={loading}
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-2 pt-4">
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Signing in...' : 'Login'}
             </Button>
           </CardFooter>
         </form>

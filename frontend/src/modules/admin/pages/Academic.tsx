@@ -10,8 +10,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { adminService } from '@/lib/services/admin.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const AdminAcademic: React.FC = () => {
+  const [loading, setLoading] = useState(false);
   const [timetableData, setTimetableData] = useState({
     className: '',
     section: '',
@@ -37,14 +41,69 @@ export const AdminAcademic: React.FC = () => {
     setCalendarData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSaveTimetable = (e: React.FormEvent) => {
+  const handleSaveTimetable = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Save Timetable:', timetableData);
+    setLoading(true);
+    try {
+      const payload: Record<string, unknown> = {
+        className: timetableData.className,
+        section: timetableData.section,
+        weekday: timetableData.weekday,
+        period: Number(timetableData.period),
+      };
+      if (timetableData.subjectCode) payload.subjectCode = timetableData.subjectCode;
+      if (timetableData.teacherId) payload.teacherId = timetableData.teacherId;
+
+      const res = await adminService.updateTimetableSlot(payload);
+      toast.success(res.message || 'Timetable slot updated successfully!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAddCalendar = (e: React.FormEvent) => {
+  const handleFetchTimetable = async () => {
+    setLoading(true);
+    try {
+      const res = await adminService.getTimetable();
+      toast.success(res.message || 'Full timetable grid fetched');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddCalendar = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Add Calendar Entry:', calendarData);
+    setLoading(true);
+    try {
+      const res = await adminService.createCalendarEvent(calendarData);
+      toast.success(res.message || 'Calendar event created successfully!');
+      setCalendarData({ title: '', date: '', category: 'HOLIDAY' });
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCalendar = async () => {
+    if (!calendarIdToDelete) {
+      toast.error('Enter Calendar Entry ID to delete');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.deleteCalendarEvent(calendarIdToDelete);
+      toast.success(res.message || 'Calendar event deleted successfully!');
+      setCalendarIdToDelete('');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -74,6 +133,7 @@ export const AdminAcademic: React.FC = () => {
                     value={timetableData.className}
                     onChange={handleTimetableChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -85,6 +145,7 @@ export const AdminAcademic: React.FC = () => {
                     value={timetableData.section}
                     onChange={handleTimetableChange}
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -99,6 +160,7 @@ export const AdminAcademic: React.FC = () => {
                     value={timetableData.weekday}
                     onChange={handleTimetableChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -111,6 +173,7 @@ export const AdminAcademic: React.FC = () => {
                     value={timetableData.period}
                     onChange={handleTimetableChange}
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -124,6 +187,7 @@ export const AdminAcademic: React.FC = () => {
                     placeholder="e.g. MATH10"
                     value={timetableData.subjectCode}
                     onChange={handleTimetableChange}
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -134,13 +198,21 @@ export const AdminAcademic: React.FC = () => {
                     placeholder="e.g. TCH12345678"
                     value={timetableData.teacherId}
                     onChange={handleTimetableChange}
+                    disabled={loading}
                   />
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex gap-2 pt-4">
-              <Button type="submit">Save Timetable Slot</Button>
-              <Button type="button" variant="outline">
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Timetable Slot'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleFetchTimetable}
+                disabled={loading}
+              >
                 Fetch Full Grid
               </Button>
             </CardFooter>
@@ -164,6 +236,7 @@ export const AdminAcademic: React.FC = () => {
                     value={calendarData.title}
                     onChange={handleCalendarChange}
                     required
+                    disabled={loading}
                   />
                 </div>
 
@@ -177,6 +250,7 @@ export const AdminAcademic: React.FC = () => {
                       value={calendarData.date}
                       onChange={handleCalendarChange}
                       required
+                      disabled={loading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -188,13 +262,14 @@ export const AdminAcademic: React.FC = () => {
                       value={calendarData.category}
                       onChange={handleCalendarChange}
                       required
+                      disabled={loading}
                     />
                   </div>
                 </div>
               </CardContent>
               <CardFooter className="pt-4">
-                <Button type="submit" className="w-full">
-                  Add Calendar Entry
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Adding...' : 'Add Calendar Entry'}
                 </Button>
               </CardFooter>
             </form>
@@ -213,11 +288,17 @@ export const AdminAcademic: React.FC = () => {
                   placeholder="24-character ObjectId"
                   value={calendarIdToDelete}
                   onChange={(e) => setCalendarIdToDelete(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </CardContent>
             <CardFooter className="pt-4">
-              <Button variant="destructive" className="w-full">
+              <Button
+                onClick={handleDeleteCalendar}
+                disabled={loading}
+                variant="destructive"
+                className="w-full"
+              >
                 Delete Event
               </Button>
             </CardFooter>

@@ -10,8 +10,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { authService } from '@/lib/services/auth.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const ChangePasswordPage: React.FC = () => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     oldPassword: '',
     newPassword: '',
@@ -21,9 +25,18 @@ export const ChangePasswordPage: React.FC = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Change Password submitted:', formData);
+    setLoading(true);
+    try {
+      const response = await authService.changePassword(formData);
+      toast.success(response.message || 'Password changed successfully!');
+      setFormData({ oldPassword: '', newPassword: '' });
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,6 +58,7 @@ export const ChangePasswordPage: React.FC = () => {
                 value={formData.oldPassword}
                 onChange={handleChange}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -53,16 +67,17 @@ export const ChangePasswordPage: React.FC = () => {
                 id="newPassword"
                 name="newPassword"
                 type="password"
-                placeholder="Enter 8-15 characters with upper, lower, digit, special char"
+                placeholder="8-15 characters with upper, lower, digit, special char"
                 value={formData.newPassword}
                 onChange={handleChange}
                 required
+                disabled={loading}
               />
             </div>
           </CardContent>
           <CardFooter className="pt-4">
-            <Button type="submit" className="w-full">
-              Update Password
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Updating...' : 'Update Password'}
             </Button>
           </CardFooter>
         </form>

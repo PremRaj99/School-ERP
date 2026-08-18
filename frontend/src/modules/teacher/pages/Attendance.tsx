@@ -10,9 +10,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { teacherService } from '@/lib/services/teacher.service';
+import type { AttendanceRecord, ClassAttendanceDetail } from '@/lib/types';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const TeacherAttendance: React.FC = () => {
+  const [loading, setLoading] = useState(false);
   const [ownMonth, setOwnMonth] = useState('');
+  const [ownRecords, setOwnRecords] = useState<AttendanceRecord[] | null>(null);
+
   const [classAttendanceData, setClassAttendanceData] = useState({
     date: '',
     className: '',
@@ -21,15 +28,61 @@ export const TeacherAttendance: React.FC = () => {
     status: 'Present',
   });
   const [classAttendanceId, setClassAttendanceId] = useState('');
+  const [rosterDetail, setRosterDetail] = useState<ClassAttendanceDetail | null>(null);
 
-  const handleOwnSubmit = (e: React.FormEvent) => {
+  const handleOwnSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Fetch own attendance for month:', ownMonth);
+    setLoading(true);
+    try {
+      const res = await teacherService.getOwnAttendance(ownMonth || undefined);
+      setOwnRecords(Array.isArray(res.data) ? res.data : []);
+      toast.success(res.message || 'Personal attendance loaded');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleClassSubmit = (e: React.FormEvent) => {
+  const handleClassSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Mark Class Attendance:', classAttendanceData);
+    setLoading(true);
+    try {
+      const payload = {
+        date: classAttendanceData.date,
+        className: classAttendanceData.className,
+        section: classAttendanceData.section,
+        attendance: [
+          {
+            studentId: classAttendanceData.studentId,
+            status: classAttendanceData.status,
+          },
+        ],
+      };
+      const res = await teacherService.createClassAttendance(payload);
+      toast.success(res.message || 'Class attendance recorded successfully!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFetchClassRoster = async () => {
+    if (!classAttendanceId) {
+      toast.error('Enter Class Attendance ID');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await teacherService.getClassAttendanceDetail(classAttendanceId);
+      setRosterDetail(res.data);
+      toast.success('Class attendance details loaded');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -59,6 +112,7 @@ export const TeacherAttendance: React.FC = () => {
                     setClassAttendanceData({ ...classAttendanceData, date: e.target.value })
                   }
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -73,6 +127,7 @@ export const TeacherAttendance: React.FC = () => {
                       setClassAttendanceData({ ...classAttendanceData, className: e.target.value })
                     }
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -85,6 +140,7 @@ export const TeacherAttendance: React.FC = () => {
                       setClassAttendanceData({ ...classAttendanceData, section: e.target.value })
                     }
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -100,6 +156,7 @@ export const TeacherAttendance: React.FC = () => {
                       setClassAttendanceData({ ...classAttendanceData, studentId: e.target.value })
                     }
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -112,16 +169,14 @@ export const TeacherAttendance: React.FC = () => {
                       setClassAttendanceData({ ...classAttendanceData, status: e.target.value })
                     }
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex gap-2 pt-4">
-              <Button type="submit" className="w-full">
-                Mark Attendance
-              </Button>
-              <Button type="button" variant="secondary" className="w-full">
-                Update Roster
+            <CardFooter className="pt-4">
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Submitting...' : 'Mark Class Attendance'}
               </Button>
             </CardFooter>
           </form>
@@ -130,8 +185,8 @@ export const TeacherAttendance: React.FC = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>My Attendance History</CardTitle>
-              <CardDescription>View your own monthly check-in record</CardDescription>
+              <CardTitle>My Personal Attendance History</CardTitle>
+              <CardDescription>View your own monthly check-in records</CardDescription>
             </CardHeader>
             <form onSubmit={handleOwnSubmit}>
               <CardContent className="space-y-4">
@@ -142,13 +197,35 @@ export const TeacherAttendance: React.FC = () => {
                     placeholder="e.g. 08-2026"
                     value={ownMonth}
                     onChange={(e) => setOwnMonth(e.target.value)}
-                    required
+                    disabled={loading}
                   />
                 </div>
+                {ownRecords && (
+                  <div className="max-h-36 space-y-2 overflow-y-auto">
+                    {ownRecords.length > 0 ? (
+                      ownRecords.map((r, i) => (
+                        <div key={i} className="flex justify-between rounded border p-2 text-xs">
+                          <span>{r.date}</span>
+                          <span
+                            className={
+                              r.status === 'Present'
+                                ? 'font-semibold text-green-600'
+                                : 'font-semibold text-red-600'
+                            }
+                          >
+                            {r.status}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-xs">No attendance records found.</p>
+                    )}
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="pt-4">
-                <Button type="submit" className="w-full">
-                  View My Attendance
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Fetching...' : 'View My Attendance'}
                 </Button>
               </CardFooter>
             </form>
@@ -169,12 +246,30 @@ export const TeacherAttendance: React.FC = () => {
                   placeholder="24-character ObjectId"
                   value={classAttendanceId}
                   onChange={(e) => setClassAttendanceId(e.target.value)}
+                  disabled={loading}
                 />
               </div>
+              {rosterDetail && (
+                <div className="bg-muted/40 space-y-1 rounded border p-3 text-xs">
+                  <p>
+                    <strong>Class:</strong> {rosterDetail.className}-{rosterDetail.section} (
+                    {rosterDetail.date})
+                  </p>
+                  <p>
+                    <strong>Total Marked:</strong> {rosterDetail.attendance?.length ?? 0} students
+                  </p>
+                </div>
+              )}
             </CardContent>
             <CardFooter className="pt-4">
-              <Button type="button" variant="outline" className="w-full">
-                Fetch Class Roster
+              <Button
+                type="button"
+                onClick={handleFetchClassRoster}
+                disabled={loading}
+                variant="outline"
+                className="w-full"
+              >
+                {loading ? 'Fetching...' : 'Fetch Class Roster'}
               </Button>
             </CardFooter>
           </Card>

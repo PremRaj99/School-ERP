@@ -11,8 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { adminService } from '@/lib/services/admin.service';
+import { getErrorMessage } from '@/lib/api';
+import { toast } from 'sonner';
 
 export const AdminNotices: React.FC = () => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -27,9 +31,78 @@ export const AdminNotices: React.FC = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Create Notice:', formData);
+    setLoading(true);
+    try {
+      const payload: Record<string, unknown> = {
+        title: formData.title,
+        date: formData.date,
+        targetRole: formData.targetRole,
+      };
+      if (formData.description) payload.description = formData.description;
+      if (formData.fileUrl) payload.fileUrl = formData.fileUrl;
+      if (formData.expiryDate) payload.expiryDate = formData.expiryDate;
+
+      const res = await adminService.createNotice(payload);
+      toast.success(res.message || 'Notice published successfully!');
+      setFormData({
+        title: '',
+        description: '',
+        fileUrl: '',
+        date: '',
+        expiryDate: '',
+        targetRole: 'All',
+      });
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!noticeId) {
+      toast.error('Enter Notice ID to delete');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.deleteNotice(noticeId);
+      toast.success(res.message || 'Notice deleted successfully!');
+      setNoticeId('');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!noticeId) {
+      toast.error('Enter Notice ID to search');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminService.getNoticeById(noticeId);
+      const notice = res.data;
+      if (notice) {
+        setFormData({
+          title: notice.title || '',
+          description: notice.description || '',
+          fileUrl: notice.fileUrl || '',
+          date: notice.date || '',
+          expiryDate: notice.expiryDate || '',
+          targetRole: notice.targetRole || 'All',
+        });
+        toast.success('Notice details loaded');
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,6 +133,7 @@ export const AdminNotices: React.FC = () => {
                   value={formData.title}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -73,6 +147,7 @@ export const AdminNotices: React.FC = () => {
                     value={formData.date}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -83,6 +158,7 @@ export const AdminNotices: React.FC = () => {
                     placeholder="DD-MM-YYYY"
                     value={formData.expiryDate}
                     onChange={handleChange}
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -96,6 +172,7 @@ export const AdminNotices: React.FC = () => {
                   value={formData.targetRole}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -107,6 +184,7 @@ export const AdminNotices: React.FC = () => {
                   placeholder="https://example.com/circular.pdf"
                   value={formData.fileUrl}
                   onChange={handleChange}
+                  disabled={loading}
                 />
               </div>
 
@@ -118,11 +196,14 @@ export const AdminNotices: React.FC = () => {
                   placeholder="Full text of the notice / announcement (min 50 characters)"
                   value={formData.description}
                   onChange={handleChange}
+                  disabled={loading}
                 />
               </div>
             </CardContent>
             <CardFooter className="flex gap-2 pt-4">
-              <Button type="submit">Publish Notice</Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Publishing...' : 'Publish Notice'}
+              </Button>
             </CardFooter>
           </form>
         </Card>
@@ -140,14 +221,21 @@ export const AdminNotices: React.FC = () => {
                 placeholder="24-character Notice ObjectId"
                 value={noticeId}
                 onChange={(e) => setNoticeId(e.target.value)}
+                disabled={loading}
               />
             </div>
           </CardContent>
           <CardFooter className="flex gap-2 pt-4">
-            <Button type="button" className="w-full">
+            <Button onClick={handleSearch} disabled={loading} type="button" className="w-full">
               Search Notice
             </Button>
-            <Button type="button" variant="destructive" className="w-full">
+            <Button
+              onClick={handleDelete}
+              disabled={loading}
+              type="button"
+              variant="destructive"
+              className="w-full"
+            >
               Delete Notice
             </Button>
           </CardFooter>
