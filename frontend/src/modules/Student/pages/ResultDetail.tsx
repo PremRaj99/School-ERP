@@ -101,7 +101,7 @@ export const StudentResultDetail: React.FC = () => {
         <div className="space-y-1 border-b pb-4 text-center">
           <div className="inline-flex items-center justify-center gap-1.5 text-base font-bold text-slate-900 dark:text-white">
             <School className="h-5 w-5 text-indigo-600" />
-            <span>AURA INTERNATIONAL ACADEMY</span>
+            <span>GYAN DEEP BAAL VIKAS VIDYA MANDIR</span>
           </div>
           <p className="text-muted-foreground text-[11px]">
             Official Academic Marksheet • {result.title}

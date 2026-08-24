@@ -19,16 +19,16 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <NavLink to="/" className="group flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white shadow-md shadow-indigo-500/20 transition-transform duration-200 group-hover:scale-105">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white shadow-md shadow-indigo-500/20 transition-transform duration-200 group-hover:scale-105">
               <School className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-                  Aura ERP
+                  Gyan Deep
                 </span>
               </div>
-              <p className="text-muted-foreground -mt-0.5 text-[10px]">Enterprise School Portal</p>
+              <p className="text-muted-foreground -mt-0.5 text-[10px]">Baal Vikas Vidya Mandir</p>
             </div>
           </NavLink>
 
@@ -72,11 +72,11 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white">
                 <School className="h-4 w-4" />
               </div>
-              <span className="text-base font-bold tracking-tight">Aura ERP</span>
+              <span className="text-base font-bold tracking-tight">Gyan Deep BVM</span>
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Unified educational enterprise management platform empowering administrators,
-              teachers, and students.
+              Gyan Deep Baal Vikas Vidya Mandir — Unified educational enterprise management
+              platform.
             </p>
           </div>
 
@@ -115,7 +115,9 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         </div>
 
         <div className="text-muted-foreground mx-auto mt-8 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 text-xs sm:flex-row dark:border-zinc-800">
-          <p>© {new Date().getFullYear()} Aura School ERP. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} Gyan Deep Baal Vikas Vidya Mandir. All rights reserved.
+          </p>
           <div className="flex items-center gap-4">
             <span className="cursor-pointer hover:text-slate-900 dark:hover:text-white">
               Privacy Policy

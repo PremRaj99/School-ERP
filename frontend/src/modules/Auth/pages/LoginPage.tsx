@@ -81,11 +81,14 @@ export const LoginPage: React.FC = () => {
           <div className="pointer-events-none absolute top-0 right-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-indigo-500/20 blur-2xl" />
 
           <div className="relative z-10 space-y-6">
-            <NavLink to="/" className="group inline-flex items-center gap-2">
+            <NavLink to="/" className="group inline-flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white backdrop-blur-xs">
                 <School className="h-5 w-5 text-indigo-300" />
               </div>
-              <span className="text-base font-bold tracking-tight">Aura School ERP</span>
+              <div>
+                <span className="text-base font-bold tracking-tight">Gyan Deep BVM</span>
+                <p className="text-[10px] text-indigo-300">Baal Vikas Vidya Mandir</p>
+              </div>
             </NavLink>
 
             <div className="space-y-2 pt-4">

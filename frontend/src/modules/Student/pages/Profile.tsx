@@ -81,7 +81,9 @@ export const StudentProfile: React.FC = () => {
                   <School className="h-4 w-4 text-sky-300" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold tracking-tight">AURA INTERNATIONAL ACADEMY</h3>
+                  <h3 className="text-xs font-bold tracking-tight">
+                    GYAN DEEP BAAL VIKAS VIDYA MANDIR
+                  </h3>
                   <p className="text-[9px] text-sky-300">Identity Pass {student.session}</p>
                 </div>
               </div>

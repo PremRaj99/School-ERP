@@ -200,7 +200,7 @@ export const AdminStudentDetail: React.FC = () => {
           <div className="flex items-center justify-between border-b border-white/15 pb-2">
             <div className="flex items-center gap-1.5">
               <School className="h-4 w-4 text-indigo-300" />
-              <span className="text-xs font-bold tracking-tight">AURA ACADEMY</span>
+              <span className="text-xs font-bold tracking-tight">GYAN DEEP BVM</span>
             </div>
             <Badge variant="outline" className="border-indigo-400/40 text-[9px] text-indigo-200">
               STUDENT PASS

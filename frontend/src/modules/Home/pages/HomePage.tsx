@@ -49,11 +49,11 @@ export const HomePage: React.FC = () => {
         </p>
 
         {/* Main CTA Buttons: Login & Contact Us */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
           <Button
             size="lg"
             onClick={() => navigate('/auth/login')}
-            className="h-11 bg-indigo-600 px-6 font-semibold text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-700"
+            className="h-11 w-full rounded-xl bg-indigo-600 px-7 font-semibold text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-700 sm:w-auto"
           >
             <ShieldCheck className="mr-2 h-4 w-4" />
             <span>Login to Portal</span>
@@ -62,9 +62,8 @@ export const HomePage: React.FC = () => {
 
           <Button
             size="lg"
-            variant="outline"
             onClick={() => navigate('/contact')}
-            className="h-11 border-slate-300 bg-white/80 px-6 font-semibold hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900/80 dark:hover:bg-zinc-800"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white/90 px-7 font-semibold text-slate-800 shadow-sm hover:bg-slate-100 sm:w-auto dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
             <Mail className="mr-2 h-4 w-4 text-indigo-500" />
             <span>Contact Us</span>
@@ -140,7 +139,8 @@ export const HomePage: React.FC = () => {
             Designed for Every Role in the Campus
           </h2>
           <p className="text-muted-foreground text-sm">
-            Explore how Aura ERP simplifies workflows for administrators, instructors, and learners.
+            Explore how Gyan Deep BVM simplifies workflows for administrators, instructors, and
+            learners.
           </p>
         </div>
 
@@ -224,7 +224,9 @@ export const HomePage: React.FC = () => {
                       <div className="h-3 w-3 rounded-full bg-amber-500" />
                       <div className="h-3 w-3 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="font-mono text-xs text-indigo-300">admin.aura-erp.live</span>
+                    <span className="font-mono text-xs text-indigo-300">
+                      admin.gyandeep-bvm.live
+                    </span>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-xl bg-white/10 p-3 backdrop-blur-xs">

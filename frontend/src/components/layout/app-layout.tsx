@@ -283,21 +283,23 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
       {/* Desktop Sidebar */}
       <aside className="fixed inset-y-0 z-30 hidden w-64 flex-col border-r border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-xl lg:flex dark:border-zinc-800/80 dark:bg-zinc-900/95">
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between border-b border-slate-200/70 px-5 dark:border-zinc-800/80">
+        <div className="flex h-16 items-center justify-between border-b border-slate-200/70 px-4 dark:border-zinc-800/80">
           <NavLink to={`/${role}/dashboard`} className="group flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white shadow-md shadow-indigo-500/20 transition-transform duration-200 group-hover:scale-105">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white shadow-md shadow-indigo-500/20 transition-transform duration-200 group-hover:scale-105">
               <School className="h-5 w-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-                  Aura ERP
+                <span className="truncate text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+                  Gyan Deep BVM
                 </span>
-                <Badge variant="outline" className="h-4 px-1.5 py-0 text-[10px] font-medium">
-                  PRO
+                <Badge variant="outline" className="h-4 px-1 py-0 text-[9px] font-medium">
+                  ERP
                 </Badge>
               </div>
-              <p className="text-muted-foreground -mt-0.5 text-[11px]">School Management</p>
+              <p className="text-muted-foreground -mt-0.5 truncate text-[10px]">
+                Baal Vikas Vidya Mandir
+              </p>
             </div>
           </NavLink>
         </div>
@@ -397,10 +399,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="group flex items-center gap-2"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white shadow-xs transition-transform group-hover:scale-105">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white shadow-xs transition-transform group-hover:scale-105">
                   <School className="h-4 w-4" />
                 </div>
-                <span className="text-sm font-bold">Aura ERP</span>
+                <div className="flex flex-col">
+                  <span className="text-xs leading-tight font-bold">Gyan Deep BVM</span>
+                  <span className="text-muted-foreground text-[9px]">Baal Vikas Vidya Mandir</span>
+                </div>
               </NavLink>
               <Button
                 variant="ghost"
