@@ -100,15 +100,15 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
             <div className="text-muted-foreground space-y-2 text-xs">
               <div className="flex items-center gap-2">
                 <Phone className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
-                <span>+91 (800) 456-7890</span>
+                <span>+91 6200103129</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
-                <span>support@aura-erp.edu</span>
+                <span>web.premraj@gmail.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
-                <span>Education City, Sector 4, New Delhi</span>
+                <span>Naya Savera Parivar Office, Duhatand, Dhanbad, Jharkhand, 826001</span>
               </div>
             </div>
           </div>

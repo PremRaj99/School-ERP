@@ -89,8 +89,7 @@ export const ContactPage: React.FC = () => {
                     Main Campus Address
                   </span>
                   <p className="text-muted-foreground mt-0.5">
-                    Aura International Academy, Knowledge Hub Boulevard, Sector 4, New Delhi -
-                    110001
+                    Naya Savera Parivar Office, Duhatand, Dhanbad, Jharkhand, 826001
                   </p>
                 </div>
               </div>
@@ -99,10 +98,9 @@ export const ContactPage: React.FC = () => {
                 <Phone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
                 <div>
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">
-                    Phone Helplines
+                    Phone Helpline
                   </span>
-                  <p className="text-muted-foreground mt-0.5">Admissions: +91 (800) 456-7890</p>
-                  <p className="text-muted-foreground">General Office: +91 (800) 456-7891</p>
+                  <p className="text-muted-foreground mt-0.5">+91 6200103129</p>
                 </div>
               </div>
 
@@ -110,10 +108,9 @@ export const ContactPage: React.FC = () => {
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-sky-500" />
                 <div>
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">
-                    Email Desks
+                    Email Desk
                   </span>
-                  <p className="text-muted-foreground mt-0.5">admissions@aura-erp.edu</p>
-                  <p className="text-muted-foreground">admin@aura-erp.edu</p>
+                  <p className="text-muted-foreground mt-0.5">web.premraj@gmail.com</p>
                 </div>
               </div>
 
