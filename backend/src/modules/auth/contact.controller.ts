@@ -1,13 +1,8 @@
-import { validateSchema } from '@/core/errors';
-import { asyncHandler, CreatedResponse } from '@/core/responses';
-import { NextFunction, Request, Response } from 'express';
-import { ContactUsSchema } from './types';
+import { authContract } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
 import { ContactService } from './services/contact.service';
 
-export const submitContact = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const parseData = validateSchema(ContactUsSchema, req.body);
-    await ContactService.createContact(parseData);
-    res.status(201).json(new CreatedResponse());
-  },
-);
+export const submitContact = defineRoute(authContract.contact, async ({ body }) => {
+  await ContactService.createContact(body);
+  return null;
+});

@@ -1,10 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { ErrorState } from '@/components/data-table';
 import {
   Dialog,
   DialogContent,
@@ -13,85 +16,101 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { TextField, DateField, SelectField } from '@/components/form';
 import { adminService } from '@/lib/services/admin.service';
-import type { Notice, CreateNoticePayload } from '@/lib/types';
+import { CreateNoticeBody, MAX_PAGE_SIZE } from '@schoolerp/contracts';
+import { dateToIsoDate } from '@/lib/date';
 import { getErrorMessage } from '@/lib/api';
+import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { Plus, Trash2, Calendar, Sparkles, Search, Filter } from 'lucide-react';
+import { Plus, Trash2, Pencil, Calendar, Sparkles, Search, Filter, Megaphone } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-const sampleNotices: Notice[] = [
-  {
-    id: 'not-1',
-    title: 'Annual Sports & Athletics Meet 2026',
-    description:
-      'Trials and selection for inter-house track and field events will commence next Monday at the main stadium.',
-    targetRole: 'All',
-    date: '10-04-2025',
-    expiryDate: '25-04-2025',
-  },
-  {
-    id: 'not-2',
-    title: 'Quarterly Examination Schedule Released',
-    description:
-      'The finalized date sheet for Classes 6 through 12 has been published. Please ensure student hall tickets are verified.',
-    targetRole: 'Student',
-    date: '08-04-2025',
-    expiryDate: '30-04-2025',
-  },
-  {
-    id: 'not-3',
-    title: 'Faculty Academic Council Review Meeting',
-    description:
-      'All department heads and teaching faculty are requested to assemble in the Conference Hall for syllabus progression review.',
-    targetRole: 'Teacher',
-    date: '05-04-2025',
-    expiryDate: '15-04-2025',
-  },
-  {
-    id: 'not-4',
-    title: 'Fee Payment Reminders for Term 1',
-    description:
-      'Parents and students are requested to clear all pending quarterly tuition dues before the scheduled examination series.',
-    targetRole: 'Student',
-    date: '01-04-2025',
-    expiryDate: '20-04-2025',
-  },
+const TARGET_ROLE_OPTIONS = [
+  { value: 'All', label: 'All Campus Members' },
+  { value: 'Student', label: 'Students Only' },
+  { value: 'Teacher', label: 'Teaching Faculty Only' },
 ];
+
+const emptyDefaults: CreateNoticeBody = {
+  title: '',
+  description: '',
+  date: dateToIsoDate(new Date()),
+  targetRole: 'All',
+  expiryDate: '',
+};
+
+const isExpired = (expiryDate: string | null): boolean =>
+  !!expiryDate && expiryDate < dateToIsoDate(new Date());
 
 export const AdminNotices: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [targetFilter, setTargetFilter] = useState<'All' | 'Student' | 'Teacher'>('All');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Expired'>('All');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingNoticeId, setEditingNoticeId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<CreateNoticePayload>({
-    title: '',
-    description: '',
-    targetRole: 'All',
-    expiryDate: '30-04-2025',
+  const { control, handleSubmit, reset } = useForm<CreateNoticeBody>({
+    resolver: zodResolver(CreateNoticeBody),
+    defaultValues: emptyDefaults,
   });
 
-  const { data: apiNotices } = useQuery({
-    queryKey: ['adminNotices'],
-    queryFn: () => adminService.getNotices(),
+  // Fetches the full record (list rows omit description/fileUrl) to seed the edit form.
+  const { data: editingNotice } = useQuery({
+    queryKey: qk.admin.notice(editingNoticeId ?? ''),
+    queryFn: () => adminService.getNoticeById(editingNoticeId!),
+    enabled: !!editingNoticeId,
   });
 
-  const noticesList: Notice[] = useMemo(() => {
-    if (apiNotices?.data && Array.isArray(apiNotices.data) && apiNotices.data.length > 0) {
-      return apiNotices.data;
+  useEffect(() => {
+    if (editingNotice) {
+      reset({
+        title: editingNotice.title,
+        description: editingNotice.description ?? '',
+        date: editingNotice.date,
+        targetRole: editingNotice.targetRole,
+        expiryDate: editingNotice.expiryDate ?? '',
+      });
     }
-    return sampleNotices;
-  }, [apiNotices]);
+  }, [editingNotice, reset]);
+
+  // pageSize: MAX_PAGE_SIZE — card grid with client-side search, not `<DataTable>`; a school's
+  // total notice count comfortably fits in one page (ALIGNMENT_PLAN.md 2C/P1).
+  const {
+    data: noticesResponse,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: qk.admin.notices({ pageSize: MAX_PAGE_SIZE }),
+    queryFn: () => adminService.getNotices({ pageSize: MAX_PAGE_SIZE }),
+  });
+  const noticesList = noticesResponse?.data;
 
   const createMutation = useMutation({
-    mutationFn: (payload: CreateNoticePayload) => adminService.createNotice(payload),
-    onSuccess: (res) => {
-      toast.success(res.message || 'Notice broadcasted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['adminNotices'] });
+    mutationFn: (payload: CreateNoticeBody) => adminService.createNotice(payload),
+    onSuccess: () => {
+      toast.success('Notice broadcasted successfully!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.notices() });
       setIsCreateOpen(false);
-      setFormData({ title: '', description: '', targetRole: 'All', expiryDate: '' });
+      reset(emptyDefaults);
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: CreateNoticeBody) => adminService.updateNotice(editingNoticeId!, payload),
+    onSuccess: () => {
+      toast.success('Notice updated');
+      queryClient.invalidateQueries({ queryKey: qk.admin.notices() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.notice(editingNoticeId!) });
+      setEditingNoticeId(null);
+      reset(emptyDefaults);
     },
     onError: (err) => {
       toast.error(getErrorMessage(err));
@@ -102,7 +121,7 @@ export const AdminNotices: React.FC = () => {
     mutationFn: (noticeId: string) => adminService.deleteNotice(noticeId),
     onSuccess: () => {
       toast.success('Notice removed');
-      queryClient.invalidateQueries({ queryKey: ['adminNotices'] });
+      queryClient.invalidateQueries({ queryKey: qk.admin.notices() });
       setDeleteConfirmId(null);
     },
     onError: (err) => {
@@ -110,18 +129,25 @@ export const AdminNotices: React.FC = () => {
     },
   });
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createMutation.mutate(formData);
+  const isEditDialogOpen = isCreateOpen || !!editingNoticeId;
+  const closeDialog = () => {
+    setIsCreateOpen(false);
+    setEditingNoticeId(null);
   };
 
-  const filteredNotices = noticesList.filter((n) => {
-    const matchesSearch = `${n.title} ${n.description || ''}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+  const onSubmit: SubmitHandler<CreateNoticeBody> = (values) =>
+    editingNoticeId ? updateMutation.mutate(values) : createMutation.mutate(values);
+
+  const filteredNotices = (noticesList ?? []).filter((n) => {
+    const matchesSearch = n.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTarget =
       targetFilter === 'All' || n.targetRole === targetFilter || n.targetRole === 'All';
-    return matchesSearch && matchesTarget;
+    const expired = isExpired(n.expiryDate);
+    const matchesStatus =
+      statusFilter === 'All' ||
+      (statusFilter === 'Active' && !expired) ||
+      (statusFilter === 'Expired' && expired);
+    return matchesSearch && matchesTarget && matchesStatus;
   });
 
   return (
@@ -144,7 +170,7 @@ export const AdminNotices: React.FC = () => {
 
         <Button
           onClick={() => {
-            setFormData({ title: '', description: '', targetRole: 'All', expiryDate: '' });
+            reset(emptyDefaults);
             setIsCreateOpen(true);
           }}
           className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
@@ -170,6 +196,22 @@ export const AdminNotices: React.FC = () => {
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <Filter className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
             <div className="flex items-center gap-1.5">
+              {(['All', 'Active', 'Expired'] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                    statusFilter === status
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-400'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+            <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-zinc-700" />
+            <div className="flex items-center gap-1.5">
               {(['All', 'Student', 'Teacher'] as const).map((role) => (
                 <button
                   key={role}
@@ -189,162 +231,177 @@ export const AdminNotices: React.FC = () => {
       </Card>
 
       {/* Notices Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {filteredNotices.map((notice, idx) => {
-          const noticeId = notice.id || notice._id || `notice-${idx}`;
-          return (
-            <Card
-              key={noticeId}
-              className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="secondary"
-                      className={`text-[10px] font-semibold ${
-                        notice.targetRole === 'All'
-                          ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
-                          : notice.targetRole === 'Teacher'
-                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                            : 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300'
-                      }`}
-                    >
-                      Audience: {notice.targetRole}
-                    </Badge>
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full" />
+          ))}
+        </div>
+      ) : isError ? (
+        <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
+      ) : filteredNotices.length === 0 ? (
+        <Empty className="rounded-none border">
+          <EmptyMedia variant="icon">
+            <Megaphone className="size-5" />
+          </EmptyMedia>
+          <EmptyTitle>No notices published yet</EmptyTitle>
+          <EmptyDescription>
+            {searchTerm || targetFilter !== 'All' || statusFilter !== 'All'
+              ? 'No notices match your filters.'
+              : 'Broadcast the first institutional circular.'}
+          </EmptyDescription>
+          {!searchTerm && targetFilter === 'All' && statusFilter === 'All' && (
+            <Button size="sm" className="mt-1 text-xs" onClick={() => setIsCreateOpen(true)}>
+              <Plus className="mr-1 h-3.5 w-3.5" />
+              Broadcast Notice
+            </Button>
+          )}
+        </Empty>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {filteredNotices.map((notice, idx) => {
+            const noticeId = notice.id || `notice-${idx}`;
+            return (
+              <Card
+                key={noticeId}
+                className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Badge
+                        variant="secondary"
+                        className={`text-[10px] font-semibold ${
+                          notice.targetRole === 'All'
+                            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
+                            : notice.targetRole === 'Teacher'
+                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                              : 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300'
+                        }`}
+                      >
+                        Audience: {notice.targetRole}
+                      </Badge>
+                      {notice.expiryDate && (
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] font-semibold ${
+                            isExpired(notice.expiryDate)
+                              ? 'border-rose-500/30 text-rose-700 dark:text-rose-300'
+                              : 'border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                          }`}
+                        >
+                          {isExpired(notice.expiryDate) ? 'Expired' : 'Active'}
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
+                      <Calendar className="h-3 w-3 text-indigo-500" />
+                      <span>{notice.date}</span>
+                    </span>
                   </div>
-                  <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
-                    <Calendar className="h-3 w-3 text-indigo-500" />
-                    <span>{notice.date}</span>
-                  </span>
-                </div>
 
-                <CardTitle className="mt-2 text-base leading-snug font-bold text-slate-900 dark:text-white">
-                  {notice.title}
-                </CardTitle>
-              </CardHeader>
+                  <CardTitle className="mt-2 text-base leading-snug font-bold text-slate-900 dark:text-white">
+                    {notice.title}
+                  </CardTitle>
+                </CardHeader>
 
-              <CardContent className="flex-1 space-y-3 pt-0 text-xs">
-                <p className="text-muted-foreground leading-relaxed">
-                  {notice.description ||
-                    'Official institutional communication for designated campus members.'}
-                </p>
+                <CardContent className="flex-1 space-y-3 pt-0 text-xs">
+                  {/* The list endpoint only returns title/date/targetRole — full body and expiry
+                    live on the detail view (not wired into this card yet). */}
+                  <p className="text-muted-foreground leading-relaxed">
+                    Official institutional communication for designated campus members.
+                  </p>
 
-                <div className="flex items-center justify-between border-t border-slate-100 pt-2 dark:border-zinc-800">
-                  <span className="text-muted-foreground text-[10px]">
-                    Expires: {notice.expiryDate || 'Active indefinitely'}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs text-rose-600 hover:bg-rose-50 dark:text-rose-400"
-                    onClick={() => setDeleteConfirmId(noticeId)}
-                  >
-                    <Trash2 className="mr-1 h-3.5 w-3.5" />
-                    <span>Delete</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                  <div className="flex items-center justify-end gap-1 border-t border-slate-100 pt-2 dark:border-zinc-800">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setEditingNoticeId(noticeId)}
+                    >
+                      <Pencil className="mr-1 h-3.5 w-3.5" />
+                      <span>Edit</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-rose-600 hover:bg-rose-50 dark:text-rose-400"
+                      onClick={() => setDeleteConfirmId(noticeId)}
+                    >
+                      <Trash2 className="mr-1 h-3.5 w-3.5" />
+                      <span>Delete</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Broadcast Notice Modal */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+      {/* Broadcast / Edit Notice Modal */}
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
               <Sparkles className="h-4 w-4" />
               <span>Institutional Broadcast</span>
             </div>
-            <DialogTitle className="text-lg font-bold">Publish Official Notice</DialogTitle>
+            <DialogTitle className="text-lg font-bold">
+              {editingNoticeId ? 'Edit Notice' : 'Publish Official Notice'}
+            </DialogTitle>
             <DialogDescription className="text-xs">
-              Create an announcement that will be displayed on designated portal dashboards.
+              {editingNoticeId
+                ? 'Update this announcement — changes are visible immediately on every portal it targets.'
+                : 'Create an announcement that will be displayed on designated portal dashboards.'}
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleCreateSubmit} className="space-y-4 pt-2">
-            <div className="space-y-1">
-              <Label htmlFor="nTitle" className="text-xs font-semibold">
-                Circular Title / Headline <span className="text-rose-500">*</span>
-              </Label>
-              <Input
-                id="nTitle"
-                placeholder="e.g. Annual Sports & Athletics Meet 2026"
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                required
-                className="h-9 text-xs"
-              />
-            </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+            <TextField
+              control={control}
+              name="title"
+              label="Circular Title / Headline"
+              required
+              placeholder="e.g. Annual Sports & Athletics Meet 2026"
+            />
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="nTarget" className="text-xs font-semibold">
-                  Target Audience <span className="text-rose-500">*</span>
-                </Label>
-                <select
-                  id="nTarget"
-                  value={formData.targetRole}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      targetRole: e.target.value as 'All' | 'Student' | 'Teacher',
-                    }))
-                  }
-                  className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-medium dark:border-zinc-700 dark:bg-zinc-900"
-                >
-                  <option value="All">All Campus Members</option>
-                  <option value="Student">Students Only</option>
-                  <option value="Teacher">Teaching Faculty Only</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="nExpiry" className="text-xs font-semibold">
-                  Expiry Date (DD-MM-YYYY)
-                </Label>
-                <Input
-                  id="nExpiry"
-                  placeholder="30-04-2025"
-                  value={formData.expiryDate}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, expiryDate: e.target.value }))}
-                  className="h-9 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="nDesc" className="text-xs font-semibold">
-                Circular Body / Details <span className="text-rose-500">*</span>
-              </Label>
-              <Textarea
-                id="nDesc"
-                placeholder="Please state the complete announcement details, instructions, dates, and venues..."
-                rows={4}
-                value={formData.description || ''}
-                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+              <SelectField
+                control={control}
+                name="targetRole"
+                label="Target Audience"
                 required
-                className="text-xs leading-relaxed"
+                options={TARGET_ROLE_OPTIONS}
               />
+              <DateField control={control} name="expiryDate" label="Expiry Date" />
             </div>
+
+            <TextField
+              control={control}
+              name="description"
+              label="Circular Body / Details"
+              required
+              multiline
+              placeholder="Please state the complete announcement details, instructions, dates, and venues..."
+            />
 
             <DialogFooter className="pt-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCreateOpen(false)}
-                className="h-9 text-xs"
-              >
+              <Button type="button" variant="outline" onClick={closeDialog} className="h-9 text-xs">
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={createMutation.isPending}
+                disabled={createMutation.isPending || updateMutation.isPending}
                 className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
               >
-                {createMutation.isPending ? 'Publishing...' : 'Broadcast Notice'}
+                {editingNoticeId
+                  ? updateMutation.isPending
+                    ? 'Saving...'
+                    : 'Save Changes'
+                  : createMutation.isPending
+                    ? 'Publishing...'
+                    : 'Broadcast Notice'}
               </Button>
             </DialogFooter>
           </form>

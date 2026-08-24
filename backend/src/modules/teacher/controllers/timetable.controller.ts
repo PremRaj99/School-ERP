@@ -1,10 +1,7 @@
-import { asyncHandler, OkResponse } from '@/core/responses';
-import { NextFunction, Request, Response } from 'express';
+import { teacherContract } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
 import { TeacherService } from '../services/teacher.service';
 
-export const getTimeTables = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const data = await TeacherService.getTimetables(req.user!.id);
-    res.status(200).json(new OkResponse(data));
-  },
-);
+export const getTimeTables = defineRoute(teacherContract.academicTimetable, async ({ user }) => {
+  return TeacherService.getTimetables(user!.id);
+});

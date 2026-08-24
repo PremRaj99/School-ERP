@@ -58,6 +58,10 @@ model Student {
   studentAttendance StudentAttendance[]
   studentFees       StudentFee[]
   examResults       ExamResult[]
+  // D5 (ALIGNMENT_PLAN.md 2D/P3) — needed for session promotion: a graduated/transferred student
+  // stays in the DB (fee/exam history intact) instead of being deleted, but drops out of the
+  // active roster. Defaults to `Active` so every existing document reads as active with no backfill.
+  status            StudentStatus       @default(Active)
 
   @@unique([classId, rollNo])
   @@index([dateOfAdmission])
@@ -108,6 +112,11 @@ model Class {
   exams            Exam[]
   timeTableEntries TimeTable[]
   classAttendances ClassAttendance[]
+  // D5 (ALIGNMENT_PLAN.md 2D/P3) — set on a class once every active student has been promoted out
+  // of it, so it stops showing up as a live option (create-student dropdown, roster pickers) while
+  // its historical data (past exams, attendance, fee records) stays queryable. Defaults to `false`
+  // so every existing class reads as still-active with no backfill.
+  isArchived       Boolean           @default(false)
 
   @@unique([className, section, session])
 }
@@ -169,6 +178,13 @@ model Transaction {
   finalAmount   Float
   status        TxnStatus
   category      TxnCategory
+  // P4 (ALIGNMENT_PLAN.md) — a free-text sub-label for a manually-logged expense (books,
+  // whiteboards, sports kit, ...), so the Finance/Admin "log an expense" form isn't limited to
+  // `TxnCategory`'s small fixed enum. `category` stays `Other` for every expense that carries one
+  // of these; `Fee`/`Salary`/`Utility`/`Infrastructure` transactions leave it null. Null, not a
+  // required field, so every existing Transaction document (which predates this column) reads
+  // correctly with no backfill needed.
+  expenseCategory String?
   createdAt     DateTime       @default(now())
   studentFee    StudentFee?
   teacherSalary TeacherSalary?
@@ -300,4 +316,10 @@ enum AttendanceStatus {
   Present
   Absent
   Leave
+}
+
+enum StudentStatus {
+  Active
+  TransferredOut
+  Graduated
 }

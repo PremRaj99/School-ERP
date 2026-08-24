@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { ColumnDef, SortingState } from '@tanstack/react-table';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -19,228 +21,378 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { DataTable, ErrorState, downloadCsv } from '@/components/data-table';
+import { TextField, NumberField, DateField, SelectField, SessionField } from '@/components/form';
 import { adminService } from '@/lib/services/admin.service';
-import type { Student, StudentPayload } from '@/lib/types';
+import { qk } from '@/lib/query-keys';
+import {
+  useClassNameOptions,
+  useSectionOptions,
+  useSessionOptions,
+} from '@/hooks/options/useAdminOptions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { CreateStudentBody, type StudentRecord } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { toast } from 'sonner';
-import {
-  Plus,
-  Search,
-  Filter,
-  Eye,
-  Trash2,
-  Phone,
-  School,
-  IdCard,
-  Sparkles,
-  QrCode,
-} from 'lucide-react';
+import { Plus, Eye, Pencil, Trash2, Phone, Sparkles, Users, UploadCloud } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { BulkImportStudentsDialog } from './BulkImportStudentsDialog';
 
-const sampleStudents: Student[] = [
-  {
-    studentId: 'STU-2025-001',
-    firstName: 'Aryan',
-    lastName: 'Sharma',
-    dob: '12-05-2009',
-    phone: '9876543210',
-    className: '10',
-    section: 'A',
-    session: '2025-2026',
-    rollNo: 101,
-    fatherName: 'Rajesh Sharma',
-    motherName: 'Sunita Sharma',
-    address: 'B-14, Green Park, New Delhi',
-    dateOfAdmission: '01-04-2021',
-  },
-  {
-    studentId: 'STU-2025-002',
-    firstName: 'Diya',
-    lastName: 'Verma',
-    dob: '24-08-2009',
-    phone: '9812345678',
-    className: '10',
-    section: 'A',
-    session: '2025-2026',
-    rollNo: 102,
-    fatherName: 'Vikram Verma',
-    motherName: 'Anita Verma',
-    address: 'Flat 402, Lotus Heights, New Delhi',
-    dateOfAdmission: '01-04-2021',
-  },
-  {
-    studentId: 'STU-2025-003',
-    firstName: 'Kabir',
-    lastName: 'Patel',
-    dob: '15-11-2010',
-    phone: '9765432109',
-    className: '9',
-    section: 'B',
-    session: '2025-2026',
-    rollNo: 204,
-    fatherName: 'Manish Patel',
-    motherName: 'Pooja Patel',
-    address: 'C-89, Preet Vihar, New Delhi',
-    dateOfAdmission: '05-04-2022',
-  },
-  {
-    studentId: 'STU-2025-004',
-    firstName: 'Ananya',
-    lastName: 'Deshmukh',
-    dob: '03-02-2011',
-    phone: '9654321098',
-    className: '8',
-    section: 'A',
-    session: '2025-2026',
-    rollNo: 301,
-    fatherName: 'Sanjay Deshmukh',
-    motherName: 'Kavita Deshmukh',
-    address: 'A-12, Model Town, New Delhi',
-    dateOfAdmission: '10-04-2023',
-  },
-  {
-    studentId: 'STU-2025-005',
-    firstName: 'Rohan',
-    lastName: 'Mehta',
-    dob: '19-09-2008',
-    phone: '9543210987',
-    className: '11',
-    section: 'A',
-    session: '2025-2026',
-    rollNo: 112,
-    fatherName: 'Alok Mehta',
-    motherName: 'Ritu Mehta',
-    address: 'D-56, Hauz Khas, New Delhi',
-    dateOfAdmission: '01-04-2020',
-  },
-];
+/** Column-id -> the backend's actual sortable field. Columns not listed here (composite/derived,
+ * like the "Class & Sec" badge) have `enableSorting: false` — the list endpoint only sorts by a
+ * real column (ALIGNMENT_PLAN.md 2C/P1), not a client-side derived label. */
+const SORT_FIELD_BY_COLUMN_ID: Record<
+  string,
+  'rollNo' | 'firstName' | 'dateOfAdmission' | 'studentId'
+> = {
+  studentId: 'studentId',
+  name: 'firstName',
+  rollNo: 'rollNo',
+};
+
+const emptyDefaults: CreateStudentBody = {
+  firstName: '',
+  lastName: '',
+  dob: '2010-01-01',
+  address: '',
+  phone: '',
+  fatherName: '',
+  motherName: '',
+  fatherOccupation: '',
+  motherOccupation: '',
+  studentAadhar: '',
+  fatherAadhar: '',
+  motherAadhar: '',
+  className: '',
+  section: '',
+  session: '',
+  dateOfAdmission: new Date().toISOString().slice(0, 10),
+  rollNo: 1,
+  appId: '',
+};
+
+/** Optional fields on `CreateStudentBody` that must become `undefined`, not `''`, on the wire —
+ * several are regex-validated (`Aadhar`) and reject an empty string outright. */
+const OPTIONAL_STRING_FIELDS = [
+  'lastName',
+  'address',
+  'fatherName',
+  'motherName',
+  'fatherOccupation',
+  'motherOccupation',
+  'studentAadhar',
+  'fatherAadhar',
+  'motherAadhar',
+  'appId',
+] as const;
+
+function sanitize(values: CreateStudentBody): CreateStudentBody {
+  const copy = { ...values };
+  for (const key of OPTIONAL_STRING_FIELDS) {
+    if (copy[key] === '') copy[key] = undefined;
+  }
+  return copy;
+}
+
+function toFormValues(s: StudentRecord): CreateStudentBody {
+  return {
+    firstName: s.firstName,
+    lastName: s.lastName ?? '',
+    dob: s.dob,
+    address: s.address ?? '',
+    phone: s.phone,
+    fatherName: s.fatherName ?? '',
+    motherName: s.motherName ?? '',
+    fatherOccupation: s.fatherOccupation ?? '',
+    motherOccupation: s.motherOccupation ?? '',
+    studentAadhar: s.studentAadhar ?? '',
+    fatherAadhar: s.fatherAadhar ?? '',
+    motherAadhar: s.motherAadhar ?? '',
+    className: s.className,
+    section: s.section,
+    session: s.session,
+    dateOfAdmission: s.dateOfAdmission,
+    rollNo: s.rollNo,
+    appId: s.appId ?? '',
+  };
+}
 
 export const AdminStudents: React.FC = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClass, setSelectedClass] = useState('ALL');
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [formTarget, setFormTarget] = useState<StudentRecord | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [bulkDeleteTargets, setBulkDeleteTargets] = useState<StudentRecord[] | null>(null);
+  const [classFilter, setClassFilter] = useState('');
+  const [sectionFilter, setSectionFilter] = useState('');
+  const [sessionFilter, setSessionFilter] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearch = useDebouncedValue(searchInput);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
-  const [formData, setFormData] = useState<StudentPayload>({
-    firstName: '',
-    lastName: '',
-    dob: '01-01-2010',
-    address: '',
-    phone: '9876543210',
-    fatherName: '',
-    motherName: '',
-    fatherOccupation: '',
-    motherOccupation: '',
-    studentAadhar: '',
-    fatherAadhar: '',
-    motherAadhar: '',
-    className: '10',
-    section: 'A',
-    session: '2025-2026',
-    dateOfAdmission: '01-04-2025',
-    rollNo: 1,
-    appId: '',
+  // Reset to page 1 whenever a filter/search changes — staying on page 3 of a now much-shorter
+  // filtered result would just show an empty page. Deferred a tick (see the deep-link effect
+  // below for why) so the compiler's set-state-in-effect lint doesn't flag it.
+  useEffect(() => {
+    queueMicrotask(() => setPageIndex(0));
+  }, [classFilter, sectionFilter, sessionFilter, debouncedSearch]);
+
+  const sort = sorting[0];
+  const sortBy = sort ? SORT_FIELD_BY_COLUMN_ID[sort.id] : undefined;
+  const sortDir: 'asc' | 'desc' | undefined = sort ? (sort.desc ? 'desc' : 'asc') : undefined;
+  const listQuery = {
+    page: pageIndex + 1,
+    pageSize: 10,
+    q: debouncedSearch || undefined,
+    className: classFilter || undefined,
+    section: sectionFilter || undefined,
+    session: sessionFilter || undefined,
+    sortBy,
+    sortDir,
+  };
+
+  const {
+    data: studentsResponse,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: qk.admin.students(listQuery),
+    queryFn: () => adminService.getStudents(listQuery),
   });
+  const students = studentsResponse?.data ?? [];
 
-  const { data: apiStudents } = useQuery({
-    queryKey: ['adminStudents'],
-    queryFn: () => adminService.getStudents(),
+  const { control, handleSubmit, watch, reset } = useForm<CreateStudentBody>({
+    resolver: zodResolver(CreateStudentBody),
+    defaultValues: emptyDefaults,
   });
-
-  const studentsList: Student[] = useMemo(() => {
-    if (apiStudents?.data && Array.isArray(apiStudents.data) && apiStudents.data.length > 0) {
-      return apiStudents.data;
-    }
-    return sampleStudents;
-  }, [apiStudents]);
+  const watchedClassName = watch('className');
+  const classNameOptions = useClassNameOptions();
+  const sectionOptions = useSectionOptions(watchedClassName);
+  const filterClassOptions = useClassNameOptions();
+  const filterSectionOptions = useSectionOptions(classFilter || undefined);
+  const sessionOptions = useSessionOptions();
 
   const createMutation = useMutation({
-    mutationFn: (payload: StudentPayload) => adminService.createStudent(payload),
-    onSuccess: (res) => {
-      toast.success(res.message || 'Student enrolled successfully!');
-      queryClient.invalidateQueries({ queryKey: ['adminStudents'] });
-      setIsCreateOpen(false);
-      resetForm();
+    mutationFn: (payload: CreateStudentBody) => adminService.createStudent(payload),
+    onSuccess: () => {
+      toast.success('Student enrolled successfully!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.students() });
+      setIsFormOpen(false);
     },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ studentId, body }: { studentId: string; body: CreateStudentBody }) =>
+      adminService.updateStudent(studentId, body),
+    onSuccess: () => {
+      toast.success('Student record updated!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.students() });
+      setIsFormOpen(false);
     },
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (studentId: string) => adminService.deleteStudent(studentId),
     onSuccess: () => {
       toast.success('Student record deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['adminStudents'] });
+      queryClient.invalidateQueries({ queryKey: qk.admin.students() });
       setDeleteConfirmId(null);
-      if (selectedStudent?.studentId === deleteConfirmId) {
-        setIsDetailOpen(false);
-      }
     },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (targets: StudentRecord[]) => {
+      const results = await Promise.allSettled(
+        targets.map((t) => adminService.deleteStudent(t.studentId)),
+      );
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      return { total: targets.length, failed };
+    },
+    onSuccess: ({ total, failed }) => {
+      queryClient.invalidateQueries({ queryKey: qk.admin.students() });
+      setBulkDeleteTargets(null);
+      if (failed === 0) toast.success(`${total} student record${total === 1 ? '' : 's'} deleted`);
+      else toast.error(`${failed} of ${total} deletions failed`);
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      firstName: '',
-      lastName: '',
-      dob: '01-01-2010',
-      address: '',
-      phone: '9876543210',
-      fatherName: '',
-      motherName: '',
-      fatherOccupation: '',
-      motherOccupation: '',
-      studentAadhar: '',
-      fatherAadhar: '',
-      motherAadhar: '',
-      className: '10',
-      section: 'A',
-      session: '2025-2026',
-      dateOfAdmission: '01-04-2025',
-      rollNo: 1,
-      appId: '',
+  const openCreateForm = () => {
+    setFormTarget(null);
+    reset(emptyDefaults);
+    setIsFormOpen(true);
+  };
+
+  const openEditForm = (student: StudentRecord) => {
+    setFormTarget(student);
+    reset(toFormValues(student));
+    setIsFormOpen(true);
+  };
+
+  const onSubmit: SubmitHandler<CreateStudentBody> = (values) => {
+    const payload = sanitize(values);
+    if (formTarget) {
+      updateMutation.mutate({ studentId: formTarget.studentId, body: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  const viewStudentDetails = (student: StudentRecord) => {
+    navigate(`/admin/students/${student.studentId}`);
+  };
+
+  // Deep-link support: `/admin/students?edit=<studentId>` (used by the Student Detail page's
+  // "Edit Record" button) opens the edit sheet for that student. Fetched directly by id rather
+  // than searched for in the currently-loaded page — now that the list is paginated/filtered
+  // (ALIGNMENT_PLAN.md 2C/P1), the target student isn't guaranteed to be on whatever page/filter
+  // happens to be showing.
+  const editId = searchParams.get('edit');
+  const { data: editTarget } = useQuery({
+    queryKey: qk.admin.student(editId ?? ''),
+    queryFn: () => adminService.getStudentById(editId as string),
+    enabled: !!editId,
+  });
+  useEffect(() => {
+    if (!editTarget) return;
+    // Deferred a tick so the state updates below aren't synchronous *within* the effect body
+    // itself (which the React Compiler lint flags as a cascading-render risk) — this still runs
+    // before paint, it's just not inline in the effect callback.
+    queueMicrotask(() => {
+      openEditForm(editTarget);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete('edit');
+          return next;
+        },
+        { replace: true },
+      );
     });
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editTarget]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'rollNo' ? Number(value) : value,
-    }));
-  };
-
-  const handleCreateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createMutation.mutate(formData);
-  };
-
-  const filteredStudents = studentsList.filter((s) => {
-    const matchesSearch = `${s.firstName} ${s.lastName || ''} ${s.studentId} ${s.phone}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesClass = selectedClass === 'ALL' || s.className === selectedClass;
-    return matchesSearch && matchesClass;
-  });
-
-  const viewStudentDetails = (student: Student) => {
-    setSelectedStudent(student);
-    setIsDetailOpen(true);
-  };
+  const columns: ColumnDef<StudentRecord, unknown>[] = [
+    {
+      accessorKey: 'studentId',
+      header: 'Student ID',
+      cell: ({ row }) => (
+        <span className="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+          {row.original.studentId}
+        </span>
+      ),
+    },
+    {
+      id: 'name',
+      header: 'Full Name',
+      accessorFn: (s) => `${s.firstName} ${s.lastName ?? ''}`.trim(),
+      cell: ({ row }) => {
+        const s = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-sky-500 text-[10px] font-bold text-white">
+              {s.firstName.charAt(0)}
+            </div>
+            <span className="text-xs font-medium">
+              {s.firstName} {s.lastName ?? ''}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      id: 'classSection',
+      header: 'Class & Sec',
+      accessorFn: (s) => `${s.className}-${s.section}`,
+      enableSorting: false,
+      cell: ({ row }) => (
+        <Badge variant="secondary" className="text-[10px] font-semibold">
+          Class {row.original.className}-{row.original.section}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'rollNo',
+      header: 'Roll No',
+      cell: ({ row }) => <span className="text-xs font-semibold">#{row.original.rollNo}</span>,
+    },
+    {
+      accessorKey: 'phone',
+      header: 'Guardian Contact',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
+          <Phone className="h-3 w-3 text-emerald-500" />
+          <span>{row.original.phone}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'session',
+      header: 'Session',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className="text-muted-foreground text-xs">{row.original.session}</span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      enableSorting: false,
+      enableHiding: false,
+      cell: ({ row }) => {
+        const student = row.original;
+        return (
+          <div className="flex items-center justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950"
+              onClick={(e) => {
+                e.stopPropagation();
+                viewStudentDetails(student);
+              }}
+              title="View Full Profile"
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              onClick={(e) => {
+                e.stopPropagation();
+                openEditForm(student);
+              }}
+              title="Edit Record"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeleteConfirmId(student.studentId);
+              }}
+              title="Delete Record"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -250,7 +402,7 @@ export const AdminStudents: React.FC = () => {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold tracking-tight">Student Enrollment Roster</h1>
             <Badge variant="outline" className="text-xs">
-              {filteredStudents.length} Active Records
+              {studentsResponse?.total ?? 0} Active Records
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
@@ -259,448 +411,261 @@ export const AdminStudents: React.FC = () => {
           </p>
         </div>
 
-        <Button
-          onClick={() => {
-            resetForm();
-            setIsCreateOpen(true);
-          }}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          <span>Admit New Student</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsImportOpen(true)}
+            className="h-9 gap-1.5 text-xs"
+          >
+            <UploadCloud className="h-3.5 w-3.5" />
+            <span>Bulk Import</span>
+          </Button>
+          <Button
+            onClick={openCreateForm}
+            className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>Admit New Student</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Filter & Search Bar */}
-      <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardContent className="flex flex-col items-center justify-between gap-3 p-4 sm:flex-row">
-          <div className="relative w-full flex-1">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-            <Input
-              placeholder="Search by student name, ID STU-..., or phone number..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9 pl-9 text-xs"
-            />
-          </div>
-
-          <div className="flex w-full items-center gap-2 sm:w-auto">
-            <Filter className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-            <div className="flex items-center gap-1.5 overflow-x-auto py-1">
-              {['ALL', '8', '9', '10', '11', '12'].map((cls) => (
-                <button
-                  key={cls}
-                  onClick={() => setSelectedClass(cls)}
-                  className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
-                    selectedClass === cls
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
-                  }`}
-                >
-                  {cls === 'ALL' ? 'All Classes' : `Class ${cls}`}
-                </button>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Student Data Table */}
-      <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
-                <TableHead className="text-xs font-bold">Student ID</TableHead>
-                <TableHead className="text-xs font-bold">Full Name</TableHead>
-                <TableHead className="text-xs font-bold">Class & Sec</TableHead>
-                <TableHead className="text-xs font-bold">Roll No</TableHead>
-                <TableHead className="text-xs font-bold">Guardian Contact</TableHead>
-                <TableHead className="text-xs font-bold">Session</TableHead>
-                <TableHead className="text-right text-xs font-bold">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredStudents.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-muted-foreground py-8 text-center text-xs">
-                    No student records matching your search query.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredStudents.map((student) => (
-                  <TableRow
-                    key={student.studentId}
-                    className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30"
-                  >
-                    <TableCell className="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                      {student.studentId}
-                    </TableCell>
-                    <TableCell className="text-xs font-medium">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-sky-500 text-[10px] font-bold text-white">
-                          {student.firstName.charAt(0)}
-                        </div>
-                        <div>
-                          <span>
-                            {student.firstName} {student.lastName || ''}
-                          </span>
-                          <p className="text-muted-foreground text-[10px]">
-                            Adm: {student.dateOfAdmission || '01-04-2025'}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      <Badge variant="secondary" className="text-[10px] font-semibold">
-                        Class {student.className}-{student.section}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs font-semibold">#{student.rollNo}</TableCell>
-                    <TableCell className="text-xs">
-                      <div className="text-muted-foreground flex items-center gap-1.5">
-                        <Phone className="h-3 w-3 text-emerald-500" />
-                        <span>{student.phone}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {student.session || '2025-2026'}
-                    </TableCell>
-                    <TableCell className="text-right text-xs">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950"
-                          onClick={() => viewStudentDetails(student)}
-                          title="View Digital Profile & ID Card"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950"
-                          onClick={() => setDeleteConfirmId(student.studentId)}
-                          title="Delete Record"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
-
-      {/* Student Profile & Digital ID Card Slide-Over Sheet */}
-      <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <SheetContent className="overflow-y-auto sm:max-w-md">
-          {selectedStudent && (
-            <div className="space-y-6 px-4 pt-4">
-              <SheetHeader>
-                <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                  <IdCard className="h-4 w-4" />
-                  <span>Student Profile & Digital ID</span>
-                </div>
-                <SheetTitle className="text-lg font-bold">
-                  {selectedStudent.firstName} {selectedStudent.lastName || ''}
-                </SheetTitle>
-                <SheetDescription className="text-xs">
-                  ID: {selectedStudent.studentId} • Roll #{selectedStudent.rollNo}
-                </SheetDescription>
-              </SheetHeader>
-
-              {/* Digital ID Card Preview */}
-              <div className="space-y-4 rounded-2xl border border-indigo-400/30 bg-linear-to-br from-indigo-900 via-indigo-950 to-slate-900 p-5 text-white shadow-xl">
-                <div className="flex items-center justify-between border-b border-white/15 pb-2">
-                  <div className="flex items-center gap-1.5">
-                    <School className="h-4 w-4 text-indigo-300" />
-                    <span className="text-xs font-bold tracking-tight">AURA ACADEMY</span>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className="border-indigo-400/40 text-[9px] text-indigo-200"
-                  >
-                    STUDENT PASS
-                  </Badge>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-2 border-white/30 bg-linear-to-tr from-indigo-500 to-sky-400 text-xl font-black text-white shadow-md">
-                    {selectedStudent.firstName.charAt(0)}
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-bold">
-                      {selectedStudent.firstName} {selectedStudent.lastName || ''}
-                    </p>
-                    <p className="text-xs text-indigo-200">
-                      Class {selectedStudent.className}-{selectedStudent.section} (Roll #
-                      {selectedStudent.rollNo})
-                    </p>
-                    <p className="text-[11px] text-indigo-300">
-                      DOB: {selectedStudent.dob || '12-05-2009'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 border-t border-white/15 pt-2 text-[11px]">
-                  <div>
-                    <span className="text-[10px] text-indigo-300">Guardian:</span>
-                    <p className="font-semibold">
-                      {selectedStudent.fatherName || 'Guardian Registered'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-indigo-300">Emergency Phone:</span>
-                    <p className="font-semibold">{selectedStudent.phone}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-1">
-                  <span className="font-mono text-[10px] text-indigo-300">
-                    VALID: {selectedStudent.session || '2025-2026'}
-                  </span>
-                  <QrCode className="h-6 w-6 text-white/80" />
-                </div>
-              </div>
-
-              {/* Full Details List */}
-              <div className="space-y-3 text-xs">
-                <h4 className="border-b pb-1 font-bold text-slate-900 dark:text-zinc-100">
-                  Registration Information
-                </h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
-                    <span className="text-muted-foreground text-[10px]">Father's Name</span>
-                    <p className="font-semibold">{selectedStudent.fatherName || 'N/A'}</p>
-                  </div>
-                  <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
-                    <span className="text-muted-foreground text-[10px]">Mother's Name</span>
-                    <p className="font-semibold">{selectedStudent.motherName || 'N/A'}</p>
-                  </div>
-                </div>
-                <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
-                  <span className="text-muted-foreground text-[10px]">Residential Address</span>
-                  <p className="mt-0.5 font-semibold">
-                    {selectedStudent.address || 'Address provided during admission'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-2">
+      {isError ? (
+        <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
+      ) : (
+        <Card className="overflow-hidden border border-slate-200/80 bg-white/90 p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+          <DataTable
+            columns={columns}
+            data={students}
+            isLoading={isLoading}
+            emptyTitle="No student records yet"
+            emptyDescription="Admit the first student to get started."
+            emptyAction={
+              <Button size="sm" className="mt-1 text-xs" onClick={openCreateForm}>
+                <Plus className="mr-1 h-3.5 w-3.5" />
+                Admit New Student
+              </Button>
+            }
+            searchPlaceholder="Search by name, ID, or phone…"
+            onRowClick={viewStudentDetails}
+            enableRowSelection
+            exportFilename="students"
+            manual={{
+              pageIndex,
+              pageSize: 10,
+              pageCount: studentsResponse?.totalPages ?? 1,
+              totalRows: studentsResponse?.total ?? 0,
+              onPageChange: setPageIndex,
+              search: searchInput,
+              onSearchChange: setSearchInput,
+              sorting,
+              onSortingChange: setSorting,
+            }}
+            toolbar={
+              <>
+                <select
+                  value={classFilter}
+                  onChange={(e) => {
+                    setClassFilter(e.target.value);
+                    setSectionFilter('');
+                  }}
+                  className="h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
+                >
+                  <option value="">All Classes</option>
+                  {filterClassOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={sectionFilter}
+                  onChange={(e) => setSectionFilter(e.target.value)}
+                  disabled={!classFilter}
+                  className="h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900"
+                >
+                  <option value="">All Sections</option>
+                  {filterSectionOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={sessionFilter}
+                  onChange={(e) => setSessionFilter(e.target.value)}
+                  className="h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
+                >
+                  <option value="">All Sessions</option>
+                  {sessionOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </>
+            }
+            bulkActions={(selected, clear) => (
+              <>
+                <span className="text-xs font-semibold">{selected.length} selected</span>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full text-xs"
-                  onClick={() => toast.success('Digital ID ready for print')}
+                  className="h-8 text-xs"
+                  onClick={() =>
+                    downloadCsv(
+                      'students-selected',
+                      ['Student ID', 'Name', 'Class', 'Section', 'Roll No', 'Phone', 'Session'],
+                      selected.map((s) => [
+                        s.studentId,
+                        `${s.firstName} ${s.lastName ?? ''}`.trim(),
+                        s.className,
+                        s.section,
+                        s.rollNo,
+                        s.phone,
+                        s.session,
+                      ]),
+                    )
+                  }
                 >
-                  <span>Print ID Card</span>
+                  Export Selected
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
-                  className="text-xs"
-                  onClick={() => {
-                    setDeleteConfirmId(selectedStudent.studentId);
-                  }}
+                  className="h-8 text-xs"
+                  onClick={() => setBulkDeleteTargets(selected)}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="mr-1 h-3.5 w-3.5" />
+                  Delete Selected
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={clear}>
+                  Clear
+                </Button>
+              </>
+            )}
+          />
+        </Card>
+      )}
+
+      {/* Admit / Edit Student Sheet */}
+      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <SheetContent className="overflow-y-auto sm:max-w-lg">
+          <div className="space-y-4 px-4 pt-4">
+            <SheetHeader>
+              <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                <Sparkles className="h-4 w-4" />
+                <span>Admissions Office</span>
+              </div>
+              <SheetTitle className="text-lg font-bold">
+                {formTarget ? `Edit ${formTarget.studentId}` : 'New Student Admission Form'}
+              </SheetTitle>
+              <SheetDescription className="text-xs">
+                {formTarget
+                  ? 'Update this student’s registered profile.'
+                  : 'Complete the admission profile. Auto-creates student credentials for portal login.'}
+              </SheetDescription>
+            </SheetHeader>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pb-4">
+              <div className="grid grid-cols-2 gap-3">
+                <TextField control={control} name="firstName" label="First Name" required />
+                <TextField control={control} name="lastName" label="Last Name" />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <SelectField
+                  control={control}
+                  name="className"
+                  label="Class"
+                  required
+                  options={classNameOptions}
+                />
+                <SelectField
+                  control={control}
+                  name="section"
+                  label="Section"
+                  required
+                  options={sectionOptions}
+                  placeholder={watchedClassName ? 'Select…' : 'Pick a class first'}
+                />
+                <NumberField control={control} name="rollNo" label="Roll No" required min={1} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <DateField control={control} name="dob" label="Date of Birth" required />
+                <TextField control={control} name="phone" label="Primary Mobile" required />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <SessionField control={control} name="session" label="Academic Session" required />
+                <DateField
+                  control={control}
+                  name="dateOfAdmission"
+                  label="Date of Admission"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <TextField control={control} name="fatherName" label="Father's Name" />
+                <TextField control={control} name="motherName" label="Mother's Name" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <TextField control={control} name="fatherOccupation" label="Father's Occupation" />
+                <TextField control={control} name="motherOccupation" label="Mother's Occupation" />
+              </div>
+
+              <TextField control={control} name="address" label="Residential Address" multiline />
+
+              <div className="grid grid-cols-3 gap-3">
+                <TextField
+                  control={control}
+                  name="studentAadhar"
+                  label="Student Aadhar"
+                  placeholder="12 digits"
+                />
+                <TextField
+                  control={control}
+                  name="fatherAadhar"
+                  label="Father Aadhar"
+                  placeholder="12 digits"
+                />
+                <TextField
+                  control={control}
+                  name="motherAadhar"
+                  label="Mother Aadhar"
+                  placeholder="12 digits"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-zinc-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsFormOpen(false)}
+                  className="h-9 text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                >
+                  {createMutation.isPending || updateMutation.isPending
+                    ? 'Saving...'
+                    : formTarget
+                      ? 'Save Changes'
+                      : 'Confirm Admission'}
                 </Button>
               </div>
-            </div>
-          )}
+            </form>
+          </div>
         </SheetContent>
       </Sheet>
-
-      {/* Admit New Student Modal */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="h-4 w-4" />
-              <span>Admissions Office</span>
-            </div>
-            <DialogTitle className="text-lg font-bold">New Student Admission Form</DialogTitle>
-            <DialogDescription className="text-xs">
-              Complete the admission profile. Auto-creates student credentials for portal login.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleCreateSubmit} className="space-y-4 pt-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="firstName" className="text-xs font-semibold">
-                  First Name <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  placeholder="e.g. Diya"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="lastName" className="text-xs font-semibold">
-                  Last Name
-                </Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  placeholder="e.g. Verma"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="h-9 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="className" className="text-xs font-semibold">
-                  Class <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="className"
-                  name="className"
-                  placeholder="e.g. 10"
-                  value={formData.className}
-                  onChange={handleInputChange}
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="section" className="text-xs font-semibold">
-                  Section <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="section"
-                  name="section"
-                  placeholder="e.g. A"
-                  value={formData.section}
-                  onChange={handleInputChange}
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="rollNo" className="text-xs font-semibold">
-                  Roll No <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="rollNo"
-                  name="rollNo"
-                  type="number"
-                  placeholder="101"
-                  value={formData.rollNo}
-                  onChange={handleInputChange}
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="dob" className="text-xs font-semibold">
-                  Date of Birth (DD-MM-YYYY) <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="dob"
-                  name="dob"
-                  placeholder="12-05-2010"
-                  value={formData.dob}
-                  onChange={handleInputChange}
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="phone" className="text-xs font-semibold">
-                  Primary Mobile <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  placeholder="9876543210"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="fatherName" className="text-xs font-semibold">
-                  Father's Name
-                </Label>
-                <Input
-                  id="fatherName"
-                  name="fatherName"
-                  placeholder="Father's full name"
-                  value={formData.fatherName}
-                  onChange={handleInputChange}
-                  className="h-9 text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="motherName" className="text-xs font-semibold">
-                  Mother's Name
-                </Label>
-                <Input
-                  id="motherName"
-                  name="motherName"
-                  placeholder="Mother's full name"
-                  value={formData.motherName}
-                  onChange={handleInputChange}
-                  className="h-9 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="address" className="text-xs font-semibold">
-                Residential Address
-              </Label>
-              <Input
-                id="address"
-                name="address"
-                placeholder="Full residential address"
-                value={formData.address}
-                onChange={handleInputChange}
-                className="h-9 text-xs"
-              />
-            </div>
-
-            <DialogFooter className="pt-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCreateOpen(false)}
-                className="h-9 text-xs"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={createMutation.isPending}
-                className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
-              >
-                {createMutation.isPending ? 'Enrolling...' : 'Confirm Admission'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
@@ -736,6 +701,45 @@ export const AdminStudents: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog open={!!bulkDeleteTargets} onOpenChange={() => setBulkDeleteTargets(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
+              <Users className="h-4 w-4" />
+              <span>Confirm Bulk Deletion</span>
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-xs">
+              Are you sure you want to permanently delete{' '}
+              <strong>{bulkDeleteTargets?.length ?? 0}</strong> student record
+              {bulkDeleteTargets?.length === 1 ? '' : 's'}? This also revokes their login
+              credentials.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkDeleteTargets(null)}
+              className="text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => bulkDeleteTargets && bulkDeleteMutation.mutate(bulkDeleteTargets)}
+              disabled={bulkDeleteMutation.isPending}
+              className="text-xs"
+            >
+              {bulkDeleteMutation.isPending ? 'Deleting...' : 'Delete All Selected'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <BulkImportStudentsDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
     </div>
   );
 };

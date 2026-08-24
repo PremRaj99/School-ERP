@@ -1,42 +1,31 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useNavigate } from 'react-router-dom';
-import { Award, ArrowRight } from 'lucide-react';
-
-const teacherExamSchedule = [
-  {
-    examTitle: 'Mid-Term Assessment 2025-2026',
-    subject: 'Mathematics (MATH101)',
-    class: 'Class 10-A',
-    date: '15-10-2025',
-    time: '09:00 - 12:00 PM',
-    room: 'Hall 1',
-    status: 'Ready for Grading',
-  },
-  {
-    examTitle: 'Mid-Term Assessment 2025-2026',
-    subject: 'Applied Calculus (CAL201)',
-    class: 'Class 11-A',
-    date: '18-10-2025',
-    time: '09:00 - 12:00 PM',
-    room: 'Hall 3',
-    status: 'Grading Completed',
-  },
-  {
-    examTitle: 'Pre-Board Examination Series 1',
-    subject: 'Mathematics (MATH101)',
-    class: 'Class 10-A',
-    date: '10-12-2025',
-    time: '09:00 - 12:00 PM',
-    room: 'Hall 1',
-    status: 'Upcoming Exam',
-  },
-];
+import { Skeleton } from '@/components/ui/skeleton';
+import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { ErrorState } from '@/components/data-table';
+import { teacherService } from '@/lib/services/teacher.service';
+import { qk } from '@/lib/query-keys';
+import { getErrorMessage } from '@/lib/api';
+import { isoToDisplayDate } from '@/lib/date';
+import { Award, ArrowRight, CalendarRange } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 export const TeacherExams: React.FC = () => {
   const navigate = useNavigate();
+
+  const {
+    data: exams,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: qk.teacher.exams(),
+    queryFn: () => teacherService.getExams(),
+  });
 
   return (
     <div className="space-y-6">
@@ -52,7 +41,7 @@ export const TeacherExams: React.FC = () => {
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Monitor assigned exam dates, invigilation duty halls, and evaluate submission sheets.
+            Exams that include a subject assigned to you.
           </p>
         </div>
 
@@ -65,69 +54,71 @@ export const TeacherExams: React.FC = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {teacherExamSchedule.map((item, idx) => (
-          <Card
-            key={idx}
-            className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <Badge variant="secondary" className="text-[10px]">
-                  {item.class}
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className={`text-[10px] ${
-                    item.status === 'Grading Completed'
-                      ? 'border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                      : item.status === 'Ready for Grading'
-                        ? 'border-indigo-500/30 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
-                        : 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300'
-                  }`}
-                >
-                  {item.status}
-                </Badge>
-              </div>
-
-              <CardTitle className="mt-2 text-base font-bold text-slate-900 dark:text-white">
-                {item.examTitle}
-              </CardTitle>
-              <CardDescription className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                {item.subject}
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="flex-1 space-y-3 pt-0 text-xs">
-              <div className="space-y-1 rounded-lg bg-slate-50 p-2.5 dark:bg-zinc-800/50">
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-44 w-full" />
+          ))}
+        </div>
+      ) : isError ? (
+        <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
+      ) : (exams ?? []).length === 0 ? (
+        <Empty className="rounded-none border">
+          <EmptyMedia variant="icon">
+            <Award className="size-5" />
+          </EmptyMedia>
+          <EmptyTitle>No exams assigned yet</EmptyTitle>
+          <EmptyDescription>You have no subjects scheduled in any examination.</EmptyDescription>
+        </Empty>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {(exams ?? []).map((exam) => (
+            <Card
+              key={exam.id}
+              className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
+            >
+              <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Exam Date:</span>
-                  <span className="font-semibold">{item.date}</span>
+                  <Badge variant="secondary" className="text-[10px]">
+                    Class {exam.className}-{exam.section}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className={`text-[10px] ${
+                      exam.isResultDecleared
+                        ? 'border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                        : 'border-amber-500/30 bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
+                    }`}
+                  >
+                    {exam.isResultDecleared ? 'Results Declared' : 'In Progress'}
+                  </Badge>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Timing:</span>
-                  <span>{item.time}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Assigned Venue:</span>
-                  <span className="font-semibold">{item.room}</span>
-                </div>
-              </div>
+                <CardTitle className="mt-2 text-base font-bold text-slate-900 dark:text-white">
+                  {exam.title}
+                </CardTitle>
+                <CardDescription className="flex items-center gap-1 text-xs">
+                  <CalendarRange className="h-3 w-3 text-indigo-500" />
+                  <span>
+                    {isoToDisplayDate(exam.dateFrom)} to{' '}
+                    {exam.dateTo ? isoToDisplayDate(exam.dateTo) : 'TBD'}
+                  </span>
+                </CardDescription>
+              </CardHeader>
 
-              <div className="border-t border-slate-100 pt-2 dark:border-zinc-800">
+              <CardContent className="pt-0">
                 <Button
                   size="sm"
                   className="h-8 w-full bg-indigo-600 text-xs text-white hover:bg-indigo-700"
-                  onClick={() => navigate('/teacher/results')}
+                  onClick={() => navigate(`/teacher/results?examId=${exam.id}`)}
                 >
                   <span>Evaluate & Enter Marks</span>
                   <ArrowRight className="ml-1 h-3.5 w-3.5" />
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

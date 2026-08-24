@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useForm, useFieldArray, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import {
   Dialog,
   DialogContent,
@@ -11,144 +13,337 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { DataTable, ErrorState } from '@/components/data-table';
+import { TextField, NumberField, MonthField, SelectField } from '@/components/form';
+import { ExpenseManager } from '@/components/finance/ExpenseManager';
 import { adminService } from '@/lib/services/admin.service';
-import type { StudentFee, TeacherSalary } from '@/lib/types';
+import { useStudentOptions } from '@/hooks/options/useAdminOptions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import {
+  CreateStudentFeeBody,
+  type StudentFeeRecord,
+  type TeacherSalaryRecord,
+  type TxnStatus,
+} from '@schoolerp/contracts';
+import { getErrorMessage } from '@/lib/api';
+import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { CreditCard, Plus, Printer, Sparkles, Receipt, Search } from 'lucide-react';
+import { CreditCard, Plus, Printer, Sparkles, Receipt, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-const sampleStudentFees: StudentFee[] = [
-  {
-    id: 'fee-1',
-    studentId: 'STU-2025-001',
-    month: 'March 2025',
-    amount: 6500,
-    paidAt: '05-03-2025',
-    status: 'Paid',
-    isPaid: true,
-  },
-  {
-    id: 'fee-2',
-    studentId: 'STU-2025-002',
-    month: 'March 2025',
-    amount: 6500,
-    paidAt: '08-03-2025',
-    status: 'Paid',
-    isPaid: true,
-  },
-  {
-    id: 'fee-3',
-    studentId: 'STU-2025-003',
-    month: 'March 2025',
-    amount: 6500,
-    status: 'Pending',
-    isPaid: false,
-  },
+const STATUS_OPTIONS: { value: TxnStatus; label: string }[] = [
+  { value: 'Paid', label: 'Paid' },
+  { value: 'Pending', label: 'Pending' },
+  { value: 'Failed', label: 'Failed' },
 ];
 
-const sampleTeacherSalaries: TeacherSalary[] = [
-  {
-    id: 'sal-1',
-    teacherId: 'TCH-001',
-    month: 'March 2025',
-    amount: 65000,
-    paidAt: '31-03-2025',
-    status: 'Paid',
-    isPaid: true,
-  },
-  {
-    id: 'sal-2',
-    teacherId: 'TCH-002',
-    month: 'March 2025',
-    amount: 60000,
-    paidAt: '31-03-2025',
-    status: 'Paid',
-    isPaid: true,
-  },
-];
+/** Column-id -> the backend's actual sortable field for each ledger (ALIGNMENT_PLAN.md 2C/P1). */
+const SORT_FIELD_BY_COLUMN_ID: Record<string, 'month' | 'finalAmount' | 'paidAt'> = {
+  month: 'month',
+  finalAmount: 'finalAmount',
+  paidAt: 'paidAt',
+};
+
+const emptyFeeDefaults: CreateStudentFeeBody = {
+  studentId: '',
+  month: '',
+  title: 'Term Fee',
+  feeBreakdown: [{ feeType: 'Tuition Fee', amount: 0 }],
+};
 
 export const AdminFinance: React.FC = () => {
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState('');
   const [isCollectFeeOpen, setIsCollectFeeOpen] = useState(false);
-  const [selectedReceipt, setSelectedReceipt] = useState<StudentFee | null>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<StudentFeeRecord | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
-  const [collectFormData, setCollectFormData] = useState({
-    studentId: '',
-    month: 'April 2025',
-    tuitionFee: 5000,
-    examFee: 1000,
-    labFee: 500,
+  // Student fee ledger — search/sort/page/status all server-side now.
+  const [feeSearch, setFeeSearch] = useState('');
+  const debouncedFeeSearch = useDebouncedValue(feeSearch);
+  const [feePageIndex, setFeePageIndex] = useState(0);
+  const [feeSorting, setFeeSorting] = useState<SortingState>([]);
+  const [feeStatusFilter, setFeeStatusFilter] = useState('');
+
+  // Teacher payroll ledger — same treatment, independent state.
+  const [salarySearch, setSalarySearch] = useState('');
+  const debouncedSalarySearch = useDebouncedValue(salarySearch);
+  const [salaryPageIndex, setSalaryPageIndex] = useState(0);
+  const [salarySorting, setSalarySorting] = useState<SortingState>([]);
+  const [salaryStatusFilter, setSalaryStatusFilter] = useState('');
+
+  useEffect(() => {
+    queueMicrotask(() => setFeePageIndex(0));
+  }, [debouncedFeeSearch, feeStatusFilter]);
+  useEffect(() => {
+    queueMicrotask(() => setSalaryPageIndex(0));
+  }, [debouncedSalarySearch, salaryStatusFilter]);
+
+  const studentOptions = useStudentOptions();
+
+  const { control, handleSubmit, watch, reset } = useForm<CreateStudentFeeBody>({
+    resolver: zodResolver(CreateStudentFeeBody),
+    defaultValues: emptyFeeDefaults,
   });
-
-  const { data: apiStudentFees } = useQuery({
-    queryKey: ['adminStudentFees'],
-    queryFn: () => adminService.getStudentFees(),
+  const {
+    fields: feeRows,
+    append: appendFeeRow,
+    remove: removeFeeRow,
+  } = useFieldArray({
+    control,
+    name: 'feeBreakdown',
   });
+  const watchedFeeBreakdown = watch('feeBreakdown');
+  const feeTotal = watchedFeeBreakdown.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
 
-  const { data: apiTeacherSalaries } = useQuery({
-    queryKey: ['adminTeacherSalaries'],
-    queryFn: () => adminService.getTeacherSalaries(),
-  });
-
-  const studentFeesList: StudentFee[] =
-    apiStudentFees?.data && Array.isArray(apiStudentFees.data) && apiStudentFees.data.length > 0
-      ? apiStudentFees.data
-      : sampleStudentFees;
-
-  const teacherSalariesList: TeacherSalary[] =
-    apiTeacherSalaries?.data &&
-    Array.isArray(apiTeacherSalaries.data) &&
-    apiTeacherSalaries.data.length > 0
-      ? apiTeacherSalaries.data
-      : sampleTeacherSalaries;
-
-  const collectFeeMutation = useMutation({
-    mutationFn: (payload: {
-      studentId: string;
-      month: string;
-      feeBreakdown: Array<{ feeType: string; amount: number }>;
-    }) => adminService.createStudentFee(payload),
-    onSuccess: (res) => {
-      toast.success(res.message || 'Fee payment recorded successfully!');
-      queryClient.invalidateQueries({ queryKey: ['adminStudentFees'] });
-      setIsCollectFeeOpen(false);
-    },
-    onError: () => toast.error('Fee collection recorded (demo mode synced)'),
-  });
-
-  const handleCollectSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = {
-      studentId: collectFormData.studentId,
-      month: collectFormData.month,
-      feeBreakdown: [
-        { feeType: 'Tuition Fee', amount: Number(collectFormData.tuitionFee) },
-        { feeType: 'Exam Fee', amount: Number(collectFormData.examFee) },
-        { feeType: 'Lab & Activity Fee', amount: Number(collectFormData.labFee) },
-      ],
-    };
-    collectFeeMutation.mutate(payload);
+  const feeSort = feeSorting[0];
+  const feeListQuery = {
+    page: feePageIndex + 1,
+    pageSize: 10,
+    q: debouncedFeeSearch || undefined,
+    status: (feeStatusFilter || undefined) as TxnStatus | undefined,
+    sortBy: feeSort ? SORT_FIELD_BY_COLUMN_ID[feeSort.id] : undefined,
+    sortDir: feeSort ? ((feeSort.desc ? 'desc' : 'asc') as 'asc' | 'desc') : undefined,
   };
 
-  const openReceiptModal = (fee: StudentFee) => {
+  const salarySort = salarySorting[0];
+  const salaryListQuery = {
+    page: salaryPageIndex + 1,
+    pageSize: 10,
+    q: debouncedSalarySearch || undefined,
+    status: (salaryStatusFilter || undefined) as TxnStatus | undefined,
+    sortBy: salarySort ? SORT_FIELD_BY_COLUMN_ID[salarySort.id] : undefined,
+    sortDir: salarySort ? ((salarySort.desc ? 'desc' : 'asc') as 'asc' | 'desc') : undefined,
+  };
+
+  const {
+    data: feesResponse,
+    isLoading: feesLoading,
+    isError: feesErrored,
+    error: feesError,
+    refetch: refetchFees,
+  } = useQuery({
+    queryKey: qk.admin.studentFees(feeListQuery),
+    queryFn: () => adminService.getStudentFees(feeListQuery),
+  });
+  const studentFees = feesResponse?.data ?? [];
+
+  const {
+    data: salariesResponse,
+    isLoading: salariesLoading,
+    isError: salariesErrored,
+    error: salariesError,
+    refetch: refetchSalaries,
+  } = useQuery({
+    queryKey: qk.admin.teacherSalaries(salaryListQuery),
+    queryFn: () => adminService.getTeacherSalaries(salaryListQuery),
+  });
+  const teacherSalaries = salariesResponse?.data ?? [];
+
+  // Summary strip needs real totals across every record, not just the current page — sourced from
+  // the same aggregate the Analytics → Finance tab already computes correctly, rather than summing
+  // a page of paginated rows (ALIGNMENT_PLAN.md 2C/P1 broke the old "sum the loaded array" approach
+  // the moment this list stopped returning everything in one response).
+  const { data: financeAnalytics } = useQuery({
+    queryKey: qk.admin.analyticsFinance(),
+    queryFn: () => adminService.getAnalyticsFinance(),
+  });
+  const feesRealized = (financeAnalytics?.monthly ?? []).reduce((sum, m) => sum + m.collected, 0);
+  const feesPending = (financeAnalytics?.monthly ?? []).reduce((sum, m) => sum + m.pending, 0);
+  const payrollDisbursed = (financeAnalytics?.salaryVsCollection ?? []).reduce(
+    (sum, m) => sum + m.salaryBurn,
+    0,
+  );
+  const pendingFeeCount = financeAnalytics?.defaulters.length ?? 0;
+
+  const collectFeeMutation = useMutation({
+    mutationFn: (payload: CreateStudentFeeBody) => adminService.createStudentFee(payload),
+    onSuccess: () => {
+      toast.success('Fee payment recorded successfully!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+      setIsCollectFeeOpen(false);
+      reset(emptyFeeDefaults);
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+
+  const updateFeeStatusMutation = useMutation({
+    mutationFn: ({ feeId, status }: { feeId: string; status: TxnStatus }) =>
+      adminService.updateStudentFeeStatus(feeId, status),
+    onSuccess: () => {
+      toast.success('Fee status updated!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+
+  const updateSalaryStatusMutation = useMutation({
+    mutationFn: ({ salaryId, status }: { salaryId: string; status: TxnStatus }) =>
+      adminService.updateTeacherSalaryStatus(salaryId, status),
+    onSuccess: () => {
+      toast.success('Salary status updated!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.teacherSalaries() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+
+  const onCollectSubmit: SubmitHandler<CreateStudentFeeBody> = (values) => {
+    collectFeeMutation.mutate(values);
+  };
+
+  const openReceiptModal = (fee: StudentFeeRecord) => {
     setSelectedReceipt(fee);
     setIsReceiptOpen(true);
   };
 
-  const filteredStudentFees = studentFeesList.filter((f) =>
-    `${f.studentId} ${f.month} ${f.status || ''}`.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const feeColumns: ColumnDef<StudentFeeRecord, unknown>[] = [
+    {
+      accessorKey: 'studentId',
+      header: 'Student ID',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
+          {row.original.studentId}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'month',
+      header: 'Billing Month',
+      cell: ({ row }) => <span className="text-xs">{row.original.month}</span>,
+    },
+    {
+      accessorKey: 'finalAmount',
+      header: 'Total Amount',
+      cell: ({ row }) => (
+        <span className="text-xs font-bold">₹{row.original.finalAmount.toLocaleString()}</span>
+      ),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      enableSorting: false,
+      cell: ({ row }) => {
+        const fee = row.original;
+        const isPaid = fee.status === 'Paid';
+        return (
+          <NativeSelect
+            value={fee.status}
+            onChange={(e) =>
+              updateFeeStatusMutation.mutate({ feeId: fee.id, status: e.target.value as TxnStatus })
+            }
+            disabled={updateFeeStatusMutation.isPending}
+            className={`h-7 w-28 text-[11px] font-semibold ${
+              isPaid
+                ? 'text-emerald-700 dark:text-emerald-300'
+                : 'text-amber-700 dark:text-amber-300'
+            }`}
+          >
+            {STATUS_OPTIONS.map((opt) => (
+              <NativeSelectOption key={opt.value} value={opt.value}>
+                {opt.label}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        );
+      },
+    },
+    {
+      accessorKey: 'paidAt',
+      header: 'Payment Date',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground text-xs">{row.original.paidAt}</span>
+      ),
+    },
+    {
+      id: 'receipt',
+      header: 'Receipt',
+      enableSorting: false,
+      enableHiding: false,
+      cell: ({ row }) =>
+        row.original.status === 'Paid' ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
+            onClick={(e) => {
+              e.stopPropagation();
+              openReceiptModal(row.original);
+            }}
+          >
+            <Printer className="mr-1 h-3.5 w-3.5" />
+            <span>Print Receipt</span>
+          </Button>
+        ) : null,
+    },
+  ];
+
+  const salaryColumns: ColumnDef<TeacherSalaryRecord, unknown>[] = [
+    {
+      accessorKey: 'teacherId',
+      header: 'Teacher ID',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+          {row.original.teacherId}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'month',
+      header: 'Payroll Month',
+      cell: ({ row }) => <span className="text-xs">{row.original.month}</span>,
+    },
+    {
+      accessorKey: 'finalAmount',
+      header: 'Salary Amount',
+      cell: ({ row }) => (
+        <span className="text-xs font-bold">₹{row.original.finalAmount.toLocaleString()}</span>
+      ),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      enableSorting: false,
+      cell: ({ row }) => {
+        const sal = row.original;
+        const isPaid = sal.status === 'Paid';
+        return (
+          <NativeSelect
+            value={sal.status}
+            onChange={(e) =>
+              updateSalaryStatusMutation.mutate({
+                salaryId: sal.id,
+                status: e.target.value as TxnStatus,
+              })
+            }
+            disabled={updateSalaryStatusMutation.isPending}
+            className={`h-7 w-28 text-[11px] font-semibold ${
+              isPaid
+                ? 'text-emerald-700 dark:text-emerald-300'
+                : 'text-amber-700 dark:text-amber-300'
+            }`}
+          >
+            {STATUS_OPTIONS.map((opt) => (
+              <NativeSelectOption key={opt.value} value={opt.value}>
+                {opt.label}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        );
+      },
+    },
+    {
+      accessorKey: 'paidAt',
+      header: 'Disbursed Date',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground text-xs">{row.original.paidAt}</span>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -184,9 +379,11 @@ export const AdminFinance: React.FC = () => {
             <span className="text-muted-foreground text-xs font-semibold">
               Term Fee Realization
             </span>
-            <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">₹1,84,500</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+              ₹{feesRealized.toLocaleString()}
+            </p>
             <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-              88% Realized on schedule
+              {feesResponse?.total ?? 0} records
             </span>
           </CardContent>
         </Card>
@@ -194,11 +391,13 @@ export const AdminFinance: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="p-4">
             <span className="text-muted-foreground text-xs font-semibold">
-              Monthly Faculty Payroll
+              Faculty Payroll Disbursed
             </span>
-            <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">₹1,85,000</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+              ₹{payrollDisbursed.toLocaleString()}
+            </p>
             <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
-              March cycle completed
+              {salariesResponse?.total ?? 0} records
             </span>
           </CardContent>
         </Card>
@@ -208,8 +407,12 @@ export const AdminFinance: React.FC = () => {
             <span className="text-muted-foreground text-xs font-semibold">
               Pending Student Dues
             </span>
-            <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">₹13,000</p>
-            <span className="text-muted-foreground text-[11px]">2 Invoices overdue</span>
+            <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">
+              ₹{feesPending.toLocaleString()}
+            </p>
+            <span className="text-muted-foreground text-[11px]">
+              {pendingFeeCount} invoice{pendingFeeCount === 1 ? '' : 's'} outstanding
+            </span>
           </CardContent>
         </Card>
       </div>
@@ -224,158 +427,146 @@ export const AdminFinance: React.FC = () => {
             <CreditCard className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
             <span>Faculty Payroll Ledger</span>
           </TabsTrigger>
+          <TabsTrigger value="expenses" className="rounded-lg px-4 text-xs font-semibold">
+            <Receipt className="mr-1.5 h-3.5 w-3.5 text-amber-500" />
+            <span>Expenses</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Student Fee Ledger Tab */}
         <TabsContent value="studentFees" className="space-y-4 pt-4 focus:outline-hidden">
-          <div className="relative max-w-sm">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-            <Input
-              placeholder="Search by student ID or billing month..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9 pl-9 text-xs"
-            />
-          </div>
-
-          <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
-                  <TableHead className="text-xs font-bold">Student ID</TableHead>
-                  <TableHead className="text-xs font-bold">Billing Month</TableHead>
-                  <TableHead className="text-xs font-bold">Total Amount</TableHead>
-                  <TableHead className="text-xs font-bold">Status</TableHead>
-                  <TableHead className="text-xs font-bold">Payment Date</TableHead>
-                  <TableHead className="text-right text-xs font-bold">Receipt</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStudentFees.map((fee, idx) => {
-                  const isPaid = fee.isPaid || fee.status === 'Paid';
-                  return (
-                    <TableRow key={idx} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30">
-                      <TableCell className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                        {fee.studentId}
-                      </TableCell>
-                      <TableCell className="text-xs">{fee.month}</TableCell>
-                      <TableCell className="text-xs font-bold">
-                        ₹{(fee.finalAmount || fee.amount || 6500).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <Badge
-                          variant="secondary"
-                          className={`text-[10px] font-semibold ${
-                            isPaid
-                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                              : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                          }`}
-                        >
-                          {isPaid ? 'Paid' : 'Pending'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {fee.paidAt || 'Awaiting Payment'}
-                      </TableCell>
-                      <TableCell className="text-right text-xs">
-                        {isPaid ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
-                            onClick={() => openReceiptModal(fee)}
-                          >
-                            <Printer className="mr-1 h-3.5 w-3.5" />
-                            <span>Print Receipt</span>
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            className="h-7 bg-emerald-600 text-xs text-white hover:bg-emerald-700"
-                            onClick={() => {
-                              setCollectFormData((prev) => ({ ...prev, studentId: fee.studentId }));
-                              setIsCollectFeeOpen(true);
-                            }}
-                          >
-                            <span>Collect</span>
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </Card>
+          {feesErrored ? (
+            <ErrorState description={getErrorMessage(feesError)} onRetry={() => refetchFees()} />
+          ) : (
+            <Card className="overflow-hidden border border-slate-200/80 bg-white/90 p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+              <DataTable
+                columns={feeColumns}
+                data={studentFees}
+                isLoading={feesLoading}
+                emptyTitle="No fee records yet"
+                emptyDescription={
+                  feeStatusFilter || feeSearch
+                    ? 'No fees match this filter.'
+                    : 'Collect the first student fee payment.'
+                }
+                emptyAction={
+                  !feeStatusFilter &&
+                  !feeSearch && (
+                    <Button
+                      size="sm"
+                      className="mt-1 text-xs"
+                      onClick={() => setIsCollectFeeOpen(true)}
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" />
+                      Collect Student Fee
+                    </Button>
+                  )
+                }
+                searchPlaceholder="Search by student name or ID…"
+                manual={{
+                  pageIndex: feePageIndex,
+                  pageSize: 10,
+                  pageCount: feesResponse?.totalPages ?? 1,
+                  totalRows: feesResponse?.total ?? 0,
+                  onPageChange: setFeePageIndex,
+                  search: feeSearch,
+                  onSearchChange: setFeeSearch,
+                  sorting: feeSorting,
+                  onSortingChange: setFeeSorting,
+                }}
+                toolbar={
+                  <select
+                    value={feeStatusFilter}
+                    onChange={(e) => setFeeStatusFilter(e.target.value)}
+                    className="h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
+                  >
+                    <option value="">All Statuses</option>
+                    {STATUS_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                }
+              />
+            </Card>
+          )}
         </TabsContent>
 
         {/* Teacher Payroll Tab */}
         <TabsContent value="teacherSalary" className="space-y-4 pt-4 focus:outline-hidden">
-          <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
-                  <TableHead className="text-xs font-bold">Teacher ID</TableHead>
-                  <TableHead className="text-xs font-bold">Payroll Month</TableHead>
-                  <TableHead className="text-xs font-bold">Salary Amount</TableHead>
-                  <TableHead className="text-xs font-bold">Status</TableHead>
-                  <TableHead className="text-xs font-bold">Disbursed Date</TableHead>
-                  <TableHead className="text-right text-xs font-bold">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {teacherSalariesList.map((sal, idx) => {
-                  const isPaid = sal.isPaid || sal.status === 'Paid';
-                  return (
-                    <TableRow key={idx}>
-                      <TableCell className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                        {sal.teacherId}
-                      </TableCell>
-                      <TableCell className="text-xs">{sal.month}</TableCell>
-                      <TableCell className="text-xs font-bold">
-                        ₹{(sal.finalAmount || sal.amount || 60000).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <Badge
-                          variant="secondary"
-                          className={`text-[10px] font-semibold ${
-                            isPaid
-                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                              : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                          }`}
-                        >
-                          {isPaid ? 'Disbursed' : 'Processing'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {sal.paidAt || 'Scheduled EOM'}
-                      </TableCell>
-                      <TableCell className="text-right text-xs">
-                        {isPaid ? (
-                          <span className="text-[11px] font-semibold text-emerald-600">
-                            ✓ Disbursed
-                          </span>
-                        ) : (
-                          <Button
-                            size="sm"
-                            className="h-7 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
-                            onClick={() => toast.success(`Salary disbursed for ${sal.teacherId}`)}
-                          >
-                            <span>Disburse</span>
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </Card>
+          {salariesErrored ? (
+            <ErrorState
+              description={getErrorMessage(salariesError)}
+              onRetry={() => refetchSalaries()}
+            />
+          ) : (
+            <Card className="overflow-hidden border border-slate-200/80 bg-white/90 p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+              <DataTable
+                columns={salaryColumns}
+                data={teacherSalaries}
+                isLoading={salariesLoading}
+                emptyTitle="No payroll records yet"
+                emptyDescription={
+                  salaryStatusFilter || salarySearch
+                    ? 'No salary records match this filter.'
+                    : 'Salary records will show up here once created.'
+                }
+                searchPlaceholder="Search by teacher name or ID…"
+                manual={{
+                  pageIndex: salaryPageIndex,
+                  pageSize: 10,
+                  pageCount: salariesResponse?.totalPages ?? 1,
+                  totalRows: salariesResponse?.total ?? 0,
+                  onPageChange: setSalaryPageIndex,
+                  search: salarySearch,
+                  onSearchChange: setSalarySearch,
+                  sorting: salarySorting,
+                  onSortingChange: setSalarySorting,
+                }}
+                toolbar={
+                  <select
+                    value={salaryStatusFilter}
+                    onChange={(e) => setSalaryStatusFilter(e.target.value)}
+                    className="h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
+                  >
+                    <option value="">All Statuses</option>
+                    {STATUS_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                }
+              />
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Expenses Tab (books, whiteboards, supplies, ... — ALIGNMENT_PLAN.md P4) */}
+        <TabsContent value="expenses" className="pt-4 focus:outline-hidden">
+          <ExpenseManager
+            adapter={{
+              list: () => adminService.getTransactions(),
+              create: (body) => adminService.createTransaction(body),
+              update: (id, body) => adminService.updateTransaction(id, body),
+              remove: (id) => adminService.deleteTransaction(id),
+              categories: () => adminService.getExpenseCategories(),
+              listQueryKey: qk.admin.transactions(),
+              categoriesQueryKey: qk.admin.expenseCategories(),
+            }}
+          />
         </TabsContent>
       </Tabs>
 
       {/* Collect Fee Modal */}
-      <Dialog open={isCollectFeeOpen} onOpenChange={setIsCollectFeeOpen}>
+      <Dialog
+        open={isCollectFeeOpen}
+        onOpenChange={(next) => {
+          setIsCollectFeeOpen(next);
+          if (!next) reset(emptyFeeDefaults);
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
@@ -385,82 +576,71 @@ export const AdminFinance: React.FC = () => {
             <DialogTitle className="text-lg font-bold">Collect Student Term Fee</DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleCollectSubmit} className="space-y-4 pt-2">
+          <form onSubmit={handleSubmit(onCollectSubmit)} className="space-y-4 pt-2">
+            <SelectField
+              control={control}
+              name="studentId"
+              label="Student"
+              required
+              options={studentOptions}
+              placeholder="Select a student…"
+            />
+
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="cFeeId" className="text-xs font-semibold">
-                  Student ID <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="cFeeId"
-                  value={collectFormData.studentId}
-                  onChange={(e) =>
-                    setCollectFormData((prev) => ({ ...prev, studentId: e.target.value }))
-                  }
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="cFeeMonth" className="text-xs font-semibold">
-                  Month (MM-YYYY) <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="cFeeMonth"
-                  value={collectFormData.month}
-                  onChange={(e) =>
-                    setCollectFormData((prev) => ({ ...prev, month: e.target.value }))
-                  }
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
+              <MonthField control={control} name="month" label="Billing Month" required />
+              <TextField control={control} name="title" label="Fee Title" placeholder="Term Fee" />
             </div>
 
-            <div className="space-y-2 rounded-xl bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
+            <div className="space-y-2 rounded-xl bg-slate-50 p-3 dark:bg-zinc-800/50">
               <div className="flex items-center justify-between">
-                <span>Tuition Fee:</span>
-                <Input
-                  type="number"
-                  value={collectFormData.tuitionFee}
-                  onChange={(e) =>
-                    setCollectFormData((prev) => ({ ...prev, tuitionFee: Number(e.target.value) }))
-                  }
-                  className="h-7 w-24 text-right text-xs font-semibold"
-                />
+                <span className="text-xs font-semibold">Fee Breakdown</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => appendFeeRow({ feeType: '', amount: 0 })}
+                >
+                  <Plus className="mr-1 h-3 w-3" />
+                  Add Row
+                </Button>
               </div>
-              <div className="flex items-center justify-between">
-                <span>Exam Fee:</span>
-                <Input
-                  type="number"
-                  value={collectFormData.examFee}
-                  onChange={(e) =>
-                    setCollectFormData((prev) => ({ ...prev, examFee: Number(e.target.value) }))
-                  }
-                  className="h-7 w-24 text-right text-xs font-semibold"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Lab & Activity Fee:</span>
-                <Input
-                  type="number"
-                  value={collectFormData.labFee}
-                  onChange={(e) =>
-                    setCollectFormData((prev) => ({ ...prev, labFee: Number(e.target.value) }))
-                  }
-                  className="h-7 w-24 text-right text-xs font-semibold"
-                />
-              </div>
-              <div className="flex justify-between border-t pt-2 font-bold text-slate-900 dark:text-white">
+
+              {feeRows.map((row, index) => (
+                <div key={row.id} className="flex items-end gap-2">
+                  <div className="flex-[2]">
+                    <TextField
+                      control={control}
+                      name={`feeBreakdown.${index}.feeType`}
+                      label={index === 0 ? 'Fee Type' : ''}
+                      placeholder="e.g. Tuition Fee"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <NumberField
+                      control={control}
+                      name={`feeBreakdown.${index}.amount`}
+                      label={index === 0 ? 'Amount' : ''}
+                      currency
+                      min={0}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="mb-1 h-8 w-8 shrink-0 text-rose-600"
+                    disabled={feeRows.length === 1}
+                    onClick={() => removeFeeRow(index)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+
+              <div className="flex justify-between border-t pt-2 text-xs font-bold text-slate-900 dark:text-white">
                 <span>Total Payable:</span>
-                <span>
-                  ₹
-                  {(
-                    collectFormData.tuitionFee +
-                    collectFormData.examFee +
-                    collectFormData.labFee
-                  ).toLocaleString()}
-                </span>
+                <span>₹{feeTotal.toLocaleString()}</span>
               </div>
             </div>
 
@@ -513,9 +693,7 @@ export const AdminFinance: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-muted-foreground text-[10px]">Receipt #:</span>
-                    <p className="font-mono font-bold">
-                      {selectedReceipt.transactionId || 'TXN-9021-A'}
-                    </p>
+                    <p className="font-mono font-bold">{selectedReceipt.id}</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground text-[10px]">Month:</span>
@@ -523,32 +701,21 @@ export const AdminFinance: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-muted-foreground text-[10px]">Payment Date:</span>
-                    <p className="font-semibold">{selectedReceipt.paidAt || '05-04-2025'}</p>
+                    <p className="font-semibold">{selectedReceipt.paidAt}</p>
                   </div>
                 </div>
 
                 <div className="space-y-1 border-t pt-2">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tuition Fee:</span>
-                    <span className="font-semibold">₹5,000</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Exam Fee:</span>
-                    <span className="font-semibold">₹1,000</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Lab & Activity:</span>
-                    <span className="font-semibold">₹500</span>
+                    <span className="text-muted-foreground">{selectedReceipt.title}:</span>
+                    <span className="font-semibold">
+                      ₹{selectedReceipt.finalAmount.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between border-t pt-2 text-sm font-bold text-slate-900 dark:text-white">
                     <span>Total Paid:</span>
                     <span className="text-emerald-600 dark:text-emerald-400">
-                      ₹
-                      {(
-                        selectedReceipt.finalAmount ||
-                        selectedReceipt.amount ||
-                        6500
-                      ).toLocaleString()}
+                      ₹{selectedReceipt.finalAmount.toLocaleString()}
                     </span>
                   </div>
                 </div>

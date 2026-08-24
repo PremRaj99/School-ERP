@@ -1,18 +1,21 @@
-import { validateSchema } from '@/core/errors';
-import { asyncHandler, CreatedResponse, OkResponse } from '@/core/responses';
+import { asyncHandler, CreatedResponse } from '@/core/responses';
 import { setCookie } from '@/core/utils/setCookie';
 import { NextFunction, Request, Response } from 'express';
-import { LoginSchema } from './types';
+import { authContract } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
 import { AuthService } from './services/auth.service';
 
-export const login = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const parseData = validateSchema(LoginSchema, req.body);
-  const { accessToken, refreshToken } = await AuthService.login(parseData);
+export const login = defineRoute(authContract.login, async ({ body, res }) => {
+  const { accessToken, refreshToken, user } = await AuthService.login(body);
 
   setCookie(res, 'access_token', accessToken);
   setCookie(res, 'refresh_token', refreshToken);
 
-  res.status(200).json(new OkResponse({ accessToken, refreshToken }));
+  return {
+    user: { username: user.username, role: user.role },
+    accessToken,
+    refreshToken,
+  };
 });
 
 export const signup = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {

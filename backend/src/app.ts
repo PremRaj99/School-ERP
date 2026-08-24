@@ -9,6 +9,7 @@ import { adminRouter } from './modules/admin/admin.route';
 import { authRouter } from './modules/auth/auth.route';
 import { studentRouter } from './modules/student/student.route';
 import { teacherRouter } from './modules/teacher/teacher.route';
+import { financeRouter } from './modules/finance/finance.route';
 import { userRouter } from './modules/user/user.route';
 import { swaggerSpec } from './swagger';
 import { limiter } from './core/security/rate-limiting';
@@ -49,6 +50,7 @@ v1Router.use('/auth', authRouter);
 v1Router.use('/admin', adminRouter);
 v1Router.use('/student', studentRouter);
 v1Router.use('/teacher', teacherRouter);
+v1Router.use('/finance', financeRouter);
 v1Router.use('/user', userRouter);
 v1Router.use('/logs', logRouter);
 

@@ -1,61 +1,57 @@
 import prisma from '@/core/db';
 import { NotFoundError, ValidationError } from '@/core/errors';
+import type {
+  CreateSubjectBody,
+  GroupedSubjects,
+  SubjectRecord,
+  UpdateSubjectBody,
+} from '@schoolerp/contracts';
 import { generateSubjectCode, getGroupedSubject } from '../helpers';
-import { CreateSubjectInput, UpdateSubjectInput } from '../types';
 
 export class AdminSubjectService {
-  static async getAllClassSubjects() {
+  static async getAllClassSubjects(): Promise<GroupedSubjects> {
     return getGroupedSubject();
   }
 
-  static async getSubjects() {
-    return await prisma.subject.findMany();
+  static async getSubjects(): Promise<SubjectRecord[]> {
+    const subjects = await prisma.subject.findMany();
+    return subjects.map((s) => ({ subjectCode: s.subjectCode, subjectName: s.subjectName }));
   }
 
-  static async createSubject(data: CreateSubjectInput) {
+  static async createSubject(data: CreateSubjectBody): Promise<SubjectRecord> {
     const subjectCode = data.subjectCode || generateSubjectCode(data.subjectName);
 
     try {
-      await prisma.subject.create({
+      const subject = await prisma.subject.create({
         data: {
           subjectCode,
           subjectName: data.subjectName,
         },
       });
+      return { subjectCode: subject.subjectCode, subjectName: subject.subjectName };
     } catch (_e) {
-      throw new ValidationError();
+      throw new ValidationError('A subject with this code already exists.');
     }
   }
 
-  static async updateSubject(subjectCode: string, data: UpdateSubjectInput) {
-    const newSubjectCode = generateSubjectCode(data.subjectName);
-
+  static async updateSubject(subjectCode: string, data: UpdateSubjectBody): Promise<SubjectRecord> {
     try {
-      await prisma.subject.update({
+      const subject = await prisma.subject.update({
         where: { subjectCode },
-        data: {
-          subjectName: data.subjectName,
-          subjectCode: newSubjectCode,
-        },
+        data: { subjectName: data.subjectName },
       });
+      return { subjectCode: subject.subjectCode, subjectName: subject.subjectName };
     } catch (_error) {
       throw new NotFoundError();
     }
   }
 
-  static async deleteSubject(param: string) {
+  static async deleteSubject(subjectCode: string): Promise<{ subjectCode: string }> {
     try {
-      if (/^[0-9a-fA-F]{24}$/.test(param)) {
-        await prisma.subject.delete({
-          where: { id: param },
-        });
-      } else {
-        await prisma.subject.delete({
-          where: { subjectCode: param },
-        });
-      }
+      await prisma.subject.delete({ where: { subjectCode } });
     } catch (_e) {
       throw new NotFoundError();
     }
+    return { subjectCode };
   }
 }

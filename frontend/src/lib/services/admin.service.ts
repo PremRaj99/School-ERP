@@ -1,352 +1,226 @@
-import { apiClient, type ApiResponse } from '../api';
-import type {
-  Student,
-  StudentPayload,
-  Teacher,
-  TeacherPayload,
-  ClassItem,
-  CreateClassPayload,
-  SubjectItem,
-  CreateSubjectPayload,
-  UpdateSubjectPayload,
-  Exam,
-  CreateExamPayload,
-  Notice,
-  CreateNoticePayload,
-  TimeTableSlot,
-  UpdateTimetableSlotPayload,
-  CalendarEvent,
-  CreateCalendarEventPayload,
-  StudentFee,
-  CreateStudentFeePayload,
-  TeacherSalary,
-  CreateTeacherSalaryPayload,
-  Transaction,
-  CreateTransactionPayload,
-  ContactMessage,
-  AttendanceRecord,
-  AdminDashboardData,
-} from '../types';
+import {
+  adminAcademicCalendarContract,
+  adminAnalyticsContract,
+  adminClassContract,
+  adminContactContract,
+  adminDashboardContract,
+  adminExamContract,
+  adminNoticeContract,
+  adminPromotionContract,
+  adminStudentAttendanceContract,
+  adminStudentContract,
+  adminStudentFeeContract,
+  adminSubjectContract,
+  adminTeacherAttendanceContract,
+  adminTeacherContract,
+  adminTeacherSalaryContract,
+  adminTimetableContract,
+  adminTransactionContract,
+  type AdminDashboard,
+  type AdminStudentAttendanceQuery,
+  type BulkImportStudentsBody,
+  type CalendarEventRecord,
+  type ClassListQuery,
+  type ClassRecord,
+  type ContactListQuery,
+  type ContactRecord,
+  type CreateCalendarEventBody,
+  type CreateClassBody,
+  type CreateExamBody,
+  type CreateNoticeBody,
+  type CreateStudentBody,
+  type CreateStudentFeeBody,
+  type CreateSubjectBody,
+  type CreateTeacherBody,
+  type CreateTeacherSalaryBody,
+  type CreateTransactionBody,
+  type ExamListQuery,
+  type ExamRecord,
+  type MarkTeacherAttendanceBody,
+  type NoticeListQuery,
+  type NoticeRecord,
+  type PromoteClassBody,
+  type StudentFeeListQuery,
+  type StudentFeeRecord,
+  type StudentListQuery,
+  type StudentRecord,
+  type SubjectRecord,
+  type TeacherListQuery,
+  type TeacherRecord,
+  type TeacherSalaryListQuery,
+  type TeacherSalaryRecord,
+  type TransactionListQuery,
+  type TransactionRecord,
+  type UpdateClassBody,
+  type UpdateExamBody,
+  type UpdateNoticeBody,
+  type UpdateStudentBody,
+  type UpdateSubjectBody,
+  type UpdateTeacherAttendanceBody,
+  type UpdateTeacherBody,
+  type UpdateTimeTableBody,
+  type UpdateTransactionBody,
+} from '@schoolerp/contracts';
+import { api } from '../api/typed-client';
 
 export const adminService = {
   // Dashboard
-  getDashboard: async () => {
-    const res = await apiClient.get<ApiResponse<AdminDashboardData>>('/admin/dashboard');
-    return res.data;
-  },
+  getDashboard: (): Promise<AdminDashboard> => api(adminDashboardContract.get),
 
-  // Students
-  getStudents: async () => {
-    const res = await apiClient.get<ApiResponse<Student[]>>('/admin/student');
-    return res.data;
-  },
-  getStudentById: async (studentId: string) => {
-    const res = await apiClient.get<ApiResponse<Student>>(`/admin/student/${studentId}`);
-    return res.data;
-  },
-  createStudent: async (payload: Partial<StudentPayload> | Record<string, unknown>) => {
-    const res = await apiClient.post<ApiResponse<Student>>('/admin/student', payload);
-    return res.data;
-  },
-  updateStudent: async (
-    studentId: string,
-    payload: Partial<StudentPayload> | Record<string, unknown>,
-  ) => {
-    const res = await apiClient.put<ApiResponse<Student>>(`/admin/student/${studentId}`, payload);
-    return res.data;
-  },
-  deleteStudent: async (studentId: string) => {
-    const res = await apiClient.delete<ApiResponse<{ message: string }>>(
-      `/admin/student/${studentId}`,
-    );
-    return res.data;
-  },
+  // Students — contract-backed: request/response shapes come from @schoolerp/contracts, so a
+  // mismatch with the backend is a build-time type error here, not a runtime surprise.
+  getStudents: (query?: StudentListQuery) => api(adminStudentContract.list, { query: query ?? {} }),
+  getStudentById: (studentId: string): Promise<StudentRecord> =>
+    api(adminStudentContract.detail, { params: { studentId } }),
+  createStudent: (body: CreateStudentBody): Promise<StudentRecord> =>
+    api(adminStudentContract.create, { body }),
+  updateStudent: (studentId: string, body: UpdateStudentBody): Promise<StudentRecord> =>
+    api(adminStudentContract.update, { params: { studentId }, body }),
+  deleteStudent: (studentId: string): Promise<{ studentId: string }> =>
+    api(adminStudentContract.remove, { params: { studentId } }),
+  resetStudentPassword: (studentId: string) =>
+    api(adminStudentContract.resetPassword, { params: { studentId } }),
+  bulkImportStudents: (body: BulkImportStudentsBody) =>
+    api(adminStudentContract.bulkImport, { body }),
 
   // Teachers
-  getTeachers: async () => {
-    const res = await apiClient.get<ApiResponse<Teacher[]>>('/admin/teacher');
-    return res.data;
-  },
-  getTeacherById: async (teacherId: string) => {
-    const res = await apiClient.get<ApiResponse<Teacher>>(`/admin/teacher/${teacherId}`);
-    return res.data;
-  },
-  createTeacher: async (payload: Partial<TeacherPayload> | Record<string, unknown>) => {
-    const res = await apiClient.post<ApiResponse<Teacher>>('/admin/teacher', payload);
-    return res.data;
-  },
-  updateTeacher: async (
-    teacherId: string,
-    payload: Partial<TeacherPayload> | Record<string, unknown>,
-  ) => {
-    const res = await apiClient.put<ApiResponse<Teacher>>(`/admin/teacher/${teacherId}`, payload);
-    return res.data;
-  },
-  deleteTeacher: async (teacherId: string) => {
-    const res = await apiClient.delete<ApiResponse<{ message: string }>>(
-      `/admin/teacher/${teacherId}`,
-    );
-    return res.data;
-  },
+  getTeachers: (query?: TeacherListQuery) => api(adminTeacherContract.list, { query: query ?? {} }),
+  getTeacherById: (teacherId: string): Promise<TeacherRecord> =>
+    api(adminTeacherContract.detail, { params: { teacherId } }),
+  createTeacher: (body: CreateTeacherBody): Promise<TeacherRecord> =>
+    api(adminTeacherContract.create, { body }),
+  updateTeacher: (teacherId: string, body: UpdateTeacherBody): Promise<TeacherRecord> =>
+    api(adminTeacherContract.update, { params: { teacherId }, body }),
+  deleteTeacher: (teacherId: string): Promise<{ teacherId: string }> =>
+    api(adminTeacherContract.remove, { params: { teacherId } }),
+  resetTeacherPassword: (teacherId: string) =>
+    api(adminTeacherContract.resetPassword, { params: { teacherId } }),
 
   // Classes
-  getClasses: async () => {
-    const res = await apiClient.get<ApiResponse<ClassItem[]>>('/admin/class');
-    return res.data;
-  },
-  createClass: async (payload: CreateClassPayload) => {
-    const res = await apiClient.post<ApiResponse<ClassItem>>('/admin/class', payload);
-    return res.data;
-  },
-  deleteClass: async (classId: string) => {
-    const res = await apiClient.delete<ApiResponse<{ message: string }>>(`/admin/class/${classId}`);
-    return res.data;
-  },
+  getClasses: (query?: ClassListQuery): Promise<ClassRecord[]> =>
+    api(adminClassContract.list, { query: query ?? {} }),
+  createClass: (body: CreateClassBody): Promise<ClassRecord> =>
+    api(adminClassContract.create, { body }),
+  updateClass: (classId: string, body: UpdateClassBody): Promise<ClassRecord> =>
+    api(adminClassContract.update, { params: { classId }, body }),
+  deleteClass: (classId: string): Promise<{ id: string }> =>
+    api(adminClassContract.remove, { params: { classId } }),
 
   // Subjects
-  getSubjects: async () => {
-    const res = await apiClient.get<ApiResponse<SubjectItem[]>>('/admin/subject');
-    return res.data;
-  },
-  getAllClassSubjects: async () => {
-    const res = await apiClient.get<ApiResponse<unknown>>('/admin/subject/get-all-class-subject');
-    return res.data;
-  },
-  createSubject: async (payload: CreateSubjectPayload) => {
-    const res = await apiClient.post<ApiResponse<SubjectItem>>('/admin/subject', payload);
-    return res.data;
-  },
-  updateSubject: async (subjectCode: string, payload: UpdateSubjectPayload) => {
-    const res = await apiClient.put<ApiResponse<SubjectItem>>(
-      `/admin/subject/${subjectCode}`,
-      payload,
-    );
-    return res.data;
-  },
-  deleteSubject: async (subjectCode: string) => {
-    const res = await apiClient.delete<ApiResponse<{ message: string }>>(
-      `/admin/subject/${subjectCode}`,
-    );
-    return res.data;
-  },
+  getSubjects: (): Promise<SubjectRecord[]> => api(adminSubjectContract.list),
+  getAllClassSubjects: () => api(adminSubjectContract.groupedByClass),
+  createSubject: (body: CreateSubjectBody): Promise<SubjectRecord> =>
+    api(adminSubjectContract.create, { body }),
+  updateSubject: (subjectCode: string, body: UpdateSubjectBody): Promise<SubjectRecord> =>
+    api(adminSubjectContract.update, { params: { subjectCode }, body }),
+  deleteSubject: (subjectCode: string): Promise<{ subjectCode: string }> =>
+    api(adminSubjectContract.remove, { params: { subjectCode } }),
 
   // Exams
-  getExams: async () => {
-    const res = await apiClient.get<ApiResponse<Exam[]>>('/admin/exam');
-    return res.data;
-  },
-  createExam: async (payload: CreateExamPayload | Record<string, unknown>) => {
-    const res = await apiClient.post<ApiResponse<Exam>>('/admin/exam', payload);
-    return res.data;
-  },
-  deleteExam: async (examId: string) => {
-    const res = await apiClient.delete<ApiResponse<{ message: string }>>(`/admin/exam/${examId}`);
-    return res.data;
-  },
-  declareResult: async (examId: string, isResultDecleared: boolean) => {
-    const res = await apiClient.put<ApiResponse<Exam>>(`/admin/exam/${examId}/declare-result`, {
-      isResultDecleared,
-    });
-    return res.data;
-  },
+  getExams: (query?: ExamListQuery) => api(adminExamContract.list, { query: query ?? {} }),
+  getExamById: (examId: string) => api(adminExamContract.detail, { params: { examId } }),
+  createExam: (body: CreateExamBody): Promise<ExamRecord[]> =>
+    api(adminExamContract.create, { body }),
+  updateExam: (examId: string, body: UpdateExamBody): Promise<ExamRecord> =>
+    api(adminExamContract.update, { params: { examId }, body }),
+  deleteExam: (examId: string): Promise<{ id: string }> =>
+    api(adminExamContract.remove, { params: { examId } }),
+  declareResult: (examId: string, isResultDecleared: boolean): Promise<ExamRecord> =>
+    api(adminExamContract.declareResult, { params: { examId }, body: { isResultDecleared } }),
 
   // Notices
-  getNotices: async () => {
-    const res = await apiClient.get<ApiResponse<Notice[]>>('/admin/notice');
-    return res.data;
-  },
-  getNoticeById: async (noticeId: string) => {
-    const res = await apiClient.get<ApiResponse<Notice>>(`/admin/notice/${noticeId}`);
-    return res.data;
-  },
-  createNotice: async (payload: CreateNoticePayload | Record<string, unknown>) => {
-    const res = await apiClient.post<ApiResponse<Notice>>('/admin/notice', payload);
-    return res.data;
-  },
-  deleteNotice: async (noticeId: string) => {
-    const res = await apiClient.delete<ApiResponse<{ message: string }>>(
-      `/admin/notice/${noticeId}`,
-    );
-    return res.data;
-  },
+  getNotices: (query?: NoticeListQuery) => api(adminNoticeContract.list, { query: query ?? {} }),
+  getNoticeById: (noticeId: string): Promise<NoticeRecord> =>
+    api(adminNoticeContract.detail, { params: { noticeId } }),
+  createNotice: (body: CreateNoticeBody): Promise<NoticeRecord> =>
+    api(adminNoticeContract.create, { body }),
+  updateNotice: (noticeId: string, body: UpdateNoticeBody): Promise<NoticeRecord> =>
+    api(adminNoticeContract.update, { params: { noticeId }, body }),
+  deleteNotice: (noticeId: string): Promise<{ id: string }> =>
+    api(adminNoticeContract.remove, { params: { noticeId } }),
 
   // Academic (Timetable & Calendar)
-  getTimetable: async () => {
-    const res = await apiClient.get<ApiResponse<TimeTableSlot[]>>('/admin/academic/time-table');
-    return res.data;
-  },
-  updateTimetableSlot: async (payload: UpdateTimetableSlotPayload | Record<string, unknown>) => {
-    const res = await apiClient.put<ApiResponse<TimeTableSlot>>(
-      '/admin/academic/time-table',
-      payload,
-    );
-    return res.data;
-  },
-  getCalendar: async () => {
-    const res = await apiClient.get<ApiResponse<CalendarEvent[]>>('/admin/academic/calendar');
-    return res.data;
-  },
-  createCalendarEvent: async (payload: CreateCalendarEventPayload) => {
-    const res = await apiClient.post<ApiResponse<CalendarEvent>>(
-      '/admin/academic/calendar',
-      payload,
-    );
-    return res.data;
-  },
-  deleteCalendarEvent: async (calendarId: string) => {
-    const res = await apiClient.delete<ApiResponse<{ message: string }>>(
-      `/admin/academic/calendar/${calendarId}`,
-    );
-    return res.data;
-  },
+  getTimetable: () => api(adminTimetableContract.get),
+  updateTimetableSlot: (body: UpdateTimeTableBody) => api(adminTimetableContract.update, { body }),
+  getCalendar: (): Promise<CalendarEventRecord[]> => api(adminAcademicCalendarContract.list),
+  createCalendarEvent: (body: CreateCalendarEventBody): Promise<CalendarEventRecord> =>
+    api(adminAcademicCalendarContract.create, { body }),
+  deleteCalendarEvent: (calendarId: string): Promise<{ id: string }> =>
+    api(adminAcademicCalendarContract.remove, { params: { calendarId } }),
 
   // Finance
-  getStudentFees: async (params?: Record<string, string>) => {
-    const res = await apiClient.get<ApiResponse<StudentFee[]>>('/admin/finance/student-fee', {
-      params,
-    });
-    return res.data;
-  },
-  getStudentFeeById: async (feeId: string) => {
-    const res = await apiClient.get<ApiResponse<StudentFee>>(`/admin/finance/student-fee/${feeId}`);
-    return res.data;
-  },
-  createStudentFee: async (payload: CreateStudentFeePayload | Record<string, unknown>) => {
-    const res = await apiClient.post<ApiResponse<StudentFee>>(
-      '/admin/finance/student-fee',
-      payload,
-    );
-    return res.data;
-  },
-  updateStudentFeeStatus: async (feeId: string, status: string) => {
-    const res = await apiClient.put<ApiResponse<StudentFee>>(
-      `/admin/finance/student-fee/${feeId}/status`,
-      { status },
-    );
-    return res.data;
-  },
-  deleteStudentFee: async (feeId: string) => {
-    const res = await apiClient.delete<ApiResponse<{ message: string }>>(
-      `/admin/finance/student-fee/${feeId}`,
-    );
-    return res.data;
-  },
+  getStudentFees: (query?: StudentFeeListQuery) =>
+    api(adminStudentFeeContract.list, { query: query ?? {} }),
+  getStudentFeeById: (feeId: string) => api(adminStudentFeeContract.detail, { params: { feeId } }),
+  createStudentFee: (body: CreateStudentFeeBody) => api(adminStudentFeeContract.create, { body }),
+  updateStudentFeeStatus: (
+    feeId: string,
+    status: StudentFeeRecord['status'],
+  ): Promise<StudentFeeRecord> =>
+    api(adminStudentFeeContract.updateStatus, { params: { feeId }, body: { status } }),
+  deleteStudentFee: (feeId: string): Promise<{ id: string }> =>
+    api(adminStudentFeeContract.remove, { params: { feeId } }),
 
-  getTeacherSalaries: async (params?: Record<string, string>) => {
-    const res = await apiClient.get<ApiResponse<TeacherSalary[]>>('/admin/finance/teacher-salary', {
-      params,
-    });
-    return res.data;
-  },
-  getTeacherSalaryById: async (salaryId: string) => {
-    const res = await apiClient.get<ApiResponse<TeacherSalary>>(
-      `/admin/finance/teacher-salary/${salaryId}`,
-    );
-    return res.data;
-  },
-  createTeacherSalary: async (payload: CreateTeacherSalaryPayload | Record<string, unknown>) => {
-    const res = await apiClient.post<ApiResponse<TeacherSalary>>(
-      '/admin/finance/teacher-salary',
-      payload,
-    );
-    return res.data;
-  },
-  updateTeacherSalaryStatus: async (salaryId: string, status: string) => {
-    const res = await apiClient.put<ApiResponse<TeacherSalary>>(
-      `/admin/finance/teacher-salary/${salaryId}/status`,
-      { status },
-    );
-    return res.data;
-  },
-  deleteTeacherSalary: async (salaryId: string) => {
-    const res = await apiClient.delete<ApiResponse<{ message: string }>>(
-      `/admin/finance/teacher-salary/${salaryId}`,
-    );
-    return res.data;
-  },
+  getTeacherSalaries: (query?: TeacherSalaryListQuery) =>
+    api(adminTeacherSalaryContract.list, { query: query ?? {} }),
+  getTeacherSalaryById: (salaryId: string) =>
+    api(adminTeacherSalaryContract.detail, { params: { salaryId } }),
+  createTeacherSalary: (body: CreateTeacherSalaryBody) =>
+    api(adminTeacherSalaryContract.create, { body }),
+  updateTeacherSalaryStatus: (
+    salaryId: string,
+    status: TeacherSalaryRecord['status'],
+  ): Promise<TeacherSalaryRecord> =>
+    api(adminTeacherSalaryContract.updateStatus, { params: { salaryId }, body: { status } }),
+  deleteTeacherSalary: (salaryId: string): Promise<{ id: string }> =>
+    api(adminTeacherSalaryContract.remove, { params: { salaryId } }),
 
-  getTransactions: async (params?: Record<string, string>) => {
-    const res = await apiClient.get<ApiResponse<Transaction[]>>('/admin/finance/transaction', {
-      params,
-    });
-    return res.data;
-  },
-  getTransactionById: async (transactionId: string) => {
-    const res = await apiClient.get<ApiResponse<Transaction>>(
-      `/admin/finance/transaction/${transactionId}`,
-    );
-    return res.data;
-  },
-  createTransaction: async (payload: CreateTransactionPayload | Record<string, unknown>) => {
-    const res = await apiClient.post<ApiResponse<Transaction>>(
-      '/admin/finance/transaction',
-      payload,
-    );
-    return res.data;
-  },
-  updateTransaction: async (
+  getTransactions: (query?: TransactionListQuery): Promise<TransactionRecord[]> =>
+    api(adminTransactionContract.list, { query: query ?? {} }),
+  getTransactionById: (transactionId: string) =>
+    api(adminTransactionContract.detail, { params: { transactionId } }),
+  createTransaction: (body: CreateTransactionBody): Promise<TransactionRecord> =>
+    api(adminTransactionContract.create, { body }),
+  updateTransaction: (
     transactionId: string,
-    payload: Partial<CreateTransactionPayload> | Record<string, unknown>,
-  ) => {
-    const res = await apiClient.put<ApiResponse<Transaction>>(
-      `/admin/finance/transaction/${transactionId}`,
-      payload,
-    );
-    return res.data;
-  },
-  deleteTransaction: async (transactionId: string) => {
-    const res = await apiClient.delete<ApiResponse<{ message: string }>>(
-      `/admin/finance/transaction/${transactionId}`,
-    );
-    return res.data;
-  },
+    body: UpdateTransactionBody,
+  ): Promise<TransactionRecord> =>
+    api(adminTransactionContract.update, { params: { transactionId }, body }),
+  deleteTransaction: (transactionId: string): Promise<{ id: string }> =>
+    api(adminTransactionContract.remove, { params: { transactionId } }),
+  getExpenseCategories: (): Promise<string[]> => api(adminTransactionContract.expenseCategories),
 
   // Contact Messages
-  getContactMessages: async () => {
-    const res = await apiClient.get<ApiResponse<ContactMessage[]>>('/admin/contact');
-    return res.data;
-  },
-  getContactMessageById: async (contactId: string) => {
-    const res = await apiClient.get<ApiResponse<ContactMessage>>(`/admin/contact/${contactId}`);
-    return res.data;
-  },
-  deleteContactMessage: async (contactId: string) => {
-    const res = await apiClient.delete<ApiResponse<{ message: string }>>(
-      `/admin/contact/${contactId}`,
-    );
-    return res.data;
-  },
+  getContactMessages: (query?: ContactListQuery) =>
+    api(adminContactContract.list, { query: query ?? {} }),
+  getContactMessageById: (contactId: string): Promise<ContactRecord> =>
+    api(adminContactContract.detail, { params: { contactId } }),
+  deleteContactMessage: (contactId: string): Promise<{ id: string }> =>
+    api(adminContactContract.remove, { params: { contactId } }),
 
   // Attendance
-  getTeacherAttendanceDate: async (date: string) => {
-    const res = await apiClient.get<ApiResponse<AttendanceRecord[]>>(
-      '/admin/attendance/teacher-attendance',
-      {
-        params: { date },
-      },
-    );
-    return res.data;
-  },
-  getTeacherAttendanceMonth: async (teacherId: string, month: string) => {
-    const res = await apiClient.get<ApiResponse<AttendanceRecord[]>>(
-      `/admin/attendance/teacher-attendance/${teacherId}`,
-      { params: { month } },
-    );
-    return res.data;
-  },
-  markTeacherAttendance: async (date: string, attendance: Array<Record<string, unknown>>) => {
-    const res = await apiClient.post<ApiResponse<AttendanceRecord[]>>(
-      '/admin/attendance/teacher-attendance',
-      attendance,
-      { params: { date } },
-    );
-    return res.data;
-  },
-  updateTeacherAttendance: async (attendance: Array<Record<string, unknown>>) => {
-    const res = await apiClient.put<ApiResponse<AttendanceRecord[]>>(
-      '/admin/attendance/teacher-attendance',
-      attendance,
-    );
-    return res.data;
-  },
+  getTeacherAttendanceDate: (date: string) =>
+    api(adminTeacherAttendanceContract.getByDate, { query: { date } }),
+  getTeacherAttendanceMonth: (teacherId: string, month: string) =>
+    api(adminTeacherAttendanceContract.getByMonth, { params: { teacherId }, query: { month } }),
+  markTeacherAttendance: (date: string, attendance: MarkTeacherAttendanceBody) =>
+    api(adminTeacherAttendanceContract.mark, { query: { date }, body: attendance }),
+  updateTeacherAttendance: (attendance: UpdateTeacherAttendanceBody) =>
+    api(adminTeacherAttendanceContract.update, { body: attendance }),
+  getStudentAttendanceReport: (query: AdminStudentAttendanceQuery) =>
+    api(adminStudentAttendanceContract.report, { query }),
+
+  // Session promotion
+  promoteClass: (body: PromoteClassBody) => api(adminPromotionContract.promote, { body }),
+
+  // Analytics
+  getAnalyticsOverview: (session?: string) =>
+    api(adminAnalyticsContract.overview, { query: { session } }),
+  getAnalyticsAttendance: (from: string, to: string, className?: string, section?: string) =>
+    api(adminAnalyticsContract.attendance, { query: { from, to, className, section } }),
+  getAnalyticsAcademics: (examId: string) =>
+    api(adminAnalyticsContract.academics, { query: { examId } }),
+  getAnalyticsFinance: (session?: string) =>
+    api(adminAnalyticsContract.finance, { query: { session } }),
+  getAnalyticsStaff: (month: string) => api(adminAnalyticsContract.staff, { query: { month } }),
 };

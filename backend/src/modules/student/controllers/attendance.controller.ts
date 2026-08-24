@@ -1,13 +1,7 @@
-import { validateSchema } from '@/core/errors';
-import { asyncHandler, OkResponse } from '@/core/responses';
-import { NextFunction, Request, Response } from 'express';
-import { monthSchema } from '../types';
+import { studentContract } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
 import { StudentService } from '../services/student.service';
 
-export const getAttendance = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const month = validateSchema(monthSchema, String(req.query.month));
-    const data = await StudentService.getAttendance(req.user!.id, month);
-    res.status(200).json(new OkResponse(data));
-  },
-);
+export const getAttendance = defineRoute(studentContract.attendance, async ({ user, query }) => {
+  return StudentService.getAttendance(user!.id, query.month);
+});

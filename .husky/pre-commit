@@ -3,6 +3,13 @@ if [ -d "$HOME/.bun/bin" ]; then
   export PATH="$HOME/.bun/bin:$PATH"
 fi
 
+echo "=== Running Contracts pre-commit checks ==="
+cd contracts
+npx lint-staged
+npx tsc --noEmit
+npm run build
+cd ..
+
 echo "=== Running Backend pre-commit checks ==="
 cd backend
 bun run format
@@ -16,4 +23,5 @@ npm run format
 npx lint-staged
 npm run typecheck
 cd ..
+
 

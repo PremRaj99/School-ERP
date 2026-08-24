@@ -1,10 +1,11 @@
-import { asyncHandler, OkResponse } from '@/core/responses';
-import { NextFunction, Request, Response } from 'express';
+import { studentContract } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
 import { StudentService } from '../services/student.service';
 
-export const getDashboard = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const data = await StudentService.getDashboard(req.user!.id);
-    res.status(200).json(new OkResponse(data));
-  },
-);
+export const getDashboard = defineRoute(studentContract.dashboard, async ({ user }) => {
+  return StudentService.getDashboard(user!.id);
+});
+
+export const getAnalytics = defineRoute(studentContract.analytics, async ({ user }) => {
+  return StudentService.getAnalytics(user!.id);
+});

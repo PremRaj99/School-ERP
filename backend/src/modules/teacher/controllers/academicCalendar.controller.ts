@@ -1,10 +1,7 @@
-import { asyncHandler, OkResponse } from '@/core/responses';
-import { NextFunction, Request, Response } from 'express';
+import { teacherContract } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
 import { TeacherService } from '../services/teacher.service';
 
-export const getAcademicCalendars = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const data = await TeacherService.getAcademicCalendar();
-    res.status(200).json(new OkResponse(data));
-  },
-);
+export const getAcademicCalendars = defineRoute(teacherContract.academicCalendar, async () => {
+  return TeacherService.getAcademicCalendar();
+});

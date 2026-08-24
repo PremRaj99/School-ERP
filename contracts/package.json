@@ -1,0 +1,33 @@
+{
+  "name": "@schoolerp/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Single source of truth for SchoolERP's API shapes: one Zod schema per operation, defining request AND response. Backend validates against these and has its response type-checked against them; frontend uses them as react-hook-form resolvers and as the response type. Consumed as a built package (dist/) by both backend and frontend so each side's own bundler/compiler (tsc/commonjs for backend, Vite/esbuild for frontend) resolves it the normal npm way — no path-alias-to-source tricks.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.57.0"
+  }
+}

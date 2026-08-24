@@ -1,8 +1,10 @@
 import prisma from '@/core/db';
 import { getTodayDate } from '../helpers';
+import type { AdminDashboard } from '@schoolerp/contracts';
+import { toISODate } from '@/shared/helpers/isoDate';
 
 export class AdminDashboardService {
-  static async getDashboard() {
+  static async getDashboard(): Promise<AdminDashboard> {
     const today = getTodayDate();
 
     const [
@@ -40,7 +42,7 @@ export class AdminDashboardService {
       prisma.notice.findMany({
         orderBy: { date: 'desc' },
         take: 5,
-        select: { id: true, title: true, date: true, targetRole: true },
+        select: { id: true, title: true, date: true, targetRole: true, expiryDate: true },
       }),
       prisma.transaction.aggregate({
         where: { category: 'Fee', status: 'Pending' },
@@ -66,7 +68,7 @@ export class AdminDashboardService {
         subjects: subjectCount,
       },
       todayTeacherAttendance: {
-        date: today,
+        date: toISODate(today),
         present,
         absent,
         leave,
@@ -78,10 +80,16 @@ export class AdminDashboardService {
         title: exam.title,
         className: exam.class.className,
         section: exam.class.section,
-        dateFrom: exam.dateFrom,
-        dateTo: exam.dateTo,
+        dateFrom: toISODate(exam.dateFrom),
+        dateTo: exam.dateTo ? toISODate(exam.dateTo) : null,
       })),
-      recentNotices,
+      recentNotices: recentNotices.map((n) => ({
+        id: n.id,
+        title: n.title,
+        date: toISODate(n.date),
+        targetRole: n.targetRole,
+        expiryDate: n.expiryDate ? toISODate(n.expiryDate) : null,
+      })),
       finance: {
         pendingStudentFees: {
           count: pendingFees._count._all,

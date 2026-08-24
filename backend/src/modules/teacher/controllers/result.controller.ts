@@ -1,43 +1,20 @@
 import prisma from '@/core/db';
-import { DatabaseError, NotFoundError, validateSchema } from '@/core/errors';
-import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from '@/core/responses';
-import { CreateResultSchema, ObjectIdSchema, UpdateResultSchema } from '@/modules/admin/types';
-import { NextFunction, Request, Response } from 'express';
+import { DatabaseError, ForbiddenError, NotFoundError } from '@/core/errors';
+import { teacherContract, type ResultSheet } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
 import { getGrade } from '@/shared';
+import { resolveTeacherId } from '@/core/middlewares/auth.middleware';
+import { toISODate } from '@/shared/helpers/isoDate';
 
-export const getResult = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const examId = validateSchema(ObjectIdSchema, req.params.examId);
-  const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId);
-
+const loadResultSheet = async (examId: string, subjectId: string): Promise<ResultSheet> => {
   const examSubject = await prisma.examSubject.findFirst({
-    where: {
-      examId: examId,
-      subjectId: subjectId,
-    },
+    where: { examId, subjectId },
     include: {
-      exam: {
-        include: {
-          class: {
-            include: {
-              students: {
-                orderBy: {
-                  rollNo: 'asc',
-                },
-              },
-            },
-          },
-        },
-      },
+      exam: { include: { class: { include: { students: { orderBy: { rollNo: 'asc' } } } } } },
       subject: true,
       examResults: {
-        include: {
-          student: true,
-        },
-        orderBy: {
-          student: {
-            rollNo: 'asc',
-          },
-        },
+        include: { student: true },
+        orderBy: { student: { rollNo: 'asc' } },
       },
     },
   });
@@ -46,10 +23,10 @@ export const getResult = asyncHandler(async (req: Request, res: Response, _next:
     throw new NotFoundError('Result for the specified exam and subject not found.');
   }
 
-  const formattedResult = {
+  return {
     id: examSubject.exam.id,
-    dateFrom: examSubject.exam.dateFrom,
-    dateTo: examSubject.exam.dateTo,
+    dateFrom: toISODate(examSubject.exam.dateFrom),
+    dateTo: examSubject.exam.dateTo ? toISODate(examSubject.exam.dateTo) : null,
     title: examSubject.exam.title,
     className: examSubject.exam.class.className,
     section: examSubject.exam.class.section,
@@ -64,56 +41,62 @@ export const getResult = asyncHandler(async (req: Request, res: Response, _next:
             studentId: result.studentId,
             firstName: result.student.firstName,
             lastName: result.student.lastName,
-            date: examSubject.date,
+            date: toISODate(examSubject.date),
             rollNo: result.student.rollNo,
             marksObtained: result.marksObtained,
             grade: result.grade,
             remark: result.remark,
           }))
         : examSubject.exam.class.students.map((student) => ({
-            id: '',
+            id: null,
             studentId: student.id,
             firstName: student.firstName,
             lastName: student.lastName,
-            date: examSubject.date,
+            date: toISODate(examSubject.date),
             rollNo: student.rollNo,
             marksObtained: 0,
             grade: '',
-            remark: '',
+            remark: null,
           })),
   };
+};
 
-  res.status(200).json(new OkResponse(formattedResult));
+export const getResult = defineRoute(teacherContract.getResult, async ({ params, req }) => {
+  // Was unscoped — any teacher could read another teacher's subject marks by guessing/enumerating
+  // examId/subjectId. Same ownership gap `updateResult` below already guards against.
+  const teacherId = await resolveTeacherId(req);
+  const examSubject = await prisma.examSubject.findUnique({
+    where: { examId_subjectId: { examId: params.examId, subjectId: params.subjectId } },
+    select: { teacherId: true },
+  });
+  if (!examSubject) {
+    throw new NotFoundError('Result for the specified exam and subject not found.');
+  }
+  if (examSubject.teacherId !== teacherId) {
+    throw new ForbiddenError('You are not assigned to mark this subject.');
+  }
+  return loadResultSheet(params.examId, params.subjectId);
 });
 
-export const createResult = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const examId = validateSchema(ObjectIdSchema, req.params.examId);
-    const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId);
-    const parseData = validateSchema(CreateResultSchema, req.body);
+export const createResult = defineRoute(
+  teacherContract.submitResult,
+  async ({ params, body, req }) => {
+    const { examId, subjectId } = params;
+    // Was `req.user?.id` — the User id, not the Teacher id, so this `where` clause could never
+    // match and submitting marks always failed (ALIGNMENT_PLAN.md 2A/B3).
+    const teacherId = await resolveTeacherId(req);
 
     try {
       await prisma.$transaction(async (txn) => {
         const examSubject = await txn.examSubject.update({
-          where: {
-            examId_subjectId: {
-              examId,
-              subjectId,
-            },
-            teacherId: req.user?.id,
-          },
-          data: {
-            isMarked: true,
-          },
+          where: { examId_subjectId: { examId, subjectId }, teacherId },
+          data: { isMarked: true },
         });
 
-        if (!examSubject) {
-          throw new NotFoundError();
-        }
-
         await txn.examResult.createMany({
-          data: parseData.map((d) => ({
-            subjectId,
+          data: body.map((d) => ({
+            // Was also passing `subjectId` here — not a field on ExamResult, so this create
+            // always threw and got swallowed as a generic DatabaseError (ALIGNMENT_PLAN.md 2A/B5).
             examSubjectId: examSubject.id,
             studentId: d.studentId,
             marksObtained: d.marksObtained,
@@ -126,34 +109,35 @@ export const createResult = asyncHandler(
       throw new DatabaseError();
     }
 
-    res.status(201).json(new CreatedResponse());
+    return loadResultSheet(examId, subjectId);
   },
 );
 
-export const updateResult = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const examId = validateSchema(ObjectIdSchema, req.params.examId);
-    const subjectId = validateSchema(ObjectIdSchema, req.params.subjectId);
-    const parseData = validateSchema(UpdateResultSchema, req.body);
+export const updateResult = defineRoute(
+  teacherContract.updateResult,
+  async ({ params, body, req }) => {
+    const { examId, subjectId } = params;
+    const teacherId = await resolveTeacherId(req);
 
     const examSubject = await prisma.examSubject.findUnique({
-      where: {
-        examId_subjectId: {
-          examId,
-          subjectId,
-        },
-      },
+      where: { examId_subjectId: { examId, subjectId } },
     });
 
     if (!examSubject) {
       throw new NotFoundError();
     }
 
+    // Was missing entirely — any teacher could edit marks for a subject they don't own
+    // (ALIGNMENT_PLAN.md 2A/A4).
+    if (examSubject.teacherId !== teacherId) {
+      throw new ForbiddenError('You are not assigned to mark this subject.');
+    }
+
     try {
       await prisma.$transaction(async (txn) => {
         await Promise.all(
-          parseData.map(async (data) => {
-            await txn.examResult.update({
+          body.map((data) =>
+            txn.examResult.update({
               where: {
                 examSubjectId_studentId: {
                   examSubjectId: examSubject.id,
@@ -165,14 +149,14 @@ export const updateResult = asyncHandler(
                 grade: getGrade(examSubject.fullMarks, data.marksObtained),
                 remark: data.remark,
               },
-            });
-          }),
+            }),
+          ),
         );
       });
     } catch (_error) {
       throw new DatabaseError();
     }
 
-    res.status(202).json(new AcceptedResponse());
+    return loadResultSheet(examId, subjectId);
   },
 );

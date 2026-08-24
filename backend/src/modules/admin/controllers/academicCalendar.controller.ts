@@ -1,28 +1,21 @@
-import { validateSchema } from '@/core/errors';
-import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from '@/core/responses';
-import { NextFunction, Request, Response } from 'express';
-import { CreatAacademicCalendarSchema, ObjectIdSchema } from '../types';
+import { adminAcademicCalendarContract } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
 import { AdminAcademicCalendarService } from '../services/academicCalendar.service';
 
-export const getAcademicCalendars = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const data = await AdminAcademicCalendarService.getAcademicCalendars();
-    res.status(200).json(new OkResponse(data));
+export const getAcademicCalendars = defineRoute(adminAcademicCalendarContract.list, async () => {
+  return AdminAcademicCalendarService.getAcademicCalendars();
+});
+
+export const createAcademicCalendar = defineRoute(
+  adminAcademicCalendarContract.create,
+  async ({ body }) => {
+    return AdminAcademicCalendarService.createAcademicCalendar(body);
   },
 );
 
-export const createAcademicCalendar = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const parseData = validateSchema(CreatAacademicCalendarSchema, req.body);
-    await AdminAcademicCalendarService.createAcademicCalendar(parseData);
-    res.status(201).json(new CreatedResponse());
-  },
-);
-
-export const deleteAcademicCalendar = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const calendarId = validateSchema(ObjectIdSchema, String(req.params.calendarId));
-    await AdminAcademicCalendarService.deleteAcademicCalendar(calendarId);
-    res.status(202).json(new AcceptedResponse());
+export const deleteAcademicCalendar = defineRoute(
+  adminAcademicCalendarContract.remove,
+  async ({ params }) => {
+    return AdminAcademicCalendarService.deleteAcademicCalendar(params.calendarId);
   },
 );

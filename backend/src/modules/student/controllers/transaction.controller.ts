@@ -1,58 +1,40 @@
 import prisma from '@/core/db';
-import { asyncHandler, OkResponse } from '@/core/responses';
-import { NextFunction, Request, Response } from 'express';
-import { NotFoundError, validateSchema } from '@/core/errors';
-import { ObjectIdSchema, sessionSchema } from '@/types';
+import { NotFoundError } from '@/core/errors';
+import { studentContract } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
+import { resolveStudentId } from '@/core/middlewares/auth.middleware';
+import { toISODate, toISOMonth } from '@/shared/helpers/isoDate';
 
-export const getStudentFee = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const sessionYear = validateSchema(sessionSchema, req.query.year);
+export const getStudentFee = defineRoute(studentContract.fees, async ({ query, req }) => {
+  // Was `req.user?.id` — the User id, not the Student id, so this always matched zero rows
+  // (ALIGNMENT_PLAN.md 2A/B4).
+  const studentId = await resolveStudentId(req);
 
-    const studentFees = await prisma.studentFee.findMany({
-      where: {
-        studentId: req.user?.id,
-        student: {
-          class: {
-            session: sessionYear,
-          },
-        },
-      },
-      include: {
-        transaction: true,
-      },
-    });
+  const studentFees = await prisma.studentFee.findMany({
+    where: { studentId, student: { class: { session: query.year } } },
+    include: { transaction: true },
+  });
 
-    res.status(200).json(
-      new OkResponse(
-        studentFees.map((t) => ({
-          id: t.id,
-          month: t.month,
-          finalAmount: t.transaction.finalAmount,
-          isPaid: t.transaction.status,
-          paidAt: t.transaction.createdAt,
-        })),
-      ),
-    );
-  },
-);
+  return studentFees.map((t) => ({
+    id: t.id,
+    month: toISOMonth(t.month),
+    finalAmount: t.transaction.finalAmount,
+    status: t.transaction.status,
+    paidAt: toISODate(t.transaction.createdAt),
+  }));
+});
 
-export const getStudentFeeDetail = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const feeId = validateSchema(ObjectIdSchema, req.params.feeId);
+export const getStudentFeeDetail = defineRoute(
+  studentContract.feeDetail,
+  async ({ params, req }) => {
+    const studentId = await resolveStudentId(req);
 
     const studentFee = await prisma.studentFee.findUnique({
-      where: {
-        studentId: req.user?.id,
-        id: feeId,
-      },
+      where: { studentId, id: params.feeId },
       include: {
         transaction: true,
         feeBreakdown: true,
-        student: {
-          include: {
-            class: true,
-          },
-        },
+        student: { include: { class: true } },
       },
     });
 
@@ -60,24 +42,19 @@ export const getStudentFeeDetail = asyncHandler(
       throw new NotFoundError();
     }
 
-    res.status(200).json(
-      new OkResponse({
-        id: studentFee.id,
-        firstName: studentFee.student.firstName,
-        lastName: studentFee.student.lastName,
-        className: studentFee.student.class.className,
-        section: studentFee.student.class.section,
-        rollNo: studentFee.student.rollNo,
-        month: studentFee.month,
-        session: studentFee.student.class.session,
-        beakDown: studentFee.feeBreakdown.map((b) => ({
-          feeType: b.feeType,
-          amount: b.amount,
-        })),
-        finalAmount: studentFee.transaction.finalAmount,
-        isPaid: studentFee.transaction.status,
-        paidAt: studentFee.transaction.createdAt,
-      }),
-    );
+    return {
+      id: studentFee.id,
+      firstName: studentFee.student.firstName,
+      lastName: studentFee.student.lastName,
+      className: studentFee.student.class.className,
+      section: studentFee.student.class.section,
+      session: studentFee.student.class.session,
+      rollNo: studentFee.student.rollNo,
+      month: toISOMonth(studentFee.month),
+      feeBreakdown: studentFee.feeBreakdown.map((b) => ({ feeType: b.feeType, amount: b.amount })),
+      finalAmount: studentFee.transaction.finalAmount,
+      status: studentFee.transaction.status,
+      paidAt: toISODate(studentFee.transaction.createdAt),
+    };
   },
 );

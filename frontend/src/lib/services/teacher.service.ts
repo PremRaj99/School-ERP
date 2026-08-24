@@ -1,128 +1,56 @@
-import { apiClient, type ApiResponse } from '../api';
-import type {
-  Teacher,
-  Exam,
-  ExamResult,
-  Notice,
-  AttendanceRecord,
-  ClassAttendanceDetail,
-  TeacherSalary,
-  TeacherDashboardData,
-} from '../types';
+import {
+  teacherContract,
+  type CreateClassAttendanceBody,
+  type SubmitMarksBody,
+  type UpdateClassAttendanceBody,
+  type UpdateMarksBody,
+} from '@schoolerp/contracts';
+import { api } from '../api/typed-client';
 
 export const teacherService = {
-  getProfile: async () => {
-    const res = await apiClient.get<ApiResponse<Teacher>>('/teacher');
-    return res.data;
-  },
+  getProfile: () => api(teacherContract.profile),
 
-  getDashboard: async () => {
-    const res = await apiClient.get<ApiResponse<TeacherDashboardData>>('/teacher/dashboard');
-    return res.data;
-  },
+  getDashboard: () => api(teacherContract.dashboard),
 
-  getOwnAttendance: async (month?: string) => {
-    const res = await apiClient.get<ApiResponse<AttendanceRecord[]>>('/teacher/attendance', {
-      params: month ? { month } : undefined,
-    });
-    return res.data;
-  },
+  getAnalytics: (session?: string) => api(teacherContract.analytics, { query: { session } }),
 
-  getClassAttendanceList: async (month?: string) => {
-    const res = await apiClient.get<ApiResponse<ClassAttendanceDetail[]>>(
-      '/teacher/attendance/class-attendance',
-      {
-        params: month ? { month } : undefined,
-      },
-    );
-    return res.data;
-  },
+  getOwnAttendance: (month: string) => api(teacherContract.myAttendance, { query: { month } }),
 
-  getClassAttendanceDetail: async (classAttendanceId: string) => {
-    const res = await apiClient.get<ApiResponse<ClassAttendanceDetail>>(
-      `/teacher/attendance/class-attendance/${classAttendanceId}`,
-    );
-    return res.data;
-  },
+  getClassAttendanceList: (month: string) =>
+    api(teacherContract.classAttendanceList, { query: { month } }),
 
-  createClassAttendance: async (payload: {
-    date: string;
-    className: string;
-    section: string;
-    attendance: Array<{ studentId: string; status: string }>;
-  }) => {
-    const res = await apiClient.post<ApiResponse<ClassAttendanceDetail>>(
-      '/teacher/attendance/class-attendance',
-      payload,
-    );
-    return res.data;
-  },
+  getClassAttendanceDetail: (classAttendanceId: string) =>
+    api(teacherContract.classAttendanceDetail, { params: { classAttendanceId } }),
 
-  updateClassAttendance: async (
-    classAttendanceId: string,
-    payload: { attendance: Array<{ id?: string; studentId: string; status: string }> },
-  ) => {
-    const res = await apiClient.put<ApiResponse<ClassAttendanceDetail>>(
-      `/teacher/attendance/class-attendance/${classAttendanceId}`,
-      payload,
-    );
-    return res.data;
-  },
+  getClassRoster: (className: string, section: string) =>
+    api(teacherContract.classRoster, { query: { className, section } }),
 
-  getExams: async () => {
-    const res = await apiClient.get<ApiResponse<Exam[]>>('/teacher/exam');
-    return res.data;
-  },
+  createClassAttendance: (body: CreateClassAttendanceBody) =>
+    api(teacherContract.markClassAttendance, { body }),
 
-  getExamDetail: async (examId: string) => {
-    const res = await apiClient.get<ApiResponse<Exam>>(`/teacher/exam/${examId}`);
-    return res.data;
-  },
+  updateClassAttendance: (classAttendanceId: string, body: UpdateClassAttendanceBody) =>
+    api(teacherContract.updateClassAttendance, { params: { classAttendanceId }, body }),
 
-  getResult: async (examId: string, subjectId: string) => {
-    const res = await apiClient.get<ApiResponse<ExamResult[]>>(
-      `/teacher/result/${examId}/${subjectId}`,
-    );
-    return res.data;
-  },
+  getTimetable: () => api(teacherContract.academicTimetable),
 
-  submitResult: async (
-    examId: string,
-    subjectId: string,
-    results: Array<{ studentId: string; marksObtained: number; remark?: string }>,
-  ) => {
-    const res = await apiClient.post<ApiResponse<ExamResult[]>>(
-      `/teacher/result/${examId}/${subjectId}`,
-      results,
-    );
-    return res.data;
-  },
+  getCalendar: () => api(teacherContract.academicCalendar),
 
-  updateResult: async (
-    examId: string,
-    subjectId: string,
-    results: Array<{ id?: string; studentId: string; marksObtained: number; remark?: string }>,
-  ) => {
-    const res = await apiClient.put<ApiResponse<ExamResult[]>>(
-      `/teacher/result/${examId}/${subjectId}`,
-      results,
-    );
-    return res.data;
-  },
+  getExams: () => api(teacherContract.exams),
 
-  getNotices: async () => {
-    const res = await apiClient.get<ApiResponse<Notice[]>>('/teacher/notice');
-    return res.data;
-  },
+  getExamDetail: (examId: string) => api(teacherContract.examDetail, { params: { examId } }),
 
-  getNoticeById: async (noticeId: string) => {
-    const res = await apiClient.get<ApiResponse<Notice>>(`/teacher/notice/${noticeId}`);
-    return res.data;
-  },
+  getResult: (examId: string, subjectId: string) =>
+    api(teacherContract.getResult, { params: { examId, subjectId } }),
 
-  getSalaryTransactions: () => {
-    return apiClient
-      .get<ApiResponse<TeacherSalary[]>>('/teacher/transaction')
-      .then((res) => res.data);
-  },
+  submitResult: (examId: string, subjectId: string, body: SubmitMarksBody) =>
+    api(teacherContract.submitResult, { params: { examId, subjectId }, body }),
+
+  updateResult: (examId: string, subjectId: string, body: UpdateMarksBody) =>
+    api(teacherContract.updateResult, { params: { examId, subjectId }, body }),
+
+  getNotices: () => api(teacherContract.notices),
+
+  getNoticeById: (noticeId: string) => api(teacherContract.noticeDetail, { params: { noticeId } }),
+
+  getSalaryTransactions: () => api(teacherContract.salary),
 };

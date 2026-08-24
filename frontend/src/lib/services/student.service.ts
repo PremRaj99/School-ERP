@@ -1,79 +1,30 @@
-import { apiClient, type ApiResponse } from '../api';
-import type {
-  Student,
-  SubjectItem,
-  Exam,
-  ExamResult,
-  Notice,
-  TimeTableSlot,
-  CalendarEvent,
-  StudentFee,
-  AttendanceRecord,
-  StudentDashboardData,
-} from '../types';
+import { studentContract } from '@schoolerp/contracts';
+import { api } from '../api/typed-client';
 
 export const studentService = {
-  getProfile: async () => {
-    const res = await apiClient.get<ApiResponse<Student>>('/student');
-    return res.data;
-  },
+  getProfile: () => api(studentContract.profile),
 
-  getDashboard: async () => {
-    const res = await apiClient.get<ApiResponse<StudentDashboardData>>('/student/dashboard');
-    return res.data;
-  },
+  getDashboard: () => api(studentContract.dashboard),
 
-  getAttendance: async (month?: string) => {
-    const res = await apiClient.get<ApiResponse<AttendanceRecord[]>>('/student/attendance', {
-      params: month ? { month } : undefined,
-    });
-    return res.data;
-  },
+  getAnalytics: () => api(studentContract.analytics),
 
-  getSubjects: async () => {
-    const res = await apiClient.get<ApiResponse<SubjectItem[]>>('/student/subject/get-all-subject');
-    return res.data;
-  },
+  getAttendance: (month: string) => api(studentContract.attendance, { query: { month } }),
 
-  getExams: async () => {
-    const res = await apiClient.get<ApiResponse<Exam[]>>('/student/exam');
-    return res.data;
-  },
+  getSubjects: () => api(studentContract.subjects),
 
-  getResult: async (examId: string) => {
-    const res = await apiClient.get<ApiResponse<ExamResult>>(`/student/result/${examId}`);
-    return res.data;
-  },
+  getExams: () => api(studentContract.exams),
 
-  getNotices: async () => {
-    const res = await apiClient.get<ApiResponse<Notice[]>>('/student/notice');
-    return res.data;
-  },
+  getResult: (examId: string) => api(studentContract.result, { params: { examId } }),
 
-  getNoticeById: async (noticeId: string) => {
-    const res = await apiClient.get<ApiResponse<Notice>>(`/student/notice/${noticeId}`);
-    return res.data;
-  },
+  getNotices: () => api(studentContract.notices),
 
-  getTimetable: async () => {
-    const res = await apiClient.get<ApiResponse<TimeTableSlot[]>>('/student/academic/time-table');
-    return res.data;
-  },
+  getNoticeById: (noticeId: string) => api(studentContract.noticeDetail, { params: { noticeId } }),
 
-  getCalendar: async () => {
-    const res = await apiClient.get<ApiResponse<CalendarEvent[]>>('/student/academic/calendar');
-    return res.data;
-  },
+  getTimetable: () => api(studentContract.timetable),
 
-  getTransactions: async (year?: string) => {
-    const res = await apiClient.get<ApiResponse<StudentFee[]>>('/student/transaction', {
-      params: year ? { year } : undefined,
-    });
-    return res.data;
-  },
+  getCalendar: () => api(studentContract.calendar),
 
-  getTransactionById: async (feeId: string) => {
-    const res = await apiClient.get<ApiResponse<StudentFee>>(`/student/transaction/${feeId}`);
-    return res.data;
-  },
+  getTransactions: (year: string) => api(studentContract.fees, { query: { year } }),
+
+  getTransactionById: (feeId: string) => api(studentContract.feeDetail, { params: { feeId } }),
 };

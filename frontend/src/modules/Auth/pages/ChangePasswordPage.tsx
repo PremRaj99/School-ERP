@@ -13,11 +13,13 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { authService } from '@/lib/services/auth.service';
 import { getErrorMessage } from '@/lib/api';
+import { useAuthStore } from '@/stores/auth.store';
 import { toast } from 'sonner';
 import { KeyRound, Eye, EyeOff, Check, ArrowLeft, ShieldCheck } from 'lucide-react';
 
 export const ChangePasswordPage: React.FC = () => {
   const navigate = useNavigate();
+  const clearAuth = useAuthStore((state) => state.clear);
   const [loading, setLoading] = useState(false);
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -49,12 +51,21 @@ export const ChangePasswordPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await authService.changePassword({
+      await authService.changePassword({
         oldPassword: formData.oldPassword,
         newPassword: formData.newPassword,
       });
-      toast.success(res.message || 'Password updated successfully! Please sign in again.');
-      navigate('/auth/login');
+      toast.success('Password updated successfully! Please sign in again.');
+      // Changing the password doesn't revoke the current session server-side — clear the local
+      // auth state and log out explicitly so the "please sign in again" above is actually true,
+      // rather than leaving a stale authenticated session a route guard would still accept.
+      try {
+        await authService.logout();
+      } catch {
+        // best-effort — still clearing local state and redirecting below regardless
+      }
+      clearAuth();
+      navigate('/auth/login', { replace: true });
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {

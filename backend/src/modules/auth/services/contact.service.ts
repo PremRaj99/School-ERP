@@ -1,8 +1,8 @@
 import prisma from '@/core/db';
-import { ContactUsInput } from '../types';
+import type { ContactUsBody } from '@schoolerp/contracts';
 
 export class ContactService {
-  static async createContact(data: ContactUsInput) {
+  static async createContact(data: ContactUsBody) {
     return await prisma.contact.create({
       data: {
         email: data.email,

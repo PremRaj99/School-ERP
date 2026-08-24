@@ -1,3 +1,5 @@
+import type { WeekDay } from '@prisma/client';
+
 interface RawTimeTableEntry {
   class: {
     className: string;
@@ -8,7 +10,7 @@ interface RawTimeTableEntry {
     firstName: string;
     lastName: string | null;
   };
-  weekday: string;
+  weekday: WeekDay;
   subject: {
     subjectName: string;
     subjectCode: string;
@@ -25,7 +27,7 @@ interface PeriodDetail {
 }
 
 interface FormattedDaySchedule {
-  weekday: string;
+  weekday: WeekDay;
   periods: PeriodDetail[];
 }
 
@@ -56,7 +58,7 @@ export const timeTableFormattedData = (
     classMap.get(classKey)!.entries.push(entry);
   }
 
-  const weekdaysOrder = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const weekdaysOrder: WeekDay[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
   const formattedResults: FormattedClassSchedule[] = [];
 

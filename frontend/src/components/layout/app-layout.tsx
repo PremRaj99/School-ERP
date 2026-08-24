@@ -10,6 +10,7 @@ import {
   Bell,
   FileSpreadsheet,
   UserCheck,
+  ClipboardCheck,
   Award,
   MessageSquare,
   Search,
@@ -26,6 +27,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Info,
+  UserCircle2,
+  Settings,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,9 +43,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useTheme } from '@/shared/common/theme';
+import { useAuthStore } from '@/stores/auth.store';
 import { CommandMenu } from './command-menu';
 import { authService } from '@/lib/services/auth.service';
+import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 interface NavItem {
   title: string;
@@ -58,14 +65,18 @@ interface NavSection {
 const adminNavSections: NavSection[] = [
   {
     title: 'Overview',
-    items: [{ title: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard }],
+    items: [
+      { title: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+      { title: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+    ],
   },
   {
     title: 'People',
     items: [
       { title: 'Students', href: '/admin/students', icon: GraduationCap },
       { title: 'Teachers', href: '/admin/teachers', icon: Users },
-      { title: 'Attendance', href: '/admin/attendance', icon: UserCheck },
+      { title: 'Teacher Attendance', href: '/admin/attendance', icon: UserCheck },
+      { title: 'Student Attendance', href: '/admin/attendance/student', icon: ClipboardCheck },
     ],
   },
   {
@@ -83,6 +94,7 @@ const adminNavSections: NavSection[] = [
       { title: 'Finance & Fees', href: '/admin/finance', icon: CreditCard },
       { title: 'Notices & Circulars', href: '/admin/notices', icon: Bell },
       { title: 'Inquiries', href: '/admin/contact', icon: MessageSquare },
+      { title: 'Account Settings', href: '/admin/settings', icon: Settings },
     ],
   },
 ];
@@ -90,11 +102,15 @@ const adminNavSections: NavSection[] = [
 const teacherNavSections: NavSection[] = [
   {
     title: 'Overview',
-    items: [{ title: 'Teacher Dashboard', href: '/teacher/dashboard', icon: LayoutDashboard }],
+    items: [
+      { title: 'Teacher Dashboard', href: '/teacher/dashboard', icon: LayoutDashboard },
+      { title: 'Analytics', href: '/teacher/analytics', icon: BarChart3 },
+    ],
   },
   {
     title: 'Classroom',
     items: [
+      { title: 'My Timetable', href: '/teacher/timetable', icon: Calendar },
       { title: 'Mark Attendance', href: '/teacher/attendance', icon: UserCheck },
       { title: 'Grading & Marks', href: '/teacher/results', icon: FileSpreadsheet },
       { title: 'Exam Schedules', href: '/teacher/exams', icon: Award },
@@ -113,7 +129,10 @@ const teacherNavSections: NavSection[] = [
 const studentNavSections: NavSection[] = [
   {
     title: 'Overview',
-    items: [{ title: 'Student Dashboard', href: '/student/dashboard', icon: LayoutDashboard }],
+    items: [
+      { title: 'Student Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
+      { title: 'Analytics', href: '/student/analytics', icon: BarChart3 },
+    ],
   },
   {
     title: 'Academics',
@@ -134,9 +153,27 @@ const studentNavSections: NavSection[] = [
   },
 ];
 
+const financeNavSections: NavSection[] = [
+  {
+    title: 'Overview',
+    items: [
+      { title: 'Finance Dashboard', href: '/finance/dashboard', icon: LayoutDashboard },
+      { title: 'Analytics', href: '/finance/analytics', icon: BarChart3 },
+    ],
+  },
+  {
+    title: 'Ledger',
+    items: [
+      { title: 'Student Fees', href: '/finance/fees', icon: GraduationCap },
+      { title: 'Teacher Salaries', href: '/finance/salaries', icon: Users },
+      { title: 'Expenses', href: '/finance/expenses', icon: CreditCard },
+    ],
+  },
+];
+
 interface AppLayoutProps {
   children: React.ReactNode;
-  role: 'admin' | 'teacher' | 'student';
+  role: 'admin' | 'teacher' | 'student' | 'finance';
 }
 
 export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
@@ -177,7 +214,21 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
       ? adminNavSections
       : role === 'teacher'
         ? teacherNavSections
-        : studentNavSections;
+        : role === 'finance'
+          ? financeNavSections
+          : studentNavSections;
+
+  const { data: userProfile } = useQuery({
+    queryKey: qk.user.profile(),
+    queryFn: () => authService.getUser(),
+  });
+
+  const profileRoute: Record<AppLayoutProps['role'], string> = {
+    admin: '/admin/settings',
+    teacher: '/teacher/profile',
+    student: '/student/profile',
+    finance: '/finance/dashboard',
+  };
 
   const roleLabels: Record<string, { label: string; badgeClass: string; avatarBg: string }> = {
     admin: {
@@ -197,9 +248,17 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
       badgeClass: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30 font-medium',
       avatarBg: 'from-sky-600 to-blue-600',
     },
+    finance: {
+      label: 'Finance Portal',
+      badgeClass:
+        'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 font-medium',
+      avatarBg: 'from-amber-600 to-orange-600',
+    },
   };
 
   const currentRoleConfig = roleLabels[role] || roleLabels.admin;
+
+  const clearAuth = useAuthStore((state) => state.clear);
 
   const handleLogout = async () => {
     try {
@@ -207,8 +266,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
     } catch {
       // ignore
     } finally {
+      clearAuth();
       toast.success('Logged out successfully');
-      navigate('/auth/login');
+      navigate('/auth/login', { replace: true });
     }
   };
 
@@ -258,6 +318,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                   (item.href !== '/admin/dashboard' &&
                     item.href !== '/teacher/dashboard' &&
                     item.href !== '/student/dashboard' &&
+                    item.href !== '/finance/dashboard' &&
                     location.pathname.startsWith(item.href));
 
                 return (
@@ -345,8 +406,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                 {role.charAt(0).toUpperCase()}
               </div>
               <div className="flex flex-col">
-                <span className="text-xs leading-tight font-semibold text-slate-800 capitalize dark:text-zinc-200">
-                  {role} User
+                <span className="text-xs leading-tight font-semibold text-slate-800 dark:text-zinc-200">
+                  {userProfile?.username ?? `${role} User`}
                 </span>
                 <span className="text-muted-foreground text-[10px]">{currentRoleConfig.label}</span>
               </div>
@@ -549,13 +610,19 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-0.5">
-                    <p className="text-xs leading-none font-semibold capitalize">{role} Account</p>
-                    <p className="text-muted-foreground text-[11px] leading-none">
-                      {role}@school.edu
+                    <p className="text-xs leading-none font-semibold">
+                      {userProfile?.username ?? `${role} Account`}
+                    </p>
+                    <p className="text-muted-foreground text-[11px] leading-none capitalize">
+                      {userProfile?.role ?? role}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate(profileRoute[role])}>
+                  <UserCircle2 className="mr-2 h-3.5 w-3.5 text-slate-500" />
+                  <span className="text-xs">My Profile</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/auth/change-password')}>
                   <KeyRound className="mr-2 h-3.5 w-3.5 text-slate-500" />
                   <span className="text-xs">Change Password</span>

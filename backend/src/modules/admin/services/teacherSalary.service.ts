@@ -1,43 +1,89 @@
 import prisma from '@/core/db';
 import { DatabaseError, NotFoundError, ValidationError } from '@/core/errors';
-import { getMonthStartEnd } from '../helpers';
-import { CreateTeacherSalaryInput } from '../types';
+import type {
+  CreateTeacherSalaryBody,
+  TeacherSalaryListQuery,
+  TeacherSalaryRecord,
+} from '@schoolerp/contracts';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@schoolerp/contracts';
+import { fromISOMonth, toISODate, toISOMonth } from '@/shared/helpers/isoDate';
 
-export interface TeacherSalaryFilters {
-  teacherId?: string;
-  month?: string;
-  status?: 'Paid' | 'Pending' | 'Failed';
+interface PaginatedTeacherSalaries {
+  data: TeacherSalaryRecord[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
 }
 
 export class AdminTeacherSalaryService {
-  static async getTeacherSalaries(filters: TeacherSalaryFilters) {
-    const salaries = await prisma.teacherSalary.findMany({
-      where: {
-        ...(filters.teacherId ? { teacher: { teacherId: filters.teacherId } } : {}),
-        ...(filters.month ? { month: getMonthStartEnd(filters.month).startDate } : {}),
-        ...(filters.status ? { transaction: { status: filters.status } } : {}),
-      },
-      include: {
-        transaction: true,
-        teacher: { select: { teacherId: true, firstName: true, lastName: true } },
-      },
-      orderBy: { month: 'desc' },
-    });
+  static async getTeacherSalaries(
+    filters: TeacherSalaryListQuery,
+  ): Promise<PaginatedTeacherSalaries> {
+    const page = filters.page ?? DEFAULT_PAGE;
+    const pageSize = filters.pageSize ?? DEFAULT_PAGE_SIZE;
+    const sortDir = filters.sortDir ?? 'desc';
 
-    return salaries.map((salary) => ({
-      id: salary.id,
-      teacherId: salary.teacher.teacherId,
-      firstName: salary.teacher.firstName,
-      lastName: salary.teacher.lastName,
-      month: salary.month,
-      title: salary.transaction.title,
-      finalAmount: salary.transaction.finalAmount,
-      status: salary.transaction.status,
-      paidAt: salary.transaction.createdAt,
-    }));
+    const teacherFilter = {
+      ...(filters.teacherId ? { teacherId: filters.teacherId } : {}),
+      ...(filters.q
+        ? {
+            OR: [
+              { firstName: { contains: filters.q, mode: 'insensitive' as const } },
+              { lastName: { contains: filters.q, mode: 'insensitive' as const } },
+              { teacherId: { contains: filters.q, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
+
+    const where = {
+      ...(Object.keys(teacherFilter).length > 0 ? { teacher: teacherFilter } : {}),
+      ...(filters.month ? { month: fromISOMonth(filters.month) } : {}),
+      ...(filters.status ? { transaction: { status: filters.status } } : {}),
+    };
+
+    const orderBy =
+      filters.sortBy === 'finalAmount'
+        ? { transaction: { finalAmount: sortDir } }
+        : filters.sortBy === 'paidAt'
+          ? { transaction: { createdAt: sortDir } }
+          : { month: sortDir };
+
+    const [salaries, total] = await Promise.all([
+      prisma.teacherSalary.findMany({
+        where,
+        include: {
+          transaction: true,
+          teacher: { select: { teacherId: true, firstName: true, lastName: true } },
+        },
+        orderBy,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.teacherSalary.count({ where }),
+    ]);
+
+    return {
+      data: salaries.map((salary) => ({
+        id: salary.id,
+        teacherId: salary.teacher.teacherId,
+        firstName: salary.teacher.firstName,
+        lastName: salary.teacher.lastName,
+        month: toISOMonth(salary.month),
+        title: salary.transaction.title,
+        finalAmount: salary.transaction.finalAmount,
+        status: salary.transaction.status,
+        paidAt: toISODate(salary.transaction.createdAt),
+      })),
+      page,
+      pageSize,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    };
   }
 
-  static async getTeacherSalaryById(salaryId: string) {
+  static async getTeacherSalaryById(salaryId: string): Promise<TeacherSalaryRecord> {
     const salary = await prisma.teacherSalary.findUnique({
       where: { id: salaryId },
       include: {
@@ -55,24 +101,21 @@ export class AdminTeacherSalaryService {
       teacherId: salary.teacher.teacherId,
       firstName: salary.teacher.firstName,
       lastName: salary.teacher.lastName,
-      month: salary.month,
+      month: toISOMonth(salary.month),
       title: salary.transaction.title,
       finalAmount: salary.transaction.finalAmount,
       status: salary.transaction.status,
-      paidAt: salary.transaction.createdAt,
+      paidAt: toISODate(salary.transaction.createdAt),
     };
   }
 
-  static async createTeacherSalary(data: CreateTeacherSalaryInput) {
-    const teacher = await prisma.teacher.findUnique({
-      where: { teacherId: data.teacherId },
-    });
-
+  static async createTeacherSalary(data: CreateTeacherSalaryBody): Promise<TeacherSalaryRecord> {
+    const teacher = await prisma.teacher.findUnique({ where: { teacherId: data.teacherId } });
     if (!teacher) {
       throw new NotFoundError('Teacher not found.');
     }
 
-    const { startDate: month } = getMonthStartEnd(data.month);
+    const month = fromISOMonth(data.month);
     const finalAmount = data.amount ?? teacher.salaryPerMonth;
 
     const existing = await prisma.teacherSalary.findUnique({
@@ -82,6 +125,7 @@ export class AdminTeacherSalaryService {
       throw new ValidationError('A salary record for this teacher and month already exists.');
     }
 
+    let salaryId = '';
     try {
       await prisma.$transaction(async (txn) => {
         const transaction = await txn.transaction.create({
@@ -93,33 +137,33 @@ export class AdminTeacherSalaryService {
           },
         });
 
-        await txn.teacherSalary.create({
-          data: {
-            teacherId: teacher.id,
-            transactionId: transaction.id,
-            month,
-          },
+        const salary = await txn.teacherSalary.create({
+          data: { teacherId: teacher.id, transactionId: transaction.id, month },
         });
+        salaryId = salary.id;
       });
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       throw new DatabaseError();
     }
+
+    return this.getTeacherSalaryById(salaryId);
   }
 
-  static async updateTeacherSalaryStatus(salaryId: string, status: 'Paid' | 'Pending' | 'Failed') {
+  static async updateTeacherSalaryStatus(
+    salaryId: string,
+    status: 'Paid' | 'Pending' | 'Failed',
+  ): Promise<TeacherSalaryRecord> {
     const salary = await prisma.teacherSalary.findUnique({ where: { id: salaryId } });
     if (!salary) {
       throw new NotFoundError();
     }
 
-    await prisma.transaction.update({
-      where: { id: salary.transactionId },
-      data: { status },
-    });
+    await prisma.transaction.update({ where: { id: salary.transactionId }, data: { status } });
+    return this.getTeacherSalaryById(salaryId);
   }
 
-  static async deleteTeacherSalary(salaryId: string) {
+  static async deleteTeacherSalary(salaryId: string): Promise<{ id: string }> {
     const salary = await prisma.teacherSalary.findUnique({ where: { id: salaryId } });
     if (!salary) {
       throw new NotFoundError();
@@ -133,5 +177,7 @@ export class AdminTeacherSalaryService {
     } catch (_e) {
       throw new DatabaseError();
     }
+
+    return { id: salaryId };
   }
 }

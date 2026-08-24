@@ -1,11 +1,48 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { School, Printer, QrCode } from 'lucide-react';
-import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ErrorState } from '@/components/data-table';
+import { studentService } from '@/lib/services/student.service';
+import { qk } from '@/lib/query-keys';
+import { getErrorMessage } from '@/lib/api';
+import { isoToDisplayDate } from '@/lib/date';
+import { School, QrCode, KeyRound } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 export const StudentProfile: React.FC = () => {
+  const navigate = useNavigate();
+
+  const {
+    data: student,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: qk.student.profile(),
+    queryFn: () => studentService.getProfile(),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-5xl space-y-6">
+        <Skeleton className="h-9 w-64" />
+        <Skeleton className="h-80 w-full" />
+      </div>
+    );
+  }
+
+  if (isError || !student) {
+    return (
+      <div className="mx-auto max-w-5xl space-y-6">
+        <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
@@ -18,17 +55,17 @@ export const StudentProfile: React.FC = () => {
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Institutional credentials, biometric details, emergency contacts, and digital identity
-            card.
+            Institutional credentials, guardian contacts, and digital identity card.
           </p>
         </div>
-
         <Button
-          onClick={() => toast.success('Sending Digital ID Card to printer...')}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          variant="outline"
+          size="sm"
+          className="h-9 text-xs"
+          onClick={() => navigate('/auth/change-password')}
         >
-          <Printer className="h-3.5 w-3.5" />
-          <span>Print Digital ID Pass</span>
+          <KeyRound className="mr-1.5 h-3.5 w-3.5" />
+          Change Password
         </Button>
       </div>
 
@@ -36,7 +73,6 @@ export const StudentProfile: React.FC = () => {
         {/* Left Column: Digital ID Card Preview */}
         <div className="space-y-4 md:col-span-6">
           <div className="relative space-y-5 overflow-hidden rounded-3xl border border-indigo-500/30 bg-linear-to-br from-indigo-900 via-indigo-950 to-slate-950 p-6 text-white shadow-2xl">
-            {/* Ambient Background Glow */}
             <div className="pointer-events-none absolute top-0 right-0 -mt-6 -mr-6 h-32 w-32 rounded-full bg-sky-500/20 blur-xl" />
 
             <div className="flex items-center justify-between border-b border-white/15 pb-3">
@@ -46,7 +82,7 @@ export const StudentProfile: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold tracking-tight">AURA INTERNATIONAL ACADEMY</h3>
-                  <p className="text-[9px] text-sky-300">Identity Pass 2025-2026</p>
+                  <p className="text-[9px] text-sky-300">Identity Pass {student.session}</p>
                 </div>
               </div>
               <Badge variant="outline" className="border-sky-400/40 text-[9px] text-sky-200">
@@ -56,26 +92,29 @@ export const StudentProfile: React.FC = () => {
 
             <div className="flex items-center gap-4">
               <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-2 border-white/30 bg-linear-to-tr from-sky-500 to-indigo-500 text-2xl font-black text-white shadow-xl">
-                AS
+                {student.firstName.charAt(0)}
+                {(student.lastName ?? '').charAt(0)}
               </div>
               <div className="space-y-0.5">
-                <h2 className="text-lg font-bold">Aryan Sharma</h2>
+                <h2 className="text-lg font-bold">
+                  {student.firstName} {student.lastName || ''}
+                </h2>
                 <p className="text-xs font-semibold text-sky-200">
-                  Class 10 - Section A (Roll #101)
+                  Class {student.className} - Section {student.section} (Roll #{student.rollNo})
                 </p>
-                <p className="font-mono text-[11px] text-sky-300">ID: STU-2025-001</p>
-                <p className="text-[10px] text-indigo-300">Blood Group: O+ • DOB: 12-05-2009</p>
+                <p className="font-mono text-[11px] text-sky-300">ID: {student.studentId}</p>
+                <p className="text-[10px] text-indigo-300">DOB: {isoToDisplayDate(student.dob)}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t border-white/15 pt-3 text-xs">
               <div>
                 <span className="block text-[10px] text-sky-300">Father / Guardian:</span>
-                <p className="text-[11px] font-semibold">Rajesh Sharma</p>
+                <p className="text-[11px] font-semibold">{student.fatherName || 'N/A'}</p>
               </div>
               <div>
-                <span className="block text-[10px] text-sky-300">Emergency Helpline:</span>
-                <p className="text-[11px] font-semibold">+91 98765 43210</p>
+                <span className="block text-[10px] text-sky-300">Emergency Contact:</span>
+                <p className="text-[11px] font-semibold">{student.phone}</p>
               </div>
             </div>
 
@@ -84,7 +123,9 @@ export const StudentProfile: React.FC = () => {
                 <span className="block font-mono text-[9px] text-sky-300">
                   AUTHORIZED CARDHOLDER
                 </span>
-                <span className="font-mono text-[10px] text-white">VALID: 2025-2026 SESSION</span>
+                <span className="font-mono text-[10px] text-white">
+                  VALID: {student.session} SESSION
+                </span>
               </div>
               <QrCode className="h-8 w-8 text-white/90" />
             </div>
@@ -101,11 +142,13 @@ export const StudentProfile: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-zinc-800/50">
                   <span className="text-muted-foreground text-[10px]">Date of Admission</span>
-                  <p className="mt-0.5 font-semibold">01-04-2021</p>
+                  <p className="mt-0.5 font-semibold">
+                    {isoToDisplayDate(student.dateOfAdmission)}
+                  </p>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-zinc-800/50">
                   <span className="text-muted-foreground text-[10px]">Aadhar Identifier</span>
-                  <p className="mt-0.5 font-mono font-semibold">XXXX-XXXX-8901</p>
+                  <p className="mt-0.5 font-mono font-semibold">{student.studentAadhar || '—'}</p>
                 </div>
               </div>
 
@@ -113,9 +156,7 @@ export const StudentProfile: React.FC = () => {
                 <span className="text-muted-foreground text-[10px]">
                   Permanent Residential Address
                 </span>
-                <p className="mt-0.5 font-semibold">
-                  B-14, Green Park Extension, New Delhi - 110016
-                </p>
+                <p className="mt-0.5 font-semibold">{student.address || 'N/A'}</p>
               </div>
             </CardContent>
           </Card>
@@ -128,15 +169,17 @@ export const StudentProfile: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-zinc-800/50">
                   <span className="text-muted-foreground text-[10px]">Father's Name</span>
-                  <p className="mt-0.5 font-semibold">Rajesh Sharma</p>
+                  <p className="mt-0.5 font-semibold">{student.fatherName || 'N/A'}</p>
                   <span className="text-muted-foreground text-[10px]">
-                    Occupation: Civil Engineer
+                    {student.fatherOccupation ? `Occupation: ${student.fatherOccupation}` : ''}
                   </span>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-zinc-800/50">
                   <span className="text-muted-foreground text-[10px]">Mother's Name</span>
-                  <p className="mt-0.5 font-semibold">Sunita Sharma</p>
-                  <span className="text-muted-foreground text-[10px]">Occupation: Academician</span>
+                  <p className="mt-0.5 font-semibold">{student.motherName || 'N/A'}</p>
+                  <span className="text-muted-foreground text-[10px]">
+                    {student.motherOccupation ? `Occupation: ${student.motherOccupation}` : ''}
+                  </span>
                 </div>
               </div>
             </CardContent>

@@ -12,65 +12,71 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { ErrorState } from '@/components/data-table';
 import { adminService } from '@/lib/services/admin.service';
-import type { ContactMessage } from '@/lib/types';
+import { MAX_PAGE_SIZE, type ContactRecord } from '@schoolerp/contracts';
+import { getErrorMessage } from '@/lib/api';
+import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { Mail, Phone, Calendar, Send, Search, Reply } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-
-const sampleMessages: ContactMessage[] = [
-  {
-    id: 'msg-1',
-    name: 'Sunil Malhotra',
-    email: 'sunil.malhotra@gmail.com',
-    mobile: '9811223344',
-    message:
-      'Seeking admission inquiry for Class 9 for the upcoming academic session 2025-2026. Please share fee details and transport routes.',
-    createdAt: '15-08-2026',
-  },
-  {
-    id: 'msg-2',
-    name: 'Priya Nambiar',
-    email: 'priya.nambiar@outlook.com',
-    mobile: '9822334455',
-    message:
-      'Requesting appointment with Principal regarding inter-school athletic tournament hosting on our campus grounds.',
-    createdAt: '14-08-2026',
-  },
-  {
-    id: 'msg-3',
-    name: 'Amitabh Sen',
-    email: 'amitabh.sen@yahoo.com',
-    mobile: '9833445566',
-    message:
-      'Inquiring about robotics lab and computer science curriculum electives for senior secondary classes 11 and 12.',
-    createdAt: '12-08-2026',
-  },
-];
+import { Mail, Phone, Send, Search, Inbox, Trash2 } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const AdminContactMessages: React.FC = () => {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [replyMessage, setReplyMessage] = useState<ContactMessage | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<ContactRecord | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const { data: apiMessages } = useQuery({
-    queryKey: ['adminMessages'],
-    queryFn: () => adminService.getContactMessages(),
+  // pageSize: MAX_PAGE_SIZE — card-grid inbox with client-side search, not `<DataTable>`; a
+  // school's total inquiry count comfortably fits in one page (ALIGNMENT_PLAN.md 2C/P1).
+  const {
+    data: messagesResponse,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: qk.admin.contactMessages({ pageSize: MAX_PAGE_SIZE }),
+    queryFn: () => adminService.getContactMessages({ pageSize: MAX_PAGE_SIZE }),
+  });
+  const messagesList = messagesResponse?.data;
+
+  const deleteMutation = useMutation({
+    mutationFn: (contactId: string) => adminService.deleteContactMessage(contactId),
+    onSuccess: () => {
+      toast.success('Inquiry removed');
+      queryClient.invalidateQueries({ queryKey: qk.admin.contactMessages() });
+      setDeleteConfirmId(null);
+      setIsDetailOpen(false);
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
-  const messagesList =
-    apiMessages?.data && Array.isArray(apiMessages.data) && apiMessages.data.length > 0
-      ? apiMessages.data
-      : sampleMessages;
+  const openDetail = (msg: ContactRecord) => {
+    setSelectedMessage(msg);
+    setReplyText(
+      `Dear ${msg.name},\n\nThank you for reaching out to Aura International Academy regarding your inquiry. `,
+    );
+    setIsDetailOpen(true);
+  };
 
   const handleSendReply = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success(`Response email dispatched to ${replyMessage?.email}`);
-    setReplyMessage(null);
-    setReplyText('');
+    toast.success(`Response email dispatched to ${selectedMessage?.email}`);
   };
 
-  const filteredMessages = messagesList.filter((m) =>
+  const filteredMessages = (messagesList ?? []).filter((m) =>
     `${m.name} ${m.email} ${m.message}`.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
@@ -106,117 +112,162 @@ export const AdminContactMessages: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Inquiries Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredMessages.map((msg, idx) => {
-          const msgId = msg.id || msg._id || `msg-${idx}`;
-          return (
-            <Card
-              key={msgId}
-              className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
-                    <Calendar className="h-3 w-3 text-indigo-500" />
-                    <span>{msg.createdAt || 'Recent'}</span>
-                  </span>
-                  <Badge
-                    variant="secondary"
-                    className="bg-blue-50 text-[10px] text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
-                  >
-                    New Inquiry
-                  </Badge>
-                </div>
-                <CardTitle className="mt-1 text-base font-bold text-slate-900 dark:text-white">
-                  {msg.name}
-                </CardTitle>
-                <CardDescription className="mt-1 space-y-0.5 text-xs">
-                  <div className="text-muted-foreground flex items-center gap-1">
-                    <Mail className="h-3 w-3 text-indigo-500" />
-                    <span>{msg.email}</span>
+      {/* Inbox Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-52 w-full" />
+          ))}
+        </div>
+      ) : isError ? (
+        <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
+      ) : filteredMessages.length === 0 ? (
+        <Empty className="rounded-none border">
+          <EmptyMedia variant="icon">
+            <Inbox className="size-5" />
+          </EmptyMedia>
+          <EmptyTitle>No inquiries yet</EmptyTitle>
+          <EmptyDescription>
+            {searchTerm
+              ? 'No inquiries match your search.'
+              : 'Messages submitted via the public Contact Us form will show up here.'}
+          </EmptyDescription>
+        </Empty>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredMessages.map((msg, idx) => {
+            const msgId = msg.id || `msg-${idx}`;
+            return (
+              <Card
+                key={msgId}
+                onClick={() => openDetail(msg)}
+                className="flex cursor-pointer flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-end">
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-50 text-[10px] text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
+                    >
+                      New Inquiry
+                    </Badge>
                   </div>
-                  <div className="text-muted-foreground flex items-center gap-1">
-                    <Phone className="h-3 w-3 text-emerald-500" />
-                    <span>{msg.mobile}</span>
-                  </div>
-                </CardDescription>
-              </CardHeader>
+                  <CardTitle className="mt-1 text-base font-bold text-slate-900 dark:text-white">
+                    {msg.name}
+                  </CardTitle>
+                  <CardDescription className="mt-1 space-y-0.5 text-xs">
+                    <div className="text-muted-foreground flex items-center gap-1">
+                      <Mail className="h-3 w-3 text-indigo-500" />
+                      <span>{msg.email}</span>
+                    </div>
+                    <div className="text-muted-foreground flex items-center gap-1">
+                      <Phone className="h-3 w-3 text-emerald-500" />
+                      <span>{msg.mobile}</span>
+                    </div>
+                  </CardDescription>
+                </CardHeader>
 
-              <CardContent className="flex-1 space-y-3 pt-0 text-xs">
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 leading-relaxed text-slate-700 dark:border-zinc-800 dark:bg-zinc-800/50 dark:text-zinc-300">
-                  "{msg.message}"
+                <CardContent className="flex-1 space-y-3 pt-0 text-xs">
+                  <p className="text-muted-foreground line-clamp-3 leading-relaxed">
+                    "{msg.message}"
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Message Detail Sheet */}
+      <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <SheetContent className="overflow-y-auto sm:max-w-lg">
+          {selectedMessage && (
+            <div className="space-y-4 px-4 pt-4">
+              <SheetHeader>
+                <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                  <Mail className="h-4 w-4" />
+                  <span>Public Inquiry</span>
+                </div>
+                <SheetTitle className="text-lg font-bold">{selectedMessage.name}</SheetTitle>
+                <SheetDescription className="text-xs">
+                  {selectedMessage.email} · {selectedMessage.mobile}
+                </SheetDescription>
+              </SheetHeader>
+
+              <div className="text-muted-foreground rounded-lg border bg-slate-50 p-2.5 text-xs leading-relaxed dark:bg-zinc-800/50">
+                <span className="mb-0.5 block font-semibold text-slate-800 dark:text-zinc-200">
+                  Original Inquiry:
+                </span>
+                "{selectedMessage.message}"
+              </div>
+
+              <form onSubmit={handleSendReply} className="space-y-3">
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold">Compose Reply</span>
+                  <Textarea
+                    rows={5}
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    required
+                    placeholder="Type your official administrative response..."
+                    className="text-xs leading-relaxed"
+                  />
                 </div>
 
-                <div className="flex items-center justify-end border-t border-slate-100 pt-2 dark:border-zinc-800">
+                <div className="flex gap-2 pt-1">
                   <Button
-                    size="sm"
-                    className="h-8 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
-                    onClick={() => {
-                      setReplyMessage(msg);
-                      setReplyText(
-                        `Dear ${msg.name},\n\nThank you for reaching out to Aura International Academy regarding your inquiry. `,
-                      );
-                    }}
+                    type="submit"
+                    className="flex-1 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
                   >
-                    <Reply className="mr-1 h-3.5 w-3.5" />
-                    <span>Reply to Sender</span>
+                    <Send className="mr-1.5 h-3.5 w-3.5" />
+                    <span>Send Response Email</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => setDeleteConfirmId(selectedMessage.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              </form>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
-      {/* Reply Modal */}
-      <Dialog open={!!replyMessage} onOpenChange={() => setReplyMessage(null)}>
-        <DialogContent className="sm:max-w-lg">
+      {/* Delete Confirmation */}
+      <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base font-bold">
-              <Mail className="h-4 w-4 text-indigo-500" />
-              <span>Compose Reply to {replyMessage?.name}</span>
+            <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
+              <Trash2 className="h-4 w-4" />
+              <span>Delete Inquiry</span>
             </DialogTitle>
-            <DialogDescription className="text-xs">
-              Recipient: {replyMessage?.email} ({replyMessage?.mobile})
+            <DialogDescription className="pt-2 text-xs">
+              Are you sure you want to permanently delete this inquiry from{' '}
+              <strong>{selectedMessage?.name}</strong>?
             </DialogDescription>
           </DialogHeader>
-
-          <form onSubmit={handleSendReply} className="space-y-3 pt-2">
-            <div className="text-muted-foreground rounded-lg border bg-slate-50 p-2.5 text-xs dark:bg-zinc-800/50">
-              <span className="mb-0.5 block font-semibold">Original Inquiry:</span>"
-              {replyMessage?.message}"
-            </div>
-
-            <div className="space-y-1">
-              <Textarea
-                rows={5}
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                required
-                placeholder="Type your official administrative response..."
-                className="text-xs leading-relaxed"
-              />
-            </div>
-
-            <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setReplyMessage(null)}
-                className="h-9 text-xs"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
-              >
-                <Send className="mr-1.5 h-3.5 w-3.5" />
-                <span>Send Response Email</span>
-              </Button>
-            </DialogFooter>
-          </form>
+          <DialogFooter className="pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteConfirmId(null)}
+              className="text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => deleteConfirmId && deleteMutation.mutate(deleteConfirmId)}
+              disabled={deleteMutation.isPending}
+              className="text-xs"
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete Permanently'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

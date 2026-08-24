@@ -1,9 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { ErrorState } from '@/components/data-table';
 import {
   Dialog,
   DialogContent,
@@ -12,171 +17,62 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { TextField, DateField } from '@/components/form';
+import { ExamWizardSheet } from './ExamWizardSheet';
 import { adminService } from '@/lib/services/admin.service';
-import type { Exam, CreateExamPayload } from '@/lib/types';
+import { MAX_PAGE_SIZE, UpdateExamBody, type ExamRecord } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
+import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { Award, Plus, Trash2, Calendar, Sparkles, Search, Check } from 'lucide-react';
+import { Award, Plus, Trash2, Pencil, Calendar, Search, Check } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-const sampleExams: Exam[] = [
-  {
-    id: 'exam-1',
-    title: 'Mid-Term Assessment 2025-2026',
-    dateFrom: '15-10-2025',
-    dateTo: '25-10-2025',
-    isResultDecleared: true,
-    className: '10',
-    section: 'A',
-    examSubjects: [
-      {
-        subjectCode: 'MATH101',
-        subjectName: 'Mathematics',
-        fullMarks: 100,
-        teacherId: 'TCH-001',
-        date: '15-10-2025',
-        isMarked: true,
-      },
-      {
-        subjectCode: 'PHY201',
-        subjectName: 'Physics',
-        fullMarks: 100,
-        teacherId: 'TCH-002',
-        date: '17-10-2025',
-        isMarked: true,
-      },
-      {
-        subjectCode: 'CHEM301',
-        subjectName: 'Chemistry',
-        fullMarks: 100,
-        teacherId: 'TCH-004',
-        date: '20-10-2025',
-        isMarked: true,
-      },
-      {
-        subjectCode: 'ENG001',
-        subjectName: 'English',
-        fullMarks: 100,
-        teacherId: 'TCH-003',
-        date: '22-10-2025',
-        isMarked: true,
-      },
-    ],
-  },
-  {
-    id: 'exam-2',
-    title: 'Pre-Board Examination Series 1',
-    dateFrom: '10-12-2025',
-    dateTo: '20-12-2025',
-    isResultDecleared: false,
-    className: '10',
-    section: 'A',
-    examSubjects: [
-      {
-        subjectCode: 'MATH101',
-        subjectName: 'Mathematics',
-        fullMarks: 100,
-        teacherId: 'TCH-001',
-        date: '10-12-2025',
-        isMarked: true,
-      },
-      {
-        subjectCode: 'PHY201',
-        subjectName: 'Physics',
-        fullMarks: 100,
-        teacherId: 'TCH-002',
-        date: '12-12-2025',
-        isMarked: false,
-      },
-      {
-        subjectCode: 'CHEM301',
-        subjectName: 'Chemistry',
-        fullMarks: 100,
-        teacherId: 'TCH-004',
-        date: '15-12-2025',
-        isMarked: false,
-      },
-    ],
-  },
-  {
-    id: 'exam-3',
-    title: 'Annual Final Examination 2026',
-    dateFrom: '01-03-2026',
-    dateTo: '15-03-2026',
-    isResultDecleared: false,
-    className: '9',
-    section: 'A',
-    examSubjects: [
-      {
-        subjectCode: 'MATH101',
-        subjectName: 'Mathematics',
-        fullMarks: 100,
-        teacherId: 'TCH-001',
-        date: '01-03-2026',
-        isMarked: false,
-      },
-      {
-        subjectCode: 'PHY201',
-        subjectName: 'Physics',
-        fullMarks: 100,
-        teacherId: 'TCH-002',
-        date: '04-03-2026',
-        isMarked: false,
-      },
-    ],
-  },
-];
-
 export const AdminExams: React.FC = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [selectedExam, setSelectedExam] = useState<ExamRecord | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [editingExam, setEditingExam] = useState<ExamRecord | null>(null);
 
-  const [formData, setFormData] = useState<CreateExamPayload>({
-    title: '',
-    dateFrom: '15-11-2025',
-    dateTo: '25-11-2025',
-    className: '10',
-    section: 'A',
-    session: '2025-2026',
-    subjects: [
-      { subjectCode: 'MATH101', fullMarks: 100, teacherId: 'TCH-001', date: '15-11-2025' },
-      { subjectCode: 'PHY201', fullMarks: 100, teacherId: 'TCH-002', date: '18-11-2025' },
-    ],
+  const { control, handleSubmit, reset } = useForm<UpdateExamBody>({
+    resolver: zodResolver(UpdateExamBody),
+    defaultValues: { title: '', dateFrom: '', dateTo: '' },
   });
 
-  const { data: apiExams } = useQuery({
-    queryKey: ['adminExams'],
-    queryFn: () => adminService.getExams(),
-  });
-
-  const examsList: Exam[] = useMemo(() => {
-    if (apiExams?.data && Array.isArray(apiExams.data) && apiExams.data.length > 0) {
-      return apiExams.data;
+  useEffect(() => {
+    if (editingExam) {
+      reset({
+        title: editingExam.title,
+        dateFrom: editingExam.dateFrom,
+        dateTo: editingExam.dateTo ?? undefined,
+      });
     }
-    return sampleExams;
-  }, [apiExams]);
+  }, [editingExam, reset]);
 
-  const createMutation = useMutation({
-    mutationFn: (payload: CreateExamPayload) => adminService.createExam(payload),
-    onSuccess: (res) => {
-      toast.success(res.message || 'Exam schedule published successfully!');
-      queryClient.invalidateQueries({ queryKey: ['adminExams'] });
-      setIsCreateOpen(false);
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
-    },
+  // pageSize: MAX_PAGE_SIZE — this is a card grid with client-side search, not `<DataTable>`;
+  // a school's total exam count comfortably fits in one page (ALIGNMENT_PLAN.md 2C/P1 — the
+  // backend now paginates, but a real pagination *UI* here would be over-engineering for how few
+  // rows this resource actually has).
+  const {
+    data: examsResponse,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: qk.admin.exams({ pageSize: MAX_PAGE_SIZE }),
+    queryFn: () => adminService.getExams({ pageSize: MAX_PAGE_SIZE }),
   });
+  const examsList = examsResponse?.data;
 
   const declareMutation = useMutation({
     mutationFn: ({ examId, isDeclared }: { examId: string; isDeclared: boolean }) =>
       adminService.declareResult(examId, isDeclared),
-    onSuccess: (res) => {
-      toast.success(res.message || 'Result publication status updated!');
-      queryClient.invalidateQueries({ queryKey: ['adminExams'] });
+    onSuccess: () => {
+      toast.success('Result publication status updated!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.exams() });
       if (selectedExam) {
         setSelectedExam((prev) =>
           prev ? { ...prev, isResultDecleared: !prev.isResultDecleared } : null,
@@ -192,7 +88,7 @@ export const AdminExams: React.FC = () => {
     mutationFn: (examId: string) => adminService.deleteExam(examId),
     onSuccess: () => {
       toast.success('Exam removed');
-      queryClient.invalidateQueries({ queryKey: ['adminExams'] });
+      queryClient.invalidateQueries({ queryKey: qk.admin.exams() });
       setDeleteConfirmId(null);
     },
     onError: (err) => {
@@ -200,12 +96,22 @@ export const AdminExams: React.FC = () => {
     },
   });
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createMutation.mutate(formData);
-  };
+  const updateMutation = useMutation({
+    mutationFn: (payload: UpdateExamBody) => adminService.updateExam(editingExam!.id, payload),
+    onSuccess: () => {
+      toast.success('Exam schedule updated');
+      queryClient.invalidateQueries({ queryKey: qk.admin.exams() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.exam(editingExam!.id) });
+      setEditingExam(null);
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
+    },
+  });
 
-  const filteredExams = examsList.filter((ex) =>
+  const onEditSubmit: SubmitHandler<UpdateExamBody> = (values) => updateMutation.mutate(values);
+
+  const filteredExams = (examsList ?? []).filter((ex) =>
     `${ex.title} ${ex.className || ''}`.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
@@ -229,7 +135,7 @@ export const AdminExams: React.FC = () => {
         </div>
 
         <Button
-          onClick={() => setIsCreateOpen(true)}
+          onClick={() => setIsWizardOpen(true)}
           className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
         >
           <Plus className="h-3.5 w-3.5" />
@@ -253,236 +159,183 @@ export const AdminExams: React.FC = () => {
       </Card>
 
       {/* Exam Schedules List */}
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {filteredExams.map((exam, idx) => {
-          const examId = exam.id || exam._id || `exam-${idx}`;
-          const subjects = exam.examSubjects || [];
-          const allMarked = subjects.length > 0 && subjects.every((s) => s.isMarked);
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-52 w-full" />
+          ))}
+        </div>
+      ) : isError ? (
+        <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
+      ) : filteredExams.length === 0 ? (
+        <Empty className="rounded-none border">
+          <EmptyMedia variant="icon">
+            <Award className="size-5" />
+          </EmptyMedia>
+          <EmptyTitle>No exams scheduled yet</EmptyTitle>
+          <EmptyDescription>
+            {searchTerm ? 'No exams match your search.' : 'Create the first examination schedule.'}
+          </EmptyDescription>
+          {!searchTerm && (
+            <Button size="sm" className="mt-1 text-xs" onClick={() => setIsWizardOpen(true)}>
+              <Plus className="mr-1 h-3.5 w-3.5" />
+              Create Examination Schedule
+            </Button>
+          )}
+        </Empty>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {filteredExams.map((exam, idx) => {
+            const examId = exam.id || `exam-${idx}`;
 
-          return (
-            <Card
-              key={examId}
-              className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] font-semibold ${
-                        exam.isResultDecleared
-                          ? 'border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                          : allMarked
-                            ? 'border-blue-500/30 bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+            return (
+              <Card
+                key={examId}
+                onClick={() => navigate(`/admin/exams/${examId}`)}
+                className="flex cursor-pointer flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-semibold ${
+                          exam.isResultDecleared
+                            ? 'border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
                             : 'border-amber-500/30 bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                      }`}
-                    >
-                      {exam.isResultDecleared
-                        ? 'Results Declared'
-                        : allMarked
-                          ? 'Ready to Declare'
-                          : 'Marking In Progress'}
+                        }`}
+                      >
+                        {exam.isResultDecleared ? 'Results Declared' : 'Marking In Progress'}
+                      </Badge>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px]">
+                      Class {exam.className || '10'}-{exam.section || 'A'}
                     </Badge>
                   </div>
-                  <Badge variant="secondary" className="text-[10px]">
-                    Class {exam.className || '10'}-{exam.section || 'A'}
-                  </Badge>
-                </div>
 
-                <CardTitle className="mt-2 text-base leading-snug font-bold text-slate-900 dark:text-white">
-                  {exam.title}
-                </CardTitle>
-                <CardDescription className="mt-1 flex items-center gap-1 text-xs">
-                  <Calendar className="h-3 w-3 text-indigo-500" />
-                  <span>
-                    {exam.dateFrom} to {exam.dateTo || 'TBD'}
-                  </span>
-                </CardDescription>
-              </CardHeader>
+                  <CardTitle className="mt-2 text-base leading-snug font-bold text-slate-900 dark:text-white">
+                    {exam.title}
+                  </CardTitle>
+                  <CardDescription className="mt-1 flex items-center gap-1 text-xs">
+                    <Calendar className="h-3 w-3 text-indigo-500" />
+                    <span>
+                      {exam.dateFrom} to {exam.dateTo || 'TBD'}
+                    </span>
+                  </CardDescription>
+                </CardHeader>
 
-              <CardContent className="flex-1 space-y-3 pt-0 text-xs">
-                <div className="space-y-1.5 rounded-lg bg-slate-50 p-2.5 dark:bg-zinc-800/50">
-                  <span className="text-muted-foreground text-[10px] font-semibold uppercase">
-                    Scheduled Subjects ({subjects.length})
-                  </span>
-                  <div className="space-y-1">
-                    {subjects.slice(0, 3).map((sub, i) => (
-                      <div key={i} className="flex items-center justify-between text-[11px]">
-                        <span className="font-medium text-slate-800 dark:text-zinc-200">
-                          {sub.subjectName || sub.subjectCode}
-                        </span>
-                        <span className="text-muted-foreground text-[10px]">{sub.date}</span>
-                      </div>
-                    ))}
-                    {subjects.length > 3 && (
-                      <p className="text-muted-foreground pt-0.5 text-[10px]">
-                        +{subjects.length - 3} more subjects
-                      </p>
-                    )}
+                <CardContent className="flex-1 space-y-3 pt-0 text-xs">
+                  {/* The list endpoint doesn't return a subject breakdown — that's the exam detail
+                    view (GET /admin/exam/:examId isn't wired into a page yet, Phase 5). */}
+                  <div className="text-muted-foreground rounded-lg bg-slate-50 p-2.5 text-[11px] dark:bg-zinc-800/50">
+                    {exam.isResultDecleared
+                      ? 'Results have been published for this exam.'
+                      : 'Subject-wise marking status is available on the exam detail view.'}
                   </div>
-                </div>
 
-                {/* Result Declaration Action Button */}
-                <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2 dark:border-zinc-800">
-                  <Button
-                    size="sm"
-                    variant={exam.isResultDecleared ? 'outline' : 'default'}
-                    className={`h-8 text-xs ${
-                      exam.isResultDecleared
-                        ? 'border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                    }`}
-                    onClick={() =>
-                      declareMutation.mutate({
-                        examId,
-                        isDeclared: !exam.isResultDecleared,
-                      })
-                    }
-                    disabled={declareMutation.isPending}
-                  >
-                    {exam.isResultDecleared ? (
-                      <>
-                        <Check className="mr-1 h-3.5 w-3.5 text-emerald-500" />
-                        <span>Published</span>
-                      </>
-                    ) : (
-                      <>
-                        <Award className="mr-1 h-3.5 w-3.5" />
-                        <span>Publish Results</span>
-                      </>
-                    )}
-                  </Button>
+                  {/* Result Declaration Action Button */}
+                  <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2 dark:border-zinc-800">
+                    <Button
+                      size="sm"
+                      variant={exam.isResultDecleared ? 'outline' : 'default'}
+                      className={`h-8 text-xs ${
+                        exam.isResultDecleared
+                          ? 'border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        declareMutation.mutate({
+                          examId,
+                          isDeclared: !exam.isResultDecleared,
+                        });
+                      }}
+                      disabled={declareMutation.isPending}
+                    >
+                      {exam.isResultDecleared ? (
+                        <>
+                          <Check className="mr-1 h-3.5 w-3.5 text-emerald-500" />
+                          <span>Published</span>
+                        </>
+                      ) : (
+                        <>
+                          <Award className="mr-1 h-3.5 w-3.5" />
+                          <span>Publish Results</span>
+                        </>
+                      )}
+                    </Button>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-rose-600 hover:bg-rose-50"
-                    onClick={() => setDeleteConfirmId(examId)}
-                    title="Delete Exam"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingExam(exam);
+                        }}
+                        title="Edit Exam"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-rose-600 hover:bg-rose-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteConfirmId(examId);
+                        }}
+                        title="Delete Exam"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Create Exam Modal */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      {/* Create Exam Wizard */}
+      <ExamWizardSheet open={isWizardOpen} onOpenChange={setIsWizardOpen} />
+
+      {/* Edit Exam Modal — metadata only (title/dates); class/section/subjects are set once at
+        creation and not editable here, see `UpdateExamBody`'s doc comment for why. */}
+      <Dialog open={!!editingExam} onOpenChange={(open) => !open && setEditingExam(null)}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="h-4 w-4" />
-              <span>Exam Controller Office</span>
-            </div>
-            <DialogTitle className="text-lg font-bold">Schedule Term Examination</DialogTitle>
+            <DialogTitle className="text-lg font-bold">Edit Exam Schedule</DialogTitle>
             <DialogDescription className="text-xs">
-              Define the examination title, target class, and scheduled dates.
+              Update the title or dates for {editingExam?.title}. Class, section, and subjects are
+              fixed at creation.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleCreateSubmit} className="space-y-4 pt-2">
-            <div className="space-y-1">
-              <Label htmlFor="examTitle" className="text-xs font-semibold">
-                Exam Title <span className="text-rose-500">*</span>
-              </Label>
-              <Input
-                id="examTitle"
-                placeholder="e.g. Mid-Term Examination 2025-2026"
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                required
-                className="h-9 text-xs"
-              />
-            </div>
-
+          <form onSubmit={handleSubmit(onEditSubmit)} className="space-y-4 pt-2">
+            <TextField control={control} name="title" label="Exam Title" required />
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="eDateFrom" className="text-xs font-semibold">
-                  Start Date (DD-MM-YYYY) <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="eDateFrom"
-                  placeholder="15-11-2025"
-                  value={formData.dateFrom}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, dateFrom: e.target.value }))}
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="eDateTo" className="text-xs font-semibold">
-                  End Date (DD-MM-YYYY)
-                </Label>
-                <Input
-                  id="eDateTo"
-                  placeholder="25-11-2025"
-                  value={formData.dateTo}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, dateTo: e.target.value }))}
-                  className="h-9 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="eClass" className="text-xs font-semibold">
-                  Class <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="eClass"
-                  placeholder="10"
-                  value={formData.className}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, className: e.target.value }))}
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="eSection" className="text-xs font-semibold">
-                  Section <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="eSection"
-                  placeholder="A"
-                  value={formData.section}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, section: e.target.value }))}
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="eSession" className="text-xs font-semibold">
-                  Session <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="eSession"
-                  placeholder="2025-2026"
-                  value={formData.session}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, session: e.target.value }))}
-                  required
-                  className="h-9 text-xs"
-                />
-              </div>
+              <DateField control={control} name="dateFrom" label="Start Date" required />
+              <DateField control={control} name="dateTo" label="End Date" />
             </div>
 
             <DialogFooter className="pt-3">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsCreateOpen(false)}
+                onClick={() => setEditingExam(null)}
                 className="h-9 text-xs"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={createMutation.isPending}
+                disabled={updateMutation.isPending}
                 className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
               >
-                {createMutation.isPending ? 'Scheduling...' : 'Confirm Schedule'}
+                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
             </DialogFooter>
           </form>

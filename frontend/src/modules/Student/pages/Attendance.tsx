@@ -1,138 +1,165 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import React, { useMemo, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ErrorState } from '@/components/data-table';
+import { studentService } from '@/lib/services/student.service';
+import { qk } from '@/lib/query-keys';
+import { getErrorMessage } from '@/lib/api';
+import { Flame } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
-const subjectAttendanceBreakdown = [
-  {
-    subject: 'Mathematics (MATH101)',
-    teacher: 'Prof. Meenakshi S.',
-    attended: 36,
-    total: 38,
-    pct: 94.7,
-  },
-  { subject: 'Physics (PHY201)', teacher: 'Prof. Vikram C.', attended: 34, total: 36, pct: 94.4 },
-  {
-    subject: 'Chemistry (CHEM301)',
-    teacher: 'Prof. Rajesh N.',
-    attended: 33,
-    total: 35,
-    pct: 94.2,
-  },
-  {
-    subject: 'English Literature (ENG001)',
-    teacher: 'Prof. Anjali K.',
-    attended: 30,
-    total: 32,
-    pct: 93.7,
-  },
-  {
-    subject: 'Computer Science (CS501)',
-    teacher: 'Prof. Alok M.',
-    attended: 28,
-    total: 29,
-    pct: 96.5,
-  },
-];
+const currentMonthString = () => new Date().toISOString().slice(0, 7);
+
+const ATTENDANCE_DAY_STYLES: Record<string, string> = {
+  Present: 'bg-emerald-500 text-white',
+  Absent: 'bg-rose-500 text-white',
+  Leave: 'bg-amber-500 text-white',
+};
 
 export const StudentAttendance: React.FC = () => {
+  const [month, setMonth] = useState(currentMonthString);
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: qk.student.attendance(month),
+    queryFn: () => studentService.getAttendance(month),
+  });
+
+  const statusByDate = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const d of data ?? []) map.set(d.date, d.status);
+    return map;
+  }, [data]);
+
+  const [year, mon] = month.split('-').map(Number);
+  const daysInMonth = new Date(year, mon, 0).getDate();
+  const firstWeekday = new Date(year, mon - 1, 1).getDay();
+
+  const present = (data ?? []).filter((d) => d.status === 'Present').length;
+  const absent = (data ?? []).filter((d) => d.status === 'Absent').length;
+  const leave = (data ?? []).filter((d) => d.status === 'Leave').length;
+  const total = present + absent + leave;
+  const pct = total > 0 ? Math.round((present / total) * 100) : null;
+
+  // Current streak: consecutive "Present" days counting back from today (or the most recent
+  // marked day), stopping at the first non-Present day.
+  const currentStreak = useMemo(() => {
+    const sorted = [...(data ?? [])].sort((a, b) => b.date.localeCompare(a.date));
+    let streak = 0;
+    for (const day of sorted) {
+      if (day.status === 'Present') streak += 1;
+      else break;
+    }
+    return streak;
+  }, [data]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight">
-              Student Attendance & Biometrics
-            </h1>
-            <Badge variant="outline" className="border-emerald-500/30 text-xs text-emerald-600">
-              94.2% Overall Rate
-            </Badge>
+            <h1 className="text-2xl font-extrabold tracking-tight">Attendance & Calendar</h1>
+            {pct !== null && (
+              <Badge
+                variant="outline"
+                className={`text-xs ${
+                  pct >= 75
+                    ? 'border-emerald-500/30 text-emerald-600'
+                    : 'border-rose-500/30 text-rose-600'
+                }`}
+              >
+                {pct}% This Month
+              </Badge>
+            )}
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Subject-wise attendance logs, monthly breakdown, and institutional minimum 75%
-            compliance tracking.
+            Minimum 75% overall attendance is required to sit for final examinations.
           </p>
         </div>
+        <input
+          type="month"
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="border-input h-9 rounded-none border bg-transparent px-2.5 text-xs font-semibold"
+        />
       </div>
 
-      {/* Aggregate Overview Cards */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="p-4">
-            <span className="text-muted-foreground text-xs font-semibold">Total Working Days</span>
-            <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">170 Days</p>
-            <span className="text-muted-foreground text-[11px]">Session 2025-2026</span>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-          <CardContent className="p-4">
-            <span className="text-muted-foreground text-xs font-semibold">Classes Attended</span>
+            <span className="text-muted-foreground text-xs font-semibold">Present</span>
             <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-              161 Days
+              {present} Days
             </p>
-            <span className="text-[11px] font-semibold text-emerald-600">✓ 94.2% Attendance</span>
           </CardContent>
         </Card>
-
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="p-4">
-            <span className="text-muted-foreground text-xs font-semibold">Unexcused Absences</span>
-            <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-400">6 Days</p>
-            <span className="text-muted-foreground text-[11px]">Recorded in register</span>
+            <span className="text-muted-foreground text-xs font-semibold">Absent</span>
+            <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-400">
+              {absent} Days
+            </p>
           </CardContent>
         </Card>
-
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="p-4">
-            <span className="text-muted-foreground text-xs font-semibold">Approved Leave</span>
-            <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">3 Days</p>
-            <span className="text-muted-foreground text-[11px]">Medical leave verified</span>
+            <span className="text-muted-foreground text-xs font-semibold">Leave</span>
+            <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">
+              {leave} Days
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <span className="text-muted-foreground text-xs font-semibold">Current Streak</span>
+              <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+                {currentStreak} Days
+              </p>
+            </div>
+            <Flame className="h-5 w-5 text-amber-500" />
           </CardContent>
         </Card>
       </div>
 
-      {/* Subject-Wise Attendance Breakdown */}
-      <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardHeader className="border-b border-slate-100 pb-3 dark:border-zinc-800">
-          <CardTitle className="text-base font-bold">Subject-Wise Attendance Breakdown</CardTitle>
-          <CardDescription className="text-xs">
-            Minimum 75% attendance in every individual subject is required to sit for final
-            examinations.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 p-5">
-          {subjectAttendanceBreakdown.map((item, idx) => (
-            <div key={idx} className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <div>
-                  <span className="font-bold text-slate-900 dark:text-white">{item.subject}</span>
-                  <span className="text-muted-foreground ml-2 text-[11px]">({item.teacher})</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground font-mono">
-                    {item.attended}/{item.total} lectures
-                  </span>
-                  <Badge
-                    variant="secondary"
-                    className="bg-emerald-50 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
-                  >
-                    {item.pct}%
-                  </Badge>
-                </div>
+      {/* Calendar Heatmap */}
+      {isLoading ? (
+        <Skeleton className="h-72 w-full" />
+      ) : isError ? (
+        <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
+      ) : (
+        <Card className="border border-slate-200/80 bg-white/90 p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+          <div className="grid grid-cols-7 gap-1.5 text-center">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+              <div key={d} className="text-muted-foreground pb-1 text-[10px] font-bold">
+                {d}
               </div>
-
-              {/* Progress Bar */}
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800">
+            ))}
+            {Array.from({ length: firstWeekday }).map((_, i) => (
+              <div key={`pad-${i}`} />
+            ))}
+            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
+              const dateStr = `${month}-${String(day).padStart(2, '0')}`;
+              const status = statusByDate.get(dateStr);
+              return (
                 <div
-                  className="h-full rounded-full bg-linear-to-r from-emerald-500 to-teal-400"
-                  style={{ width: `${item.pct}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+                  key={day}
+                  className={`flex h-9 items-center justify-center rounded-md text-[11px] font-semibold ${
+                    status
+                      ? ATTENDANCE_DAY_STYLES[status]
+                      : 'bg-slate-100 text-slate-400 dark:bg-zinc-800 dark:text-zinc-600'
+                  }`}
+                  title={status ?? 'No record'}
+                >
+                  {day}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

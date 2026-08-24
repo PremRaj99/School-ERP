@@ -13,14 +13,17 @@ export class ApiResponse {
 }
 
 export class CreatedResponse extends ApiResponse {
-  constructor(message = 'created') {
-    super(201, null, message);
+  // `data` defaults to null so every existing `new CreatedResponse()` call site (not yet migrated
+  // to a contract) keeps working unchanged — ALIGNMENT_PLAN.md 2B/N2 only asks that a migrated
+  // route CAN return the created resource, not that every mutation must.
+  constructor(data: object | Array<object> | null = null, message = 'created') {
+    super(201, data, message);
   }
 }
 
 export class AcceptedResponse extends ApiResponse {
-  constructor(message = 'accepted') {
-    super(202, null, message);
+  constructor(data: object | Array<object> | null = null, message = 'accepted') {
+    super(202, data, message);
   }
 }
 

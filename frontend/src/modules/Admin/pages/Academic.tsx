@@ -12,109 +12,140 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { ErrorState } from '@/components/data-table';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { adminService } from '@/lib/services/admin.service';
-import type { CalendarEvent, CreateCalendarEventPayload } from '@/lib/types';
+import { qk } from '@/lib/query-keys';
+import { getErrorMessage } from '@/lib/api';
+import { useSubjectOptions, useTeacherOptions } from '@/hooks/options/useAdminOptions';
+import type { CreateCalendarEventBody, WeekDay } from '@schoolerp/contracts';
 import { toast } from 'sonner';
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, Sparkles } from 'lucide-react';
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  Plus,
+  Trash2,
+  Sparkles,
+  Pencil,
+  AlertTriangle,
+} from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-const sampleCalendarEvents: CalendarEvent[] = [
-  { id: 'ev-1', title: 'Summer Vacation Break', date: '15-05-2025', category: 'HOLIDAY' },
-  { id: 'ev-2', title: 'Mid-Term Assessment Week', date: '15-10-2025', category: 'EXAM' },
-  { id: 'ev-3', title: 'Annual Sports Day 2026', date: '20-11-2025', category: 'EVENT' },
-  { id: 'ev-4', title: 'Republic Day Celebration', date: '26-01-2026', category: 'HOLIDAY' },
-  { id: 'ev-5', title: 'Final Term Exams Begin', date: '01-03-2026', category: 'EXAM' },
-];
+const WEEKDAYS: WeekDay[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8];
 
-const timetableMatrix = [
-  {
-    period: 1,
-    time: '08:30 - 09:15 AM',
-    slots: {
-      MON: { sub: 'Mathematics', code: 'MATH101', teacher: 'Meenakshi S.' },
-      TUE: { sub: 'Physics', code: 'PHY201', teacher: 'Vikram C.' },
-      WED: { sub: 'Mathematics', code: 'MATH101', teacher: 'Meenakshi S.' },
-      THU: { sub: 'Chemistry', code: 'CHEM301', teacher: 'Rajesh N.' },
-      FRI: { sub: 'Physics', code: 'PHY201', teacher: 'Vikram C.' },
-      SAT: { sub: 'Computer Sci', code: 'CS501', teacher: 'Alok M.' },
-    },
-  },
-  {
-    period: 2,
-    time: '09:15 - 10:00 AM',
-    slots: {
-      MON: { sub: 'English Lit', code: 'ENG001', teacher: 'Anjali K.' },
-      TUE: { sub: 'Mathematics', code: 'MATH101', teacher: 'Meenakshi S.' },
-      WED: { sub: 'English Lit', code: 'ENG001', teacher: 'Anjali K.' },
-      THU: { sub: 'Mathematics', code: 'MATH101', teacher: 'Meenakshi S.' },
-      FRI: { sub: 'Chemistry', code: 'CHEM301', teacher: 'Rajesh N.' },
-      SAT: { sub: 'Library / PE', code: 'ACT001', teacher: 'Staff' },
-    },
-  },
-  {
-    period: 3,
-    time: '10:00 - 10:45 AM',
-    slots: {
-      MON: { sub: 'Physics Lab', code: 'PHY201', teacher: 'Vikram C.' },
-      TUE: { sub: 'Chemistry Lab', code: 'CHEM301', teacher: 'Rajesh N.' },
-      WED: { sub: 'Biology', code: 'BIO401', teacher: 'Staff' },
-      THU: { sub: 'Physics', code: 'PHY201', teacher: 'Vikram C.' },
-      FRI: { sub: 'Mathematics', code: 'MATH101', teacher: 'Meenakshi S.' },
-      SAT: { sub: 'Sports & Games', code: 'PE001', teacher: 'Coach' },
-    },
-  },
-  {
-    period: 4,
-    time: '11:15 - 12:00 PM',
-    slots: {
-      MON: { sub: 'Chemistry', code: 'CHEM301', teacher: 'Rajesh N.' },
-      TUE: { sub: 'English Lit', code: 'ENG001', teacher: 'Anjali K.' },
-      WED: { sub: 'History / Civics', code: 'HIST102', teacher: 'Staff' },
-      THU: { sub: 'Computer Lab', code: 'CS501', teacher: 'Alok M.' },
-      FRI: { sub: 'English Lit', code: 'ENG001', teacher: 'Anjali K.' },
-      SAT: { sub: 'Moral Science', code: 'VAL001', teacher: 'Staff' },
-    },
-  },
-];
+interface EditingCell {
+  weekday: WeekDay;
+  period: number;
+  subjectCode: string;
+  teacherId: string;
+}
 
 export const AdminAcademic: React.FC = () => {
   const queryClient = useQueryClient();
-  const [selectedClass, setSelectedClass] = useState('10-A');
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
 
-  const [eventFormData, setEventFormData] = useState<CreateCalendarEventPayload>({
+  const [eventFormData, setEventFormData] = useState<CreateCalendarEventBody>({
     title: '',
-    date: '15-08-2025',
+    date: '2025-08-15',
     category: 'HOLIDAY',
   });
 
-  const { data: apiCalendar } = useQuery({
-    queryKey: ['adminCalendar'],
+  const {
+    data: calendarEvents,
+    isLoading: calendarLoading,
+    isError: calendarErrored,
+    error: calendarError,
+    refetch: refetchCalendar,
+  } = useQuery({
+    queryKey: qk.admin.calendar(),
     queryFn: () => adminService.getCalendar(),
   });
 
-  const calendarEvents =
-    apiCalendar?.data && Array.isArray(apiCalendar.data) && apiCalendar.data.length > 0
-      ? apiCalendar.data
-      : sampleCalendarEvents;
+  const {
+    data: classSchedules,
+    isLoading: timetableLoading,
+    isError: timetableErrored,
+    error: timetableError,
+    refetch: refetchTimetable,
+  } = useQuery({
+    queryKey: qk.admin.timetable(),
+    queryFn: () => adminService.getTimetable(),
+  });
+
+  const classOptions = (classSchedules ?? []).map((c) => `${c.className}-${c.section}`);
+  const activeClass = selectedClass ?? classOptions[0] ?? null;
+  const activeSchedule = classSchedules?.find((c) => `${c.className}-${c.section}` === activeClass);
+
+  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
+  const subjectOptions = useSubjectOptions();
+  const teacherOptions = useTeacherOptions();
+
+  const slotAt = (weekday: WeekDay, period: number) =>
+    activeSchedule?.schedule
+      .find((d) => d.weekday === weekday)
+      ?.periods.find((p) => p.periodNumber === period);
+
+  /** A teacher already teaching a *different* class-section at this exact weekday+period. */
+  const findConflict = (weekday: WeekDay, period: number, teacherId: string) => {
+    if (!teacherId) return null;
+    for (const cls of classSchedules ?? []) {
+      if (cls.className === activeSchedule?.className && cls.section === activeSchedule?.section)
+        continue;
+      const hit = cls.schedule
+        .find((d) => d.weekday === weekday)
+        ?.periods.find((p) => p.periodNumber === period && p.teacherId === teacherId);
+      if (hit)
+        return { className: cls.className, section: cls.section, teacherName: hit.teacherFullName };
+    }
+    return null;
+  };
+
+  const conflict = editingCell
+    ? findConflict(editingCell.weekday, editingCell.period, editingCell.teacherId)
+    : null;
+
+  const updateSlotMutation = useMutation({
+    mutationFn: (cell: EditingCell) => {
+      if (!activeSchedule) throw new Error('No class selected');
+      return adminService.updateTimetableSlot({
+        className: activeSchedule.className,
+        section: activeSchedule.section,
+        weekday: cell.weekday,
+        period: cell.period,
+        subjectCode: cell.subjectCode,
+        teacherId: cell.teacherId,
+      });
+    },
+    onSuccess: () => {
+      toast.success('Timetable slot updated!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.timetable() });
+      setEditingCell(null);
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
 
   const createEventMutation = useMutation({
-    mutationFn: (payload: CreateCalendarEventPayload) => adminService.createCalendarEvent(payload),
+    mutationFn: (payload: CreateCalendarEventBody) => adminService.createCalendarEvent(payload),
     onSuccess: () => {
       toast.success('Calendar event added!');
-      queryClient.invalidateQueries({ queryKey: ['adminCalendar'] });
+      queryClient.invalidateQueries({ queryKey: qk.admin.calendar() });
       setIsAddEventOpen(false);
-      setEventFormData({ title: '', date: '', category: 'EVENT' });
+      setEventFormData({ title: '', date: '2025-08-15', category: 'EVENT' });
     },
-    onError: () => toast.error('Failed to add event'),
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   const deleteEventMutation = useMutation({
     mutationFn: (id: string) => adminService.deleteCalendarEvent(id),
     onSuccess: () => {
       toast.success('Event removed');
-      queryClient.invalidateQueries({ queryKey: ['adminCalendar'] });
+      queryClient.invalidateQueries({ queryKey: qk.admin.calendar() });
     },
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   return (
@@ -173,122 +204,189 @@ export const AdminAcademic: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground text-xs font-semibold">Select Class:</span>
                   <select
-                    value={selectedClass}
+                    value={activeClass ?? ''}
                     onChange={(e) => setSelectedClass(e.target.value)}
+                    disabled={classOptions.length === 0}
                     className="h-8 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
                   >
-                    <option value="10-A">Class 10-A</option>
-                    <option value="10-B">Class 10-B</option>
-                    <option value="9-A">Class 9-A</option>
-                    <option value="11-A">Class 11-A</option>
-                    <option value="12-A">Class 12-A</option>
+                    {classOptions.length === 0 && <option value="">No classes yet</option>}
+                    {classOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        Class {opt}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
             </CardHeader>
 
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-800/60">
-                    <th className="w-32 p-3 font-bold text-slate-800 dark:text-zinc-200">
-                      Period & Time
-                    </th>
-                    {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day) => (
-                      <th key={day} className="p-3 font-bold text-slate-800 dark:text-zinc-200">
-                        {day}
+            {timetableLoading ? (
+              <div className="space-y-1.5 p-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-14 w-full" />
+                ))}
+              </div>
+            ) : timetableErrored ? (
+              <ErrorState
+                description={getErrorMessage(timetableError)}
+                onRetry={() => refetchTimetable()}
+              />
+            ) : !activeClass ? (
+              <Empty className="rounded-none border-0">
+                <EmptyMedia variant="icon">
+                  <Clock className="size-5" />
+                </EmptyMedia>
+                <EmptyTitle>No classes yet</EmptyTitle>
+                <EmptyDescription>
+                  Create a class section first, then build its timetable here.
+                </EmptyDescription>
+              </Empty>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-800/60">
+                      <th className="w-24 p-3 font-bold text-slate-800 dark:text-zinc-200">
+                        Period
                       </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80">
-                  {timetableMatrix.map((row) => (
-                    <tr key={row.period} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30">
-                      <td className="bg-slate-50/30 p-3 font-semibold text-indigo-600 dark:bg-zinc-900 dark:text-indigo-400">
-                        <div>Period {row.period}</div>
-                        <span className="text-muted-foreground text-[10px] font-normal">
-                          {row.time}
-                        </span>
-                      </td>
-                      {(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'] as const).map((day) => {
-                        const slot = row.slots[day];
-                        return (
-                          <td key={day} className="p-2.5 align-top">
-                            {slot ? (
-                              <div className="space-y-0.5 rounded-lg border border-indigo-100 bg-indigo-50/60 p-2 dark:border-indigo-900/40 dark:bg-indigo-950/30">
-                                <p className="leading-tight font-bold text-indigo-950 dark:text-indigo-200">
-                                  {slot.sub}
-                                </p>
-                                <p className="text-muted-foreground font-mono text-[10px]">
-                                  {slot.code}
-                                </p>
-                                <p className="text-[10px] font-medium text-slate-600 dark:text-zinc-400">
-                                  {slot.teacher}
-                                </p>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-[10px]">Free Period</span>
-                            )}
-                          </td>
-                        );
-                      })}
+                      {WEEKDAYS.map((day) => (
+                        <th key={day} className="p-3 font-bold text-slate-800 dark:text-zinc-200">
+                          {day}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80">
+                    {PERIODS.map((periodNumber) => (
+                      <tr
+                        key={periodNumber}
+                        className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30"
+                      >
+                        <td className="bg-slate-50/30 p-3 font-semibold text-indigo-600 dark:bg-zinc-900 dark:text-indigo-400">
+                          Period {periodNumber}
+                        </td>
+                        {WEEKDAYS.map((day) => {
+                          const slot = slotAt(day, periodNumber);
+                          return (
+                            <td key={day} className="p-1.5 align-top">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setEditingCell({
+                                    weekday: day,
+                                    period: periodNumber,
+                                    subjectCode: slot?.subjectCode ?? '',
+                                    teacherId: slot?.teacherId ?? '',
+                                  })
+                                }
+                                className="group w-full rounded-lg p-1.5 text-left transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800"
+                              >
+                                {slot ? (
+                                  <div className="relative space-y-0.5 rounded-lg border border-indigo-100 bg-indigo-50/60 p-2 dark:border-indigo-900/40 dark:bg-indigo-950/30">
+                                    <Pencil className="absolute top-1.5 right-1.5 h-2.5 w-2.5 text-indigo-400 opacity-0 group-hover:opacity-100" />
+                                    <p className="leading-tight font-bold text-indigo-950 dark:text-indigo-200">
+                                      {slot.subjectName}
+                                    </p>
+                                    <p className="text-muted-foreground font-mono text-[10px]">
+                                      {slot.subjectCode}
+                                    </p>
+                                    <p className="text-[10px] font-medium text-slate-600 dark:text-zinc-400">
+                                      {slot.teacherFullName}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground flex items-center gap-1 text-[10px]">
+                                    <Plus className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100" />
+                                    Free Period
+                                  </span>
+                                )}
+                              </button>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </Card>
         </TabsContent>
 
         {/* Academic Calendar Events Tab */}
         <TabsContent value="calendar" className="pt-4 focus:outline-hidden">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {calendarEvents.map((ev, idx) => {
-              const eventId = ev.id || ev._id || `ev-${idx}`;
-              return (
-                <Card
-                  key={eventId}
-                  className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <Badge
-                        variant="secondary"
-                        className={`text-[10px] font-semibold ${
-                          ev.category === 'HOLIDAY'
-                            ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
-                            : ev.category === 'EXAM'
-                              ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                              : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
-                        }`}
-                      >
-                        {ev.category}
-                      </Badge>
-                      <span className="text-muted-foreground flex items-center gap-1 text-[11px] font-semibold">
-                        <CalendarIcon className="h-3 w-3 text-indigo-500" />
-                        <span>{ev.date}</span>
-                      </span>
-                    </div>
-                    <CardTitle className="mt-2 text-base font-bold text-slate-900 dark:text-white">
-                      {ev.title}
-                    </CardTitle>
-                  </CardHeader>
+          {calendarLoading ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-36 w-full" />
+              ))}
+            </div>
+          ) : calendarErrored ? (
+            <ErrorState
+              description={getErrorMessage(calendarError)}
+              onRetry={() => refetchCalendar()}
+            />
+          ) : (calendarEvents ?? []).length === 0 ? (
+            <Empty className="rounded-none border">
+              <EmptyMedia variant="icon">
+                <CalendarIcon className="size-5" />
+              </EmptyMedia>
+              <EmptyTitle>No calendar events yet</EmptyTitle>
+              <EmptyDescription>Add the first holiday, exam, or event date.</EmptyDescription>
+              <Button size="sm" className="mt-1 text-xs" onClick={() => setIsAddEventOpen(true)}>
+                <Plus className="mr-1 h-3.5 w-3.5" />
+                Add Calendar Event
+              </Button>
+            </Empty>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {(calendarEvents ?? []).map((ev, idx) => {
+                const eventId = ev.id || `ev-${idx}`;
+                return (
+                  <Card
+                    key={eventId}
+                    className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <Badge
+                          variant="secondary"
+                          className={`text-[10px] font-semibold ${
+                            ev.category === 'HOLIDAY'
+                              ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                              : ev.category === 'EXAM'
+                                ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
+                                : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
+                          }`}
+                        >
+                          {ev.category}
+                        </Badge>
+                        <span className="text-muted-foreground flex items-center gap-1 text-[11px] font-semibold">
+                          <CalendarIcon className="h-3 w-3 text-indigo-500" />
+                          <span>{ev.date}</span>
+                        </span>
+                      </div>
+                      <CardTitle className="mt-2 text-base font-bold text-slate-900 dark:text-white">
+                        {ev.title}
+                      </CardTitle>
+                    </CardHeader>
 
-                  <CardContent className="flex items-center justify-between pt-0">
-                    <span className="text-muted-foreground text-xs">Session 2025-2026</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-rose-600 hover:bg-rose-50"
-                      onClick={() => deleteEventMutation.mutate(eventId)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                    <CardContent className="flex items-center justify-between pt-0">
+                      <span className="text-muted-foreground text-xs">Session 2025-2026</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-rose-600 hover:bg-rose-50"
+                        onClick={() => deleteEventMutation.mutate(eventId)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -327,11 +425,11 @@ export const AdminAcademic: React.FC = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="evDate" className="text-xs font-semibold">
-                  Date (DD-MM-YYYY) <span className="text-rose-500">*</span>
+                  Date <span className="text-rose-500">*</span>
                 </Label>
                 <Input
                   id="evDate"
-                  placeholder="20-11-2025"
+                  type="date"
                   value={eventFormData.date}
                   onChange={(e) => setEventFormData((prev) => ({ ...prev, date: e.target.value }))}
                   required
@@ -347,7 +445,10 @@ export const AdminAcademic: React.FC = () => {
                   id="evCat"
                   value={eventFormData.category}
                   onChange={(e) =>
-                    setEventFormData((prev) => ({ ...prev, category: e.target.value }))
+                    setEventFormData((prev) => ({
+                      ...prev,
+                      category: e.target.value as CreateCalendarEventBody['category'],
+                    }))
                   }
                   className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-medium dark:border-zinc-700 dark:bg-zinc-900"
                 >
@@ -377,6 +478,105 @@ export const AdminAcademic: React.FC = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Timetable Cell Editor */}
+      <Dialog open={!!editingCell} onOpenChange={() => setEditingCell(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+              <Clock className="h-4 w-4" />
+              <span>Timetable Slot</span>
+            </div>
+            <DialogTitle className="text-base font-bold">
+              {editingCell && `${editingCell.weekday} · Period ${editingCell.period}`}
+            </DialogTitle>
+          </DialogHeader>
+
+          {editingCell && (
+            <div className="space-y-3 pt-1">
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold">
+                  Subject <span className="text-rose-500">*</span>
+                </Label>
+                <NativeSelect
+                  value={editingCell.subjectCode}
+                  onChange={(e) =>
+                    setEditingCell((prev) =>
+                      prev ? { ...prev, subjectCode: e.target.value } : prev,
+                    )
+                  }
+                  className="h-9 text-xs"
+                >
+                  <NativeSelectOption value="" disabled>
+                    Select…
+                  </NativeSelectOption>
+                  {subjectOptions.map((opt) => (
+                    <NativeSelectOption key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold">
+                  Teacher <span className="text-rose-500">*</span>
+                </Label>
+                <NativeSelect
+                  value={editingCell.teacherId}
+                  onChange={(e) =>
+                    setEditingCell((prev) => (prev ? { ...prev, teacherId: e.target.value } : prev))
+                  }
+                  className="h-9 text-xs"
+                >
+                  <NativeSelectOption value="" disabled>
+                    Select…
+                  </NativeSelectOption>
+                  {teacherOptions.map((opt) => (
+                    <NativeSelectOption key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </div>
+
+              {conflict && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-300/60 bg-amber-50 p-2.5 text-[11px] text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    {conflict.teacherName} is already teaching Class {conflict.className}-
+                    {conflict.section} at this same time.
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditingCell(null)}
+              className="text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={
+                !editingCell ||
+                !editingCell.subjectCode ||
+                !editingCell.teacherId ||
+                updateSlotMutation.isPending
+              }
+              onClick={() => editingCell && updateSlotMutation.mutate(editingCell)}
+              className="bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+            >
+              {updateSlotMutation.isPending ? 'Saving...' : conflict ? 'Save Anyway' : 'Save Slot'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

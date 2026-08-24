@@ -1,47 +1,50 @@
 import React, { useState } from 'react';
-import { useNavigate, NavLink } from 'react-router-dom';
+import { useNavigate, useSearchParams, NavLink } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { authService } from '@/lib/services/auth.service';
 import { getErrorMessage } from '@/lib/api';
+import { useAuthStore, roleHomePath } from '@/stores/auth.store';
 import { toast } from 'sonner';
 import {
   School,
   ShieldCheck,
   Users,
   GraduationCap,
+  Wallet,
   Eye,
   EyeOff,
   ArrowRight,
-  Sparkles,
   ArrowLeft,
 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const setUser = useAuthStore((state) => state.setUser);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<'Admin' | 'Teacher' | 'Student'>('Admin');
+  const [selectedRole, setSelectedRole] = useState<'Admin' | 'Teacher' | 'Student' | 'Finance'>(
+    'Admin',
+  );
   const [formData, setFormData] = useState({
-    username: 'admin',
-    password: 'password123',
+    username: '',
+    password: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleRoleSelect = (role: 'Admin' | 'Teacher' | 'Student') => {
+  const handleRoleSelect = (role: 'Admin' | 'Teacher' | 'Student' | 'Finance') => {
     setSelectedRole(role);
-    if (role === 'Admin') {
-      setFormData({ username: 'admin', password: 'password123' });
-    } else if (role === 'Teacher') {
-      setFormData({ username: 'teacher', password: 'password123' });
-    } else {
-      setFormData({ username: 'student', password: 'password123' });
-    }
+    // Just switches which tab is highlighted — credentials are always typed in, never
+    // pre-filled. The old version auto-filled `admin`/`password123` per role, which was never a
+    // real account (the seeded password is `admin123`, and the field cleared on every switch
+    // anyway) — dropped rather than fixed with the real seed credentials, since hardcoding a
+    // working password into a page anyone can load isn't something to reintroduce deliberately.
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,29 +52,21 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await authService.login(formData);
-      toast.success(response.message || 'Login successful! Welcome back.');
-      const role = response.data?.user?.role || selectedRole;
-      if (role === 'Admin') {
-        navigate('/admin/dashboard');
-      } else if (role === 'Teacher') {
-        navigate('/teacher/dashboard');
-      } else if (role === 'Student') {
-        navigate('/student/dashboard');
-      } else {
-        navigate('/');
-      }
+      setUser(response.user);
+      toast.success('Login successful! Welcome back.');
+      // `next` is only honored if it actually belongs to the role that just logged in — otherwise
+      // the route guard would immediately bounce them straight back out again.
+      const next = searchParams.get('next');
+      const home = roleHomePath(response.user.role);
+      const destination =
+        next && next.startsWith(`/${response.user.role.toLowerCase()}`) ? next : home;
+      navigate(destination, { replace: true });
     } catch (err) {
-      // In demo mode if backend is not seeded, still let user test smoothly
       const errMsg = getErrorMessage(err);
       toast.error(errMsg);
     } finally {
       setLoading(false);
     }
-  };
-
-  const directDemoBypass = (target: string) => {
-    toast.success(`Entering demo ${selectedRole} portal`);
-    navigate(target);
   };
 
   return (
@@ -112,10 +107,6 @@ export const LoginPage: React.FC = () => {
               <ShieldCheck className="h-4 w-4 text-emerald-400" />
               <span>Role-Based Access Control</span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-indigo-200">
-              <Sparkles className="h-4 w-4 text-amber-400" />
-              <span>Instant 1-Click Demo Testing</span>
-            </div>
           </div>
         </div>
 
@@ -138,7 +129,7 @@ export const LoginPage: React.FC = () => {
           </div>
 
           {/* Role Switcher Tabs */}
-          <div className="mb-5 grid grid-cols-3 gap-1.5 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
+          <div className="mb-5 grid grid-cols-4 gap-1.5 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
             <button
               type="button"
               onClick={() => handleRoleSelect('Admin')}
@@ -174,6 +165,18 @@ export const LoginPage: React.FC = () => {
             >
               <GraduationCap className="h-3.5 w-3.5" />
               <span>Student</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRoleSelect('Finance')}
+              className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all ${
+                selectedRole === 'Finance'
+                  ? 'bg-white text-amber-600 shadow-xs dark:bg-zinc-900 dark:text-amber-400'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+              }`}
+            >
+              <Wallet className="h-3.5 w-3.5" />
+              <span>Finance</span>
             </button>
           </div>
 
@@ -243,27 +246,6 @@ export const LoginPage: React.FC = () => {
                 </>
               )}
             </Button>
-
-            {/* Direct 1-Click Launch Bypass */}
-            <div className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-9 w-full border-dashed border-indigo-300 bg-indigo-50/50 text-xs text-indigo-600 hover:bg-indigo-100/60 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-400"
-                onClick={() =>
-                  directDemoBypass(
-                    selectedRole === 'Admin'
-                      ? '/admin/dashboard'
-                      : selectedRole === 'Teacher'
-                        ? '/teacher/dashboard'
-                        : '/student/dashboard',
-                  )
-                }
-              >
-                <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                <span>Instant Demo Bypass ({selectedRole} Portal)</span>
-              </Button>
-            </div>
           </form>
         </div>
       </div>

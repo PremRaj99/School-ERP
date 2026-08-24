@@ -2,37 +2,49 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Calendar, Search, Pin } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { ErrorState } from '@/components/data-table';
+import { teacherService } from '@/lib/services/teacher.service';
+import { qk } from '@/lib/query-keys';
+import { getErrorMessage } from '@/lib/api';
+import { isoToDisplayDate, dateToIsoDate } from '@/lib/date';
+import { Calendar, Search, Bell, FileText } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
-const facultyNotices = [
-  {
-    title: 'Curriculum Progress Review & Department Meeting',
-    desc: 'All department heads are requested to assemble in Conference Room B for syllabus progression and examination question paper submission.',
-    date: '10-04-2025',
-    target: 'Teacher',
-    isPinned: true,
-  },
-  {
-    title: 'Annual Sports & Athletics Meet 2026',
-    desc: 'Faculty members assigned to track and field duty are requested to attend the briefing session in the sports pavilion this Friday.',
-    date: '08-04-2025',
-    target: 'All',
-    isPinned: true,
-  },
-  {
-    title: 'Digital Evaluation Portal Guidelines',
-    desc: 'Instructions on uploading term marks and entering letter grades via the Teacher Portal before the result declaration deadline.',
-    date: '02-04-2025',
-    target: 'Teacher',
-    isPinned: false,
-  },
-];
+const isExpired = (expiryDate: string | null) =>
+  !!expiryDate && expiryDate < dateToIsoDate(new Date());
 
 export const TeacherNotices: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedNoticeId, setSelectedNoticeId] = useState<string | null>(null);
 
-  const filteredNotices = facultyNotices.filter((n) =>
-    `${n.title} ${n.desc}`.toLowerCase().includes(searchTerm.toLowerCase()),
+  const {
+    data: notices,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: qk.teacher.notices(),
+    queryFn: () => teacherService.getNotices(),
+  });
+
+  const { data: noticeDetail, isLoading: detailLoading } = useQuery({
+    queryKey: qk.teacher.notice(selectedNoticeId ?? ''),
+    queryFn: () => teacherService.getNoticeById(selectedNoticeId as string),
+    enabled: !!selectedNoticeId,
+  });
+
+  const filteredNotices = (notices ?? []).filter((n) =>
+    n.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -70,46 +82,107 @@ export const TeacherNotices: React.FC = () => {
       </Card>
 
       {/* Notices Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {filteredNotices.map((notice, idx) => (
-          <Card
-            key={idx}
-            className="border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Badge
-                    variant="secondary"
-                    className="bg-emerald-50 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
+        </div>
+      ) : isError ? (
+        <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
+      ) : filteredNotices.length === 0 ? (
+        <Empty className="rounded-none border">
+          <EmptyMedia variant="icon">
+            <Bell className="size-5" />
+          </EmptyMedia>
+          <EmptyTitle>No notices yet</EmptyTitle>
+          <EmptyDescription>
+            {searchTerm ? 'No notices match your search.' : 'Announcements will show up here.'}
+          </EmptyDescription>
+        </Empty>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {filteredNotices.map((notice) => {
+            const expired = isExpired(notice.expiryDate);
+            return (
+              <Card
+                key={notice.id}
+                onClick={() => setSelectedNoticeId(notice.id)}
+                className="cursor-pointer border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Badge
+                        variant="secondary"
+                        className="bg-emerald-50 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                      >
+                        Target: {notice.targetRole}
+                      </Badge>
+                      {expired && (
+                        <Badge
+                          variant="outline"
+                          className="border-slate-300 text-[10px] text-slate-500"
+                        >
+                          Expired
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
+                      <Calendar className="h-3 w-3 text-indigo-500" />
+                      <span>{isoToDisplayDate(notice.date)}</span>
+                    </span>
+                  </div>
+                  <CardTitle className="mt-2 text-base font-bold text-slate-900 dark:text-white">
+                    {notice.title}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Notice Detail Sheet */}
+      <Sheet open={!!selectedNoticeId} onOpenChange={() => setSelectedNoticeId(null)}>
+        <SheetContent className="overflow-y-auto sm:max-w-lg">
+          <div className="space-y-4 px-4 pt-4">
+            {detailLoading ? (
+              <Skeleton className="h-48 w-full" />
+            ) : noticeDetail ? (
+              <>
+                <SheetHeader>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                    <Bell className="h-4 w-4" />
+                    <span>Notice</span>
+                  </div>
+                  <SheetTitle className="text-lg font-bold">{noticeDetail.title}</SheetTitle>
+                  <SheetDescription className="text-xs">
+                    Published {isoToDisplayDate(noticeDetail.date)} · Target:{' '}
+                    {noticeDetail.targetRole}
+                    {noticeDetail.expiryDate &&
+                      ` · Expires ${isoToDisplayDate(noticeDetail.expiryDate)}`}
+                  </SheetDescription>
+                </SheetHeader>
+                <p className="text-muted-foreground text-xs leading-relaxed whitespace-pre-wrap">
+                  {noticeDetail.description}
+                </p>
+                {noticeDetail.fileUrl && (
+                  <a
+                    href={noticeDetail.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
                   >
-                    Target: {notice.target}
-                  </Badge>
-                  {notice.isPinned && (
-                    <Badge
-                      variant="outline"
-                      className="border-amber-500/30 text-[10px] text-amber-600"
-                    >
-                      <Pin className="mr-1 h-2.5 w-2.5" />
-                      Pinned
-                    </Badge>
-                  )}
-                </div>
-                <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
-                  <Calendar className="h-3 w-3 text-indigo-500" />
-                  <span>{notice.date}</span>
-                </span>
-              </div>
-              <CardTitle className="mt-2 text-base font-bold text-slate-900 dark:text-white">
-                {notice.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-muted-foreground text-xs leading-relaxed">
-              {notice.desc}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                    <FileText className="h-3.5 w-3.5" />
+                    View attached document
+                  </a>
+                )}
+              </>
+            ) : null}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

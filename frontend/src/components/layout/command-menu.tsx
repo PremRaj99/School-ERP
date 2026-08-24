@@ -22,6 +22,7 @@ import {
   LayoutDashboard,
   Home,
   UserCheck,
+  ClipboardCheck,
   Award,
   MessageSquare,
   Shield,
@@ -135,7 +136,11 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/attendance'))}>
             <UserCheck className="mr-2 h-4 w-4 text-teal-500" />
-            <span>Attendance Hub</span>
+            <span>Teacher Attendance</span>
+          </CommandItem>
+          <CommandItem onSelect={() => runCommand(() => navigate('/admin/attendance/student'))}>
+            <ClipboardCheck className="mr-2 h-4 w-4 text-teal-500" />
+            <span>Student Attendance</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/contact'))}>
             <MessageSquare className="mr-2 h-4 w-4 text-blue-400" />

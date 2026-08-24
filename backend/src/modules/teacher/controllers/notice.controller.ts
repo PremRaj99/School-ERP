@@ -1,18 +1,11 @@
-import { validateSchema } from '@/core/errors';
-import { asyncHandler, OkResponse } from '@/core/responses';
-import { NextFunction, Request, Response } from 'express';
-import { ObjectIdSchema } from '../types';
+import { teacherContract } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
 import { TeacherService } from '../services/teacher.service';
 
-export const getNotices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const data = await TeacherService.getNotices();
-  res.status(200).json(new OkResponse(data));
+export const getNotices = defineRoute(teacherContract.notices, async () => {
+  return TeacherService.getNotices();
 });
 
-export const getNoticeDetail = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const noticeId = validateSchema(ObjectIdSchema, String(req.params.noticeId));
-    const data = await TeacherService.getNoticeDetail(noticeId);
-    res.status(200).json(new OkResponse(data));
-  },
-);
+export const getNoticeDetail = defineRoute(teacherContract.noticeDetail, async ({ params }) => {
+  return TeacherService.getNoticeDetail(params.noticeId);
+});

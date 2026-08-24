@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import React, { useMemo, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -10,51 +10,73 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Printer } from 'lucide-react';
-import { toast } from 'sonner';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { ErrorState } from '@/components/data-table';
+import { studentService } from '@/lib/services/student.service';
+import { qk } from '@/lib/query-keys';
+import { getErrorMessage } from '@/lib/api';
+import { Receipt } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
-interface StudentFeeRecord {
-  month: string;
-  amount: number;
-  status: 'Paid' | 'Due';
-  paidAt?: string;
-  receiptId?: string;
+/** Matches `useSessionOptions()` (`hooks/options/useAdminOptions.ts`) — a session starts in April.
+ * Duplicated locally rather than imported since that hook lives in the Admin-scoped options file
+ * and this is a pure client-side generator, not an API call. */
+function sessionOptions(): string[] {
+  const now = new Date();
+  const currentStartYear = now.getMonth() + 1 >= 4 ? now.getFullYear() : now.getFullYear() - 1;
+  return [currentStartYear - 1, currentStartYear, currentStartYear + 1].map(
+    (year) => `${year}-${year + 1}`,
+  );
 }
 
-const feeHistory: StudentFeeRecord[] = [
-  {
-    month: 'April 2025',
-    amount: 6500,
-    status: 'Paid',
-    paidAt: '05-04-2025',
-    receiptId: 'REC-2025-04-101',
-  },
-  {
-    month: 'March 2025',
-    amount: 6500,
-    status: 'Paid',
-    paidAt: '02-03-2025',
-    receiptId: 'REC-2025-03-101',
-  },
-  {
-    month: 'February 2025',
-    amount: 6500,
-    status: 'Paid',
-    paidAt: '04-02-2025',
-    receiptId: 'REC-2025-02-101',
-  },
-  {
-    month: 'January 2025',
-    amount: 6500,
-    status: 'Paid',
-    paidAt: '03-01-2025',
-    receiptId: 'REC-2025-01-101',
-  },
-];
+const STATUS_STYLES: Record<string, string> = {
+  Paid: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300',
+  Pending: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300',
+  Failed: 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
+};
+
+const YEARS = sessionOptions();
+const defaultYear = YEARS[1];
 
 export const StudentFees: React.FC = () => {
-  const [selectedReceipt, setSelectedReceipt] = useState<StudentFeeRecord | null>(null);
+  const [year, setYear] = useState(defaultYear);
+  const [selectedFeeId, setSelectedFeeId] = useState<string | null>(null);
+
+  const {
+    data: fees,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: qk.student.fees(year),
+    queryFn: () => studentService.getTransactions(year),
+  });
+
+  const { data: feeDetail, isLoading: detailLoading } = useQuery({
+    queryKey: qk.student.fee(selectedFeeId ?? ''),
+    queryFn: () => studentService.getTransactionById(selectedFeeId as string),
+    enabled: !!selectedFeeId,
+  });
+
+  const { pendingCount, pendingTotal, paidTotal } = useMemo(() => {
+    const list = fees ?? [];
+    const pending = list.filter((f) => f.status === 'Pending');
+    const paid = list.filter((f) => f.status === 'Paid');
+    return {
+      pendingCount: pending.length,
+      pendingTotal: pending.reduce((sum, f) => sum + f.finalAmount, 0),
+      paidTotal: paid.reduce((sum, f) => sum + f.finalAmount, 0),
+    };
+  }, [fees]);
 
   return (
     <div className="space-y-6">
@@ -62,179 +84,191 @@ export const StudentFees: React.FC = () => {
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight">
-              Tuition Invoices & Payment Portal
-            </h1>
-            <Badge variant="outline" className="border-emerald-500/30 text-xs text-emerald-600">
-              Account Clear
+            <h1 className="text-2xl font-extrabold tracking-tight">Fee Invoices & Receipts</h1>
+            <Badge
+              variant="outline"
+              className={`text-xs ${
+                pendingCount === 0
+                  ? 'border-emerald-500/30 text-emerald-600'
+                  : 'border-amber-500/30 text-amber-600'
+              }`}
+            >
+              {pendingCount === 0 ? 'Account Clear' : `${pendingCount} Pending`}
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Review term fee breakdown, complete online digital payments, and download payment
-            receipts.
+            Review fee invoices and payment receipts for the selected session.
           </p>
         </div>
+        <select
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
+        >
+          {YEARS.map((y) => (
+            <option key={y} value={y}>
+              Session {y}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Account Overview Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="p-4">
-            <span className="text-muted-foreground text-xs font-semibold">Current Balance Due</span>
-            <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">₹0.00</p>
-            <span className="text-[11px] font-semibold text-emerald-600">✓ No overdue charges</span>
+            <span className="text-muted-foreground text-xs font-semibold">Pending Balance</span>
+            <p
+              className={`mt-1 text-2xl font-bold ${
+                pendingCount === 0
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-amber-600 dark:text-amber-400'
+              }`}
+            >
+              ₹{pendingTotal.toLocaleString()}
+            </p>
+            <span className="text-muted-foreground text-[11px]">
+              {pendingCount === 0 ? 'No overdue charges' : `${pendingCount} invoice(s) pending`}
+            </span>
           </CardContent>
         </Card>
 
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="p-4">
-            <span className="text-muted-foreground text-xs font-semibold">Monthly Tuition Fee</span>
-            <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">₹6,500</p>
-            <span className="text-muted-foreground text-[11px]">Class 10-A Composite Fee</span>
+            <span className="text-muted-foreground text-xs font-semibold">Total Paid</span>
+            <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+              ₹{paidTotal.toLocaleString()}
+            </p>
+            <span className="text-muted-foreground text-[11px]">Session {year}</span>
           </CardContent>
         </Card>
 
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="p-4">
-            <span className="text-muted-foreground text-xs font-semibold">Total YTD Paid</span>
-            <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-400">₹26,000</p>
-            <span className="text-muted-foreground text-[11px]">4 Invoices Cleared</span>
+            <span className="text-muted-foreground text-xs font-semibold">Total Invoices</span>
+            <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+              {(fees ?? []).length}
+            </p>
+            <span className="text-muted-foreground text-[11px]">Session {year}</span>
           </CardContent>
         </Card>
       </div>
 
       {/* Payment History Table */}
-      <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardHeader className="border-b border-slate-100 pb-3 dark:border-zinc-800">
-          <CardTitle className="text-base font-bold">Past Payment Receipts</CardTitle>
-          <CardDescription className="text-xs">
-            Complete transaction ledger for academic session 2025-2026.
-          </CardDescription>
-        </CardHeader>
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
-              <TableHead className="text-xs font-bold">Billing Month</TableHead>
-              <TableHead className="text-xs font-bold">Receipt Number</TableHead>
-              <TableHead className="text-xs font-bold">Amount Paid</TableHead>
-              <TableHead className="text-xs font-bold">Status</TableHead>
-              <TableHead className="text-xs font-bold">Payment Date</TableHead>
-              <TableHead className="text-right text-xs font-bold">Receipt</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {feeHistory.map((fee, idx) => (
-              <TableRow key={idx} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30">
-                <TableCell className="text-xs font-bold text-slate-900 dark:text-white">
-                  {fee.month}
-                </TableCell>
-                <TableCell className="text-muted-foreground font-mono text-xs">
-                  {fee.receiptId}
-                </TableCell>
-                <TableCell className="text-xs font-bold text-slate-900 dark:text-white">
-                  ₹{fee.amount.toLocaleString()}
-                </TableCell>
-                <TableCell className="text-xs">
-                  <Badge
-                    variant="secondary"
-                    className="bg-emerald-50 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
-                  >
-                    {fee.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground text-xs">{fee.paidAt}</TableCell>
-                <TableCell className="text-right text-xs">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
-                    onClick={() => setSelectedReceipt(fee)}
-                  >
-                    <Printer className="mr-1 h-3.5 w-3.5" />
-                    <span>View Receipt</span>
-                  </Button>
-                </TableCell>
+      {isLoading ? (
+        <div className="space-y-1.5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+      ) : isError ? (
+        <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
+      ) : (fees ?? []).length === 0 ? (
+        <Empty className="rounded-none border">
+          <EmptyMedia variant="icon">
+            <Receipt className="size-5" />
+          </EmptyMedia>
+          <EmptyTitle>No fee invoices</EmptyTitle>
+          <EmptyDescription>No fee has been raised for session {year} yet.</EmptyDescription>
+        </Empty>
+      ) : (
+        <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
+                <TableHead className="text-xs font-bold">Billing Month</TableHead>
+                <TableHead className="text-xs font-bold">Amount</TableHead>
+                <TableHead className="text-xs font-bold">Status</TableHead>
+                <TableHead className="text-right text-xs font-bold">Receipt</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+            </TableHeader>
+            <TableBody>
+              {[...(fees ?? [])]
+                .sort((a, b) => b.month.localeCompare(a.month))
+                .map((fee) => (
+                  <TableRow key={fee.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30">
+                    <TableCell className="text-xs font-bold text-slate-900 dark:text-white">
+                      {fee.month}
+                    </TableCell>
+                    <TableCell className="text-xs font-bold text-slate-900 dark:text-white">
+                      ₹{fee.finalAmount.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      <Badge
+                        variant="secondary"
+                        className={`text-[10px] font-semibold ${STATUS_STYLES[fee.status] ?? ''}`}
+                      >
+                        {fee.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right text-xs">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
+                        onClick={() => setSelectedFeeId(fee.id)}
+                      >
+                        <Receipt className="mr-1 h-3.5 w-3.5" />
+                        <span>View Receipt</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
 
-      {/* Receipt View Modal */}
-      <Dialog open={!!selectedReceipt} onOpenChange={() => setSelectedReceipt(null)}>
-        <DialogContent className="sm:max-w-md">
-          {selectedReceipt && (
-            <div className="space-y-4 pt-2">
-              <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-xs dark:border-zinc-700 dark:bg-zinc-800/60">
-                <div className="flex items-center justify-between border-b pb-3">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                      AURA INTERNATIONAL ACADEMY
-                    </h3>
-                    <p className="text-muted-foreground text-[10px]">
-                      Fee Receipt • {selectedReceipt.month}
-                    </p>
+      {/* Receipt Detail Sheet */}
+      <Sheet open={!!selectedFeeId} onOpenChange={() => setSelectedFeeId(null)}>
+        <SheetContent className="overflow-y-auto sm:max-w-md">
+          <div className="space-y-4 px-4 pt-4">
+            {detailLoading ? (
+              <Skeleton className="h-64 w-full" />
+            ) : feeDetail ? (
+              <>
+                <SheetHeader>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                    <Receipt className="h-4 w-4" />
+                    <span>Fee Receipt</span>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className="border-emerald-500/30 text-[9px] text-emerald-600"
-                  >
-                    PAID
-                  </Badge>
-                </div>
+                  <SheetTitle className="text-lg font-bold">{feeDetail.month}</SheetTitle>
+                  <SheetDescription className="text-xs">
+                    {feeDetail.firstName} {feeDetail.lastName || ''} · Class {feeDetail.className}-
+                    {feeDetail.section} · Roll #{feeDetail.rollNo}
+                  </SheetDescription>
+                </SheetHeader>
 
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                  <div>
-                    <span className="text-muted-foreground text-[10px]">Student Name:</span>
-                    <p className="font-bold">Aryan Sharma</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-[10px]">Student ID:</span>
-                    <p className="font-mono font-bold">STU-2025-001</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-[10px]">Receipt #:</span>
-                    <p className="font-mono font-semibold">{selectedReceipt.receiptId}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-[10px]">Payment Date:</span>
-                    <p className="font-semibold">{selectedReceipt.paidAt}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1 border-t pt-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tuition Fee:</span>
-                    <span className="font-semibold">₹5,000</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Examination Fee:</span>
-                    <span className="font-semibold">₹1,000</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Lab & Activities:</span>
-                    <span className="font-semibold">₹500</span>
-                  </div>
+                <div className="space-y-1 rounded-lg border bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
+                  {feeDetail.feeBreakdown.length === 0 ? (
+                    <p className="text-muted-foreground">No fee breakdown recorded.</p>
+                  ) : (
+                    feeDetail.feeBreakdown.map((item, i) => (
+                      <div key={i} className="flex justify-between">
+                        <span className="text-muted-foreground">{item.feeType}:</span>
+                        <span className="font-semibold">₹{item.amount.toLocaleString()}</span>
+                      </div>
+                    ))
+                  )}
                   <div className="flex justify-between border-t pt-2 text-sm font-bold text-slate-900 dark:text-white">
-                    <span>Total Amount Paid:</span>
+                    <span>Total Amount:</span>
                     <span className="text-emerald-600 dark:text-emerald-400">
-                      ₹{selectedReceipt.amount.toLocaleString()}
+                      ₹{feeDetail.finalAmount.toLocaleString()}
                     </span>
                   </div>
                 </div>
-              </div>
 
-              <Button
-                className="w-full bg-indigo-600 text-xs text-white hover:bg-indigo-700"
-                onClick={() => toast.success('Sending fee receipt to printer...')}
-              >
-                <Printer className="mr-1.5 h-3.5 w-3.5" />
-                <span>Print Official Receipt</span>
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] ${STATUS_STYLES[feeDetail.status] ?? ''}`}
+                >
+                  {feeDetail.status}
+                </Badge>
+              </>
+            ) : null}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

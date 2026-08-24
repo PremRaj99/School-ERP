@@ -1,0 +1,21 @@
+{
+  "name": "school-erp",
+  "private": true,
+  "version": "0.0.0",
+  "description": "SchoolERP monorepo root — npm workspaces tying backend, frontend, and the shared contracts package together. Each workspace still has its own scripts and can be run from inside its own directory; see CLAUDE.md.",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "contracts"
+  ],
+  "scripts": {
+    "build:contracts": "npm run build -w contracts",
+    "dev:contracts": "npm run dev -w contracts",
+    "typecheck": "npm run typecheck -w contracts && npm run typecheck -w backend && npm run typecheck -w frontend"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
+  }
+}
+

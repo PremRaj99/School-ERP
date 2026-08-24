@@ -40,10 +40,8 @@ export const ContactPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await contactService.submitContact(formData);
-      toast.success(
-        res.message || 'Your inquiry has been submitted successfully! We will reach out shortly.',
-      );
+      await contactService.submitContact(formData);
+      toast.success('Your inquiry has been submitted successfully! We will reach out shortly.');
       setFormData({ name: '', email: '', mobile: '', message: '' });
     } catch (err) {
       toast.error(getErrorMessage(err));

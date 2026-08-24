@@ -1,53 +1,19 @@
-import { apiClient, type ApiResponse } from '../api';
-
-export interface LoginPayload {
-  username: string;
-  password: string;
-}
-
-export interface LoginResponseData {
-  user: {
-    id: string;
-    username: string;
-    role: 'Admin' | 'Teacher' | 'Student';
-  };
-  accessToken?: string;
-  refreshToken?: string;
-}
-
-export interface ChangePasswordPayload {
-  oldPassword: string;
-  newPassword: string;
-}
-
-export interface UserProfileResponse {
-  username: string;
-  role: string;
-}
+import {
+  authContract,
+  userContract,
+  type ChangePasswordBody,
+  type LoginBody,
+} from '@schoolerp/contracts';
+import { api } from '../api/typed-client';
 
 export const authService = {
-  login: async (payload: LoginPayload) => {
-    const res = await apiClient.post<ApiResponse<LoginResponseData>>('/auth/login', payload);
-    return res.data;
-  },
+  login: (body: LoginBody) => api(authContract.login, { body }),
 
-  logout: async () => {
-    const res = await apiClient.post<ApiResponse<null>>('/user/logout');
-    return res.data;
-  },
+  logout: () => api(userContract.logout),
 
-  refresh: async () => {
-    const res = await apiClient.post<ApiResponse<null>>('/auth/refresh');
-    return res.data;
-  },
+  refresh: () => api(userContract.refresh),
 
-  changePassword: async (payload: ChangePasswordPayload) => {
-    const res = await apiClient.post<ApiResponse<null>>('/user/change-password', payload);
-    return res.data;
-  },
+  changePassword: (body: ChangePasswordBody) => api(userContract.changePassword, { body }),
 
-  getUser: async () => {
-    const res = await apiClient.get<ApiResponse<UserProfileResponse>>('/user');
-    return res.data;
-  },
+  getUser: () => api(userContract.profile),
 };

@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { useAuthStore } from '@/stores/auth.store';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -9,12 +10,6 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
-export interface ApiResponse<T = unknown> {
-  status: number;
-  message: string;
-  data: T;
-}
 
 // Response interceptor for standard error handling & refresh
 apiClient.interceptors.response.use(
@@ -32,6 +27,10 @@ apiClient.interceptors.response.use(
         await axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true });
         return apiClient(originalRequest);
       } catch (refreshError) {
+        // The refresh itself failed — the session is really over. Clear the cached auth state so
+        // route guards redirect to login instead of showing a stale "authenticated" page that
+        // every subsequent request will 401 on.
+        useAuthStore.getState().clear();
         return Promise.reject(refreshError);
       }
     }

@@ -1,15 +1,6 @@
-import { apiClient, type ApiResponse } from '../api';
-
-export interface ContactPayload {
-  name: string;
-  email: string;
-  mobile: string;
-  message: string;
-}
+import { authContract, type ContactUsBody } from '@schoolerp/contracts';
+import { api } from '../api/typed-client';
 
 export const contactService = {
-  submitContact: async (payload: ContactPayload) => {
-    const res = await apiClient.post<ApiResponse<null>>('/auth/contact', payload);
-    return res.data;
-  },
+  submitContact: (body: ContactUsBody) => api(authContract.contact, { body }),
 };

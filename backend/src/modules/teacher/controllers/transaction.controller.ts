@@ -1,27 +1,24 @@
 import prisma from '@/core/db';
-import { asyncHandler, OkResponse } from '@/core/responses';
-import { NextFunction, Request, Response } from 'express';
+import { teacherContract } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
+import { resolveTeacherId } from '@/core/middlewares/auth.middleware';
+import { toISODate, toISOMonth } from '@/shared/helpers/isoDate';
 
-export const getTeacherSalary = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const teacherSalary = await prisma.teacherSalary.findMany({
-      where: {
-        teacherId: req.user?.id,
-      },
-      include: {
-        transaction: true,
-      },
-    });
+export const getTeacherSalary = defineRoute(teacherContract.salary, async ({ req }) => {
+  // Was `req.user?.id` — the User id, not the Teacher id, so this always matched zero rows
+  // (ALIGNMENT_PLAN.md 2A/B1).
+  const teacherId = await resolveTeacherId(req);
 
-    res.status(200).json(
-      new OkResponse(
-        teacherSalary.map((t) => ({
-          month: t.month,
-          amount: t.transaction.finalAmount,
-          isPaid: t.transaction.status,
-          paidAt: t.transaction.createdAt,
-        })),
-      ),
-    );
-  },
-);
+  const teacherSalary = await prisma.teacherSalary.findMany({
+    where: { teacherId },
+    include: { transaction: true },
+  });
+
+  return teacherSalary.map((t) => ({
+    id: t.id,
+    month: toISOMonth(t.month),
+    finalAmount: t.transaction.finalAmount,
+    status: t.transaction.status,
+    paidAt: toISODate(t.transaction.createdAt),
+  }));
+});

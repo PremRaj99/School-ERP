@@ -1,31 +1,30 @@
-import { validateSchema } from '@/core/errors';
-import { AcceptedResponse, asyncHandler, CreatedResponse, OkResponse } from '@/core/responses';
-import { NextFunction, Request, Response } from 'express';
-import { CreateExamSchema, DeclareResultSchema, ObjectIdSchema } from '../types';
+import { adminExamContract } from '@schoolerp/contracts';
+import { defineRoute } from '@/core/http/defineRoute';
 import { AdminExamService } from '../services/exam.service';
 
-export const getExams = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const data = await AdminExamService.getExams();
-  res.status(200).json(new OkResponse(data));
+export const getExams = defineRoute(adminExamContract.list, async ({ query }) => {
+  return AdminExamService.getExams(query);
 });
 
-export const createExam = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const parseData = validateSchema(CreateExamSchema, req.body);
-  await AdminExamService.createExam(parseData);
-  res.status(201).json(new CreatedResponse());
+export const getExamDetail = defineRoute(adminExamContract.detail, async ({ params }) => {
+  return AdminExamService.getExamById(params.examId);
 });
 
-export const deleteExam = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const examId = validateSchema(ObjectIdSchema, String(req.params.examId));
-  await AdminExamService.deleteExam(examId);
-  res.status(202).json(new AcceptedResponse());
+export const createExam = defineRoute(adminExamContract.create, async ({ body }) => {
+  return AdminExamService.createExam(body);
 });
 
-export const updateExamResultStatus = asyncHandler(
-  async (req: Request, res: Response, _next: NextFunction) => {
-    const examId = validateSchema(ObjectIdSchema, String(req.params.examId));
-    const { isResultDecleared } = validateSchema(DeclareResultSchema, req.body);
-    await AdminExamService.setResultDeclaration(examId, isResultDecleared);
-    res.status(202).json(new AcceptedResponse());
+export const updateExam = defineRoute(adminExamContract.update, async ({ params, body }) => {
+  return AdminExamService.updateExam(params.examId, body);
+});
+
+export const deleteExam = defineRoute(adminExamContract.remove, async ({ params }) => {
+  return AdminExamService.deleteExam(params.examId);
+});
+
+export const updateExamResultStatus = defineRoute(
+  adminExamContract.declareResult,
+  async ({ params, body }) => {
+    return AdminExamService.setResultDeclaration(params.examId, body.isResultDecleared);
   },
 );

@@ -11,6 +11,7 @@ import { academicRouter } from './academic.route';
 import { attendanceRouter } from './attendance.route';
 import { financeRouter } from './finance.route';
 import { contactRouter } from './contact.route';
+import { analyticsRouter } from './analytics.route';
 
 const adminRouter = express.Router();
 
@@ -29,5 +30,6 @@ adminRouter.use('/academic', academicRouter);
 adminRouter.use('/attendance', attendanceRouter);
 adminRouter.use('/finance', financeRouter);
 adminRouter.use('/contact', contactRouter);
+adminRouter.use('/analytics', analyticsRouter);
 
 export { adminRouter };

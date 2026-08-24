@@ -3,7 +3,7 @@ import { ForbiddenError, NotFoundError, ValidationError } from '@/core/errors';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from '@/core/config/constants';
-import { ChangePasswordInput } from '../types';
+import type { ChangePasswordBody } from '@schoolerp/contracts';
 
 export class UserService {
   static async getUserById(userId: string) {
@@ -20,7 +20,7 @@ export class UserService {
     return user;
   }
 
-  static async changePassword(userId: string, data: ChangePasswordInput) {
+  static async changePassword(userId: string, data: ChangePasswordBody) {
     const user = await this.getUserById(userId);
 
     const validatePassword = await bcrypt.compare(data.oldPassword, user.password);

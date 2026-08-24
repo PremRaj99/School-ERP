@@ -3,10 +3,10 @@ import { NotFoundError, ValidationError } from '@/core/errors';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from '@/core/config/constants';
-import { LoginInput } from '../types';
+import type { LoginBody } from '@schoolerp/contracts';
 
 export class AuthService {
-  static async login(data: LoginInput) {
+  static async login(data: LoginBody) {
     const user = await prisma.user.findUnique({
       where: { username: data.username },
     });

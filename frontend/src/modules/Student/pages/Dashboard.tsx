@@ -3,50 +3,56 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { ErrorState } from '@/components/data-table';
+import { studentService } from '@/lib/services/student.service';
+import { qk } from '@/lib/query-keys';
+import { getErrorMessage } from '@/lib/api';
+import { isoToDisplayDate } from '@/lib/date';
 import {
   GraduationCap,
   Award,
   Calendar,
   CreditCard,
   Bell,
-  Clock,
   ArrowRight,
   CheckCircle2,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 export const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
 
-  const studentSchedule = [
-    {
-      period: 1,
-      time: '08:30 - 09:15 AM',
-      subject: 'Mathematics (MATH101)',
-      teacher: 'Prof. Meenakshi S.',
-      room: 'Room 204',
-    },
-    {
-      period: 2,
-      time: '09:15 - 10:00 AM',
-      subject: 'English Literature (ENG001)',
-      teacher: 'Prof. Anjali K.',
-      room: 'Room 204',
-    },
-    {
-      period: 3,
-      time: '10:00 - 10:45 AM',
-      subject: 'Physics Lab (PHY201)',
-      teacher: 'Prof. Vikram C.',
-      room: 'Science Lab 2',
-    },
-    {
-      period: 4,
-      time: '11:15 - 12:00 PM',
-      subject: 'Chemistry (CHEM301)',
-      teacher: 'Prof. Rajesh N.',
-      room: 'Room 204',
-    },
-  ];
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: qk.student.dashboard(),
+    queryFn: () => studentService.getDashboard(),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-32 w-full rounded-3xl" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-72 w-full" />
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />;
+  }
+
+  const { profile, attendanceThisMonth, upcomingExams, recentNotices, pendingFees } = data;
+  const attendancePct =
+    attendanceThisMonth.total > 0
+      ? Math.round((attendanceThisMonth.present / attendanceThisMonth.total) * 100)
+      : null;
+  const nextExam = [...upcomingExams].sort((a, b) => a.dateFrom.localeCompare(b.dateFrom))[0];
 
   return (
     <div className="space-y-6">
@@ -57,10 +63,11 @@ export const StudentDashboard: React.FC = () => {
             Student Academic Hub
           </Badge>
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-            Welcome back, Aryan Sharma!
+            Welcome back, {profile.firstName} {profile.lastName || ''}!
           </h1>
           <p className="max-w-xl text-xs text-sky-200/90">
-            Class 10 - Section A • Roll No #101 • Student ID: STU-2025-001 • Term 1
+            Class {profile.className}-{profile.section} • Roll No #{profile.rollNo} • Student ID:{' '}
+            {profile.studentId} • Session {profile.session}
           </p>
         </div>
 
@@ -75,16 +82,18 @@ export const StudentDashboard: React.FC = () => {
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Attendance Rate */}
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <span className="text-muted-foreground text-xs font-semibold">Attendance Record</span>
+              <span className="text-muted-foreground text-xs font-semibold">
+                Attendance (This Month)
+              </span>
               <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                94.2%
+                {attendancePct !== null ? `${attendancePct}%` : '—'}
               </p>
               <span className="text-[10px] font-semibold text-emerald-600">
-                Above 75% threshold
+                {attendanceThisMonth.present}P / {attendanceThisMonth.absent}A /{' '}
+                {attendanceThisMonth.leave}L
               </span>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
@@ -93,29 +102,16 @@ export const StudentDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Academic GPA / Percentage */}
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <span className="text-muted-foreground text-xs font-semibold">Latest Term Grade</span>
-              <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                Grade A+ (94%)
+              <span className="text-muted-foreground text-xs font-semibold">Upcoming Exams</span>
+              <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+                {upcomingExams.length}
               </p>
-              <span className="text-[10px] font-semibold text-indigo-600">Rank #2 in Class</span>
-            </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600">
-              <Award className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Exams */}
-        <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-          <CardContent className="flex items-center justify-between p-4">
-            <div>
-              <span className="text-muted-foreground text-xs font-semibold">Upcoming Exam</span>
-              <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">In 3 Days</p>
-              <span className="text-muted-foreground text-[10px]">Pre-Board Mathematics</span>
+              <span className="text-muted-foreground text-[10px]">
+                {nextExam ? nextExam.title : 'None scheduled'}
+              </span>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
               <Calendar className="h-5 w-5" />
@@ -123,73 +119,82 @@ export const StudentDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Fee Dues */}
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="flex items-center justify-between p-4">
             <div>
               <span className="text-muted-foreground text-xs font-semibold">Fee Account</span>
               <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                All Clear
+                {pendingFees.count === 0
+                  ? 'All Clear'
+                  : `₹${pendingFees.totalAmount.toLocaleString()}`}
               </p>
-              <span className="text-[10px] font-semibold text-emerald-600">₹0 Pending balance</span>
+              <span className="text-[10px] font-semibold text-emerald-600">
+                {pendingFees.count === 0
+                  ? '✓ No pending balance'
+                  : `${pendingFees.count} invoice${pendingFees.count === 1 ? '' : 's'} pending`}
+              </span>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600">
               <CreditCard className="h-5 w-5" />
             </div>
           </CardContent>
         </Card>
+
+        <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <span className="text-muted-foreground text-xs font-semibold">Notices</span>
+              <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                {recentNotices.length}
+              </p>
+              <span className="text-muted-foreground text-[10px]">Recent announcements</span>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600">
+              <Bell className="h-5 w-5" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Main Grid: Today's Lectures & Quick Links */}
+      {/* Main Grid: Upcoming Exams & Quick Links */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* Today's Timetable */}
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs lg:col-span-8 dark:border-zinc-800 dark:bg-zinc-900/90">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-3 dark:border-zinc-800">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-base font-bold">
-                <Clock className="h-4 w-4 text-indigo-500" />
-                <span>Today's Class Schedule (Class 10-A)</span>
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Your daily lecture timeline and classroom locations.
-              </CardDescription>
-            </div>
-            <Badge variant="outline" className="text-[10px]">
-              Tuesday
-            </Badge>
+          <CardHeader className="border-b border-slate-100 pb-3 dark:border-zinc-800">
+            <CardTitle className="flex items-center gap-2 text-base font-bold">
+              <Award className="h-4 w-4 text-indigo-500" />
+              <span>Upcoming Examinations</span>
+            </CardTitle>
+            <CardDescription className="text-xs">Your next scheduled assessments.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 p-4">
-            {studentSchedule.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col justify-between gap-3 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5 sm:flex-row sm:items-center dark:border-zinc-800 dark:bg-zinc-800/40"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-                    <span className="text-muted-foreground text-[10px] font-semibold">P</span>
-                    <span className="text-sm leading-none font-bold text-slate-900 dark:text-white">
-                      {item.period}
-                    </span>
-                  </div>
-                  <div className="space-y-0.5">
-                    <span className="text-xs font-bold text-slate-900 dark:text-white">
-                      {item.subject}
-                    </span>
-                    <p className="text-muted-foreground text-[11px]">
-                      {item.teacher} • {item.room}
-                    </p>
-                    <p className="text-muted-foreground flex items-center gap-1 text-[10px]">
-                      <Clock className="h-3 w-3" />
-                      <span>{item.time}</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {upcomingExams.length === 0 ? (
+              <Empty className="rounded-none border-0">
+                <EmptyMedia variant="icon">
+                  <Award className="size-5" />
+                </EmptyMedia>
+                <EmptyTitle>No upcoming exams</EmptyTitle>
+                <EmptyDescription>You have no examinations scheduled right now.</EmptyDescription>
+              </Empty>
+            ) : (
+              upcomingExams.map((exam) => (
+                <button
+                  key={exam.id}
+                  onClick={() => navigate('/student/exams')}
+                  className="flex w-full flex-col justify-between gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5 text-left sm:flex-row sm:items-center dark:border-zinc-800 dark:bg-zinc-800/40"
+                >
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">
+                    {exam.title}
+                  </span>
+                  <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                    {isoToDisplayDate(exam.dateFrom)}
+                    {exam.dateTo && ` – ${isoToDisplayDate(exam.dateTo)}`}
+                  </span>
+                </button>
+              ))
+            )}
           </CardContent>
         </Card>
 
-        {/* Quick Tools & School Notices */}
         <div className="space-y-6 lg:col-span-4">
           <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-2">
@@ -242,14 +247,24 @@ export const StudentDashboard: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2.5 pt-1 text-xs">
-              <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-2.5 dark:border-indigo-900/40 dark:bg-indigo-950/30">
-                <span className="block font-semibold text-indigo-950 dark:text-indigo-200">
-                  Annual Sports Meet Trials
-                </span>
-                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                  Selection trials begin Monday morning at the track grounds.
-                </p>
-              </div>
+              {recentNotices.length === 0 ? (
+                <p className="text-muted-foreground text-xs">No notices yet.</p>
+              ) : (
+                recentNotices.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => navigate('/student/notices')}
+                    className="block w-full rounded-lg border border-indigo-100 bg-indigo-50/50 p-2.5 text-left dark:border-indigo-900/40 dark:bg-indigo-950/30"
+                  >
+                    <span className="block font-semibold text-indigo-950 dark:text-indigo-200">
+                      {n.title}
+                    </span>
+                    <p className="text-muted-foreground mt-0.5 text-[11px]">
+                      {isoToDisplayDate(n.date)}
+                    </p>
+                  </button>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>

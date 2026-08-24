@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { ColumnDef, SortingState } from '@tanstack/react-table';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,184 +15,348 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { DataTable, ErrorState, downloadCsv } from '@/components/data-table';
+import { TextField, NumberField, DateField, TagsField } from '@/components/form';
 import { adminService } from '@/lib/services/admin.service';
-import type { Teacher, TeacherPayload } from '@/lib/types';
+import { qk } from '@/lib/query-keys';
+import { CreateTeacherBody, type TeacherRecord } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { toast } from 'sonner';
-import {
-  UserPlus,
-  Search,
-  Phone,
-  Calendar,
-  BookOpen,
-  Trash2,
-  Eye,
-  Sparkles,
-  LayoutGrid,
-  List,
-} from 'lucide-react';
+import { UserPlus, Phone, Trash2, Eye, Pencil, Sparkles, Users } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
-const sampleTeachers: Teacher[] = [
-  {
-    teacherId: 'TCH-001',
-    firstName: 'Meenakshi',
-    lastName: 'Sundaram',
-    dob: '14-07-1985',
-    phone: '9876501234',
-    dateOfJoining: '15-06-2018',
-    qualifications: 'M.Sc. Mathematics, B.Ed.',
-    salaryPerMonth: 65000,
-    subjectsHandled: ['Mathematics', 'Advanced Calculus'],
-    about: 'Head of Mathematics Department with 12+ years of senior secondary coaching experience.',
-  },
-  {
-    teacherId: 'TCH-002',
-    firstName: 'Vikram',
-    lastName: 'Choudhary',
-    dob: '22-11-1988',
-    phone: '9876505678',
-    dateOfJoining: '10-07-2019',
-    qualifications: 'M.Sc. Physics, NET Qualified',
-    salaryPerMonth: 62000,
-    subjectsHandled: ['Physics', 'Applied Science'],
-    about: 'Physics faculty specializing in laboratory experiments and Olympiad preparation.',
-  },
-  {
-    teacherId: 'TCH-003',
-    firstName: 'Anjali',
-    lastName: 'Kapoor',
-    dob: '05-03-1990',
-    phone: '9876509012',
-    dateOfJoining: '01-08-2020',
-    qualifications: 'M.A. English Literature, B.Ed.',
-    salaryPerMonth: 58000,
-    subjectsHandled: ['English', 'Creative Writing'],
-    about: 'Debate coordinator and senior English literature instructor.',
-  },
-  {
-    teacherId: 'TCH-004',
-    firstName: 'Rajesh',
-    lastName: 'Nair',
-    dob: '18-09-1986',
-    phone: '9876503456',
-    dateOfJoining: '05-04-2017',
-    qualifications: 'M.Sc. Chemistry, M.Phil.',
-    salaryPerMonth: 64000,
-    subjectsHandled: ['Chemistry', 'Environmental Studies'],
-    about: 'Senior Chemistry instructor with focus on practical organic chemistry labs.',
-  },
-];
+/** Column-id -> the backend's actual sortable field — see the identical map in `Students.tsx`. */
+const SORT_FIELD_BY_COLUMN_ID: Record<
+  string,
+  'firstName' | 'dateOfJoining' | 'salaryPerMonth' | 'teacherId'
+> = {
+  teacherId: 'teacherId',
+  name: 'firstName',
+  salaryPerMonth: 'salaryPerMonth',
+};
+
+const emptyDefaults: CreateTeacherBody = {
+  firstName: '',
+  lastName: '',
+  dob: '1990-01-01',
+  address: '',
+  phone: '',
+  teacherAadhar: '',
+  dateOfJoining: new Date().toISOString().slice(0, 10),
+  about: '',
+  salaryPerMonth: 0,
+  qualifications: '',
+  subjectHandled: [],
+};
+
+const OPTIONAL_STRING_FIELDS = ['lastName', 'address', 'teacherAadhar', 'about'] as const;
+
+function sanitize(values: CreateTeacherBody): CreateTeacherBody {
+  const copy = { ...values };
+  for (const key of OPTIONAL_STRING_FIELDS) {
+    if (copy[key] === '') copy[key] = undefined;
+  }
+  return copy;
+}
+
+function toFormValues(t: TeacherRecord): CreateTeacherBody {
+  return {
+    firstName: t.firstName,
+    lastName: t.lastName ?? '',
+    dob: t.dob,
+    address: t.address ?? '',
+    phone: t.phone,
+    teacherAadhar: t.teacherAadhar ?? '',
+    dateOfJoining: t.dateOfJoining,
+    about: t.about ?? '',
+    salaryPerMonth: t.salaryPerMonth,
+    qualifications: t.qualifications,
+    subjectHandled: t.subjectHandled,
+  };
+}
 
 export const AdminTeachers: React.FC = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formTarget, setFormTarget] = useState<TeacherRecord | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [bulkDeleteTargets, setBulkDeleteTargets] = useState<TeacherRecord[] | null>(null);
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearch = useDebouncedValue(searchInput);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
-  const [formData, setFormData] = useState<TeacherPayload>({
-    firstName: '',
-    lastName: '',
-    dob: '01-01-1990',
-    phone: '9876543210',
-    dateOfJoining: '01-04-2025',
-    qualifications: 'M.Sc., B.Ed.',
-    salaryPerMonth: 60000,
-    subjectsHandled: ['Mathematics'],
-    about: 'Faculty member at Aura International Academy.',
+  // Reset to page 1 whenever the search changes — staying on page 3 of a now much-shorter
+  // filtered result would just show an empty page. Deferred a tick (see the deep-link effect
+  // below for why) so the compiler's set-state-in-effect lint doesn't flag it.
+  useEffect(() => {
+    queueMicrotask(() => setPageIndex(0));
+  }, [debouncedSearch]);
+
+  const sort = sorting[0];
+  const sortBy = sort ? SORT_FIELD_BY_COLUMN_ID[sort.id] : undefined;
+  const sortDir: 'asc' | 'desc' | undefined = sort ? (sort.desc ? 'desc' : 'asc') : undefined;
+  const listQuery = {
+    page: pageIndex + 1,
+    pageSize: 10,
+    q: debouncedSearch || undefined,
+    sortBy,
+    sortDir,
+  };
+
+  const {
+    data: teachersResponse,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: qk.admin.teachers(listQuery),
+    queryFn: () => adminService.getTeachers(listQuery),
   });
+  const teachers = teachersResponse?.data ?? [];
 
-  const { data: apiTeachers } = useQuery({
-    queryKey: ['adminTeachers'],
-    queryFn: () => adminService.getTeachers(),
+  const { control, handleSubmit, reset } = useForm<CreateTeacherBody>({
+    resolver: zodResolver(CreateTeacherBody),
+    defaultValues: emptyDefaults,
   });
-
-  const teachersList: Teacher[] = useMemo(() => {
-    if (apiTeachers?.data && Array.isArray(apiTeachers.data) && apiTeachers.data.length > 0) {
-      return apiTeachers.data;
-    }
-    return sampleTeachers;
-  }, [apiTeachers]);
 
   const createMutation = useMutation({
-    mutationFn: (payload: TeacherPayload) => adminService.createTeacher(payload),
-    onSuccess: (res) => {
-      toast.success(res.message || 'Teacher registered successfully!');
-      queryClient.invalidateQueries({ queryKey: ['adminTeachers'] });
-      setIsCreateOpen(false);
-      resetForm();
+    mutationFn: (payload: CreateTeacherBody) => adminService.createTeacher(payload),
+    onSuccess: () => {
+      toast.success('Teacher registered successfully!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.teachers() });
+      setIsFormOpen(false);
     },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ teacherId, body }: { teacherId: string; body: CreateTeacherBody }) =>
+      adminService.updateTeacher(teacherId, body),
+    onSuccess: () => {
+      toast.success('Teacher record updated!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.teachers() });
+      setIsFormOpen(false);
     },
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (teacherId: string) => adminService.deleteTeacher(teacherId),
     onSuccess: () => {
       toast.success('Teacher record removed successfully');
-      queryClient.invalidateQueries({ queryKey: ['adminTeachers'] });
+      queryClient.invalidateQueries({ queryKey: qk.admin.teachers() });
       setDeleteConfirmId(null);
-      if (selectedTeacher?.teacherId === deleteConfirmId) {
-        setSelectedTeacher(null);
-      }
     },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (targets: TeacherRecord[]) => {
+      const results = await Promise.allSettled(
+        targets.map((t) => adminService.deleteTeacher(t.teacherId)),
+      );
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      return { total: targets.length, failed };
+    },
+    onSuccess: ({ total, failed }) => {
+      queryClient.invalidateQueries({ queryKey: qk.admin.teachers() });
+      setBulkDeleteTargets(null);
+      if (failed === 0) toast.success(`${total} teacher record${total === 1 ? '' : 's'} deleted`);
+      else toast.error(`${failed} of ${total} deletions failed`);
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      firstName: '',
-      lastName: '',
-      dob: '01-01-1990',
-      phone: '9876543210',
-      dateOfJoining: '01-04-2025',
-      qualifications: 'M.Sc., B.Ed.',
-      salaryPerMonth: 60000,
-      subjectsHandled: ['Mathematics'],
-      about: '',
+  const openCreateForm = () => {
+    setFormTarget(null);
+    reset(emptyDefaults);
+    setIsFormOpen(true);
+  };
+
+  const openEditForm = (teacher: TeacherRecord) => {
+    setFormTarget(teacher);
+    reset(toFormValues(teacher));
+    setIsFormOpen(true);
+  };
+
+  const onSubmit: SubmitHandler<CreateTeacherBody> = (values) => {
+    const payload = sanitize(values);
+    if (formTarget) {
+      updateMutation.mutate({ teacherId: formTarget.teacherId, body: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  const viewTeacherDetails = (teacher: TeacherRecord) => {
+    navigate(`/admin/teachers/${teacher.teacherId}`);
+  };
+
+  // Deep-link support: `/admin/teachers?edit=<teacherId>` (used by the Teacher Detail page's
+  // "Edit Record" button) opens the edit sheet for that teacher. Fetched directly by id rather
+  // than searched for in the currently-loaded page — now that the list is paginated/searched
+  // (ALIGNMENT_PLAN.md 2C/P1), the target teacher isn't guaranteed to be on whatever page happens
+  // to be showing.
+  const editId = searchParams.get('edit');
+  const { data: editTarget } = useQuery({
+    queryKey: qk.admin.teacher(editId ?? ''),
+    queryFn: () => adminService.getTeacherById(editId as string),
+    enabled: !!editId,
+  });
+  useEffect(() => {
+    if (!editTarget) return;
+    // Deferred a tick so the state updates below aren't synchronous *within* the effect body
+    // itself (which the React Compiler lint flags as a cascading-render risk) — this still runs
+    // before paint, it's just not inline in the effect callback.
+    queueMicrotask(() => {
+      openEditForm(editTarget);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete('edit');
+          return next;
+        },
+        { replace: true },
+      );
     });
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editTarget]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'salaryPerMonth' ? Number(value) : value,
-    }));
-  };
-
-  const handleSubjectsChange = (val: string) => {
-    const arr = val
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    setFormData((prev) => ({ ...prev, subjectsHandled: arr }));
-  };
-
-  const handleCreateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createMutation.mutate(formData);
-  };
-
-  const filteredTeachers = teachersList.filter((t) => {
-    const matches =
-      `${t.firstName} ${t.lastName || ''} ${t.teacherId} ${(t.subjectsHandled || t.subjectHandled || []).join(' ')}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-    return matches;
-  });
+  const columns: ColumnDef<TeacherRecord, unknown>[] = [
+    {
+      accessorKey: 'teacherId',
+      header: 'Teacher ID',
+      cell: ({ row }) => (
+        <span className="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+          {row.original.teacherId}
+        </span>
+      ),
+    },
+    {
+      id: 'name',
+      header: 'Faculty Name',
+      accessorFn: (t) => `${t.firstName} ${t.lastName ?? ''}`.trim(),
+      cell: ({ row }) => {
+        const t = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-linear-to-tr from-emerald-600 to-teal-500 text-[10px] font-bold text-white">
+              {t.firstName.charAt(0)}
+            </div>
+            <span className="text-xs font-medium">
+              {t.firstName} {t.lastName ?? ''}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'qualifications',
+      header: 'Qualifications',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className="text-muted-foreground text-xs">{row.original.qualifications}</span>
+      ),
+    },
+    {
+      id: 'subjects',
+      header: 'Subjects',
+      accessorFn: (t) => t.subjectHandled.join(', '),
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="flex max-w-56 flex-wrap gap-1">
+          {row.original.subjectHandled.length === 0 ? (
+            <span className="text-muted-foreground text-xs">—</span>
+          ) : (
+            row.original.subjectHandled.map((sub) => (
+              <Badge key={sub} variant="outline" className="text-[10px] font-medium">
+                {sub}
+              </Badge>
+            ))
+          )}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'phone',
+      header: 'Phone',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
+          <Phone className="h-3 w-3 text-emerald-500" />
+          <span>{row.original.phone}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'salaryPerMonth',
+      header: 'Monthly Salary',
+      cell: ({ row }) => (
+        <span className="text-xs font-semibold">
+          ₹{row.original.salaryPerMonth.toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      enableSorting: false,
+      enableHiding: false,
+      cell: ({ row }) => {
+        const teacher = row.original;
+        return (
+          <div className="flex items-center justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
+              onClick={(e) => {
+                e.stopPropagation();
+                viewTeacherDetails(teacher);
+              }}
+              title="View Profile"
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              onClick={(e) => {
+                e.stopPropagation();
+                openEditForm(teacher);
+              }}
+              title="Edit Record"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-rose-600 hover:bg-rose-50 dark:text-rose-400"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeleteConfirmId(teacher.teacherId);
+              }}
+              title="Delete Record"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -200,7 +366,7 @@ export const AdminTeachers: React.FC = () => {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold tracking-tight">Faculty & Instructors</h1>
             <Badge variant="outline" className="text-xs">
-              {filteredTeachers.length} Active Staff
+              {teachersResponse?.total ?? 0} Active Staff
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
@@ -208,345 +374,194 @@ export const AdminTeachers: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`rounded-md p-1.5 ${
-                viewMode === 'grid'
-                  ? 'bg-white text-indigo-600 shadow-xs dark:bg-zinc-900 dark:text-indigo-400'
-                  : 'text-muted-foreground'
-              }`}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => setViewMode('table')}
-              className={`rounded-md p-1.5 ${
-                viewMode === 'table'
-                  ? 'bg-white text-indigo-600 shadow-xs dark:bg-zinc-900 dark:text-indigo-400'
-                  : 'text-muted-foreground'
-              }`}
-            >
-              <List className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          <Button
-            onClick={() => {
-              resetForm();
-              setIsCreateOpen(true);
-            }}
-            className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
-          >
-            <UserPlus className="h-3.5 w-3.5" />
-            <span>Add Faculty</span>
-          </Button>
-        </div>
+        <Button
+          onClick={openCreateForm}
+          className="h-9 gap-1.5 bg-emerald-600 text-xs text-white shadow-sm hover:bg-emerald-700"
+        >
+          <UserPlus className="h-3.5 w-3.5" />
+          <span>Add Faculty</span>
+        </Button>
       </div>
 
-      {/* Search Bar */}
-      <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardContent className="p-4">
-          <div className="relative w-full">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-            <Input
-              placeholder="Search by instructor name, teacher ID TCH-..., or subject handled..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9 pl-9 text-xs"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Faculty Grid or Table View */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {filteredTeachers.map((teacher) => {
-            const subjects = teacher.subjectsHandled || teacher.subjectHandled || ['General'];
-            return (
-              <Card
-                key={teacher.teacherId}
-                className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-tr from-emerald-600 to-teal-500 text-sm font-bold text-white shadow-md">
-                        {teacher.firstName.charAt(0)}
-                      </div>
-                      <div>
-                        <CardTitle className="text-sm font-bold">
-                          {teacher.firstName} {teacher.lastName || ''}
-                        </CardTitle>
-                        <span className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400">
-                          {teacher.teacherId}
-                        </span>
-                      </div>
-                    </div>
-                    <Badge
-                      variant="secondary"
-                      className="bg-emerald-50 text-[10px] text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
-                    >
-                      ₹{(teacher.salaryPerMonth / 1000).toFixed(0)}k/mo
-                    </Badge>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="flex-1 space-y-3 pt-0 text-xs">
-                  <div>
-                    <span className="text-muted-foreground text-[10px] font-semibold uppercase">
-                      Qualifications
-                    </span>
-                    <p className="font-medium text-slate-800 dark:text-zinc-200">
-                      {teacher.qualifications}
-                    </p>
-                  </div>
-
-                  <div>
-                    <span className="text-muted-foreground mb-1 block text-[10px] font-semibold uppercase">
-                      Curriculum Handled
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {subjects.map((sub, i) => (
-                        <Badge
-                          key={i}
-                          variant="outline"
-                          className="bg-slate-50 text-[10px] font-medium dark:bg-zinc-800"
-                        >
-                          <BookOpen className="mr-1 h-2.5 w-2.5 text-indigo-500" />
-                          {sub}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="text-muted-foreground flex items-center justify-between border-t border-slate-100 pt-1 text-[11px] dark:border-zinc-800">
-                    <div className="flex items-center gap-1">
-                      <Phone className="h-3 w-3 text-emerald-500" />
-                      <span>{teacher.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3 text-indigo-500" />
-                      <span>Joined {teacher.dateOfJoining || '2020'}</span>
-                    </div>
-                  </div>
-                </CardContent>
-
-                <div className="flex items-center justify-between border-t border-slate-100 p-3 dark:border-zinc-800">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-xs text-indigo-600 dark:text-indigo-400"
-                    onClick={() => setSelectedTeacher(teacher)}
-                  >
-                    <Eye className="mr-1 h-3.5 w-3.5" />
-                    <span>View Profile</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-xs text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950"
-                    onClick={() => setDeleteConfirmId(teacher.teacherId)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+      {/* Faculty Data Table */}
+      {isError ? (
+        <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : (
-        <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
-                <TableHead className="text-xs font-bold">Teacher ID</TableHead>
-                <TableHead className="text-xs font-bold">Faculty Name</TableHead>
-                <TableHead className="text-xs font-bold">Qualifications</TableHead>
-                <TableHead className="text-xs font-bold">Subjects</TableHead>
-                <TableHead className="text-xs font-bold">Phone</TableHead>
-                <TableHead className="text-xs font-bold">Monthly Salary</TableHead>
-                <TableHead className="text-right text-xs font-bold">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTeachers.map((teacher) => (
-                <TableRow key={teacher.teacherId}>
-                  <TableCell className="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                    {teacher.teacherId}
-                  </TableCell>
-                  <TableCell className="text-xs font-medium">
-                    {teacher.firstName} {teacher.lastName || ''}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-xs">
-                    {teacher.qualifications}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    {(teacher.subjectsHandled || teacher.subjectHandled || []).join(', ')}
-                  </TableCell>
-                  <TableCell className="text-xs">{teacher.phone}</TableCell>
-                  <TableCell className="text-xs font-semibold">
-                    ₹{teacher.salaryPerMonth.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-right text-xs">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-rose-600"
-                      onClick={() => setDeleteConfirmId(teacher.teacherId)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <Card className="overflow-hidden border border-slate-200/80 bg-white/90 p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+          <DataTable
+            columns={columns}
+            data={teachers}
+            isLoading={isLoading}
+            emptyTitle="No faculty registered yet"
+            emptyDescription="Add the first teacher to get started."
+            emptyAction={
+              <Button size="sm" className="mt-1 text-xs" onClick={openCreateForm}>
+                <UserPlus className="mr-1 h-3.5 w-3.5" />
+                Add Faculty
+              </Button>
+            }
+            searchPlaceholder="Search by name, ID…"
+            onRowClick={viewTeacherDetails}
+            enableRowSelection
+            exportFilename="teachers"
+            manual={{
+              pageIndex,
+              pageSize: 10,
+              pageCount: teachersResponse?.totalPages ?? 1,
+              totalRows: teachersResponse?.total ?? 0,
+              onPageChange: setPageIndex,
+              search: searchInput,
+              onSearchChange: setSearchInput,
+              sorting,
+              onSortingChange: setSorting,
+            }}
+            bulkActions={(selected, clear) => (
+              <>
+                <span className="text-xs font-semibold">{selected.length} selected</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() =>
+                    downloadCsv(
+                      'teachers-selected',
+                      ['Teacher ID', 'Name', 'Qualifications', 'Subjects', 'Phone', 'Salary'],
+                      selected.map((t) => [
+                        t.teacherId,
+                        `${t.firstName} ${t.lastName ?? ''}`.trim(),
+                        t.qualifications,
+                        t.subjectHandled.join(', '),
+                        t.phone,
+                        t.salaryPerMonth,
+                      ]),
+                    )
+                  }
+                >
+                  Export Selected
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => setBulkDeleteTargets(selected)}
+                >
+                  <Trash2 className="mr-1 h-3.5 w-3.5" />
+                  Delete Selected
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={clear}>
+                  Clear
+                </Button>
+              </>
+            )}
+          />
         </Card>
       )}
 
-      {/* Add Teacher Modal */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-          <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-              <Sparkles className="h-4 w-4" />
-              <span>Faculty Registry</span>
-            </div>
-            <DialogTitle className="text-lg font-bold">Register New Faculty Member</DialogTitle>
-            <DialogDescription className="text-xs">
-              Fill in instructor details to create portal login and assign teaching subjects.
-            </DialogDescription>
-          </DialogHeader>
+      {/* Add / Edit Faculty Sheet */}
+      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <SheetContent className="overflow-y-auto sm:max-w-lg">
+          <div className="space-y-4 px-4 pt-4">
+            <SheetHeader>
+              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <Sparkles className="h-4 w-4" />
+                <span>Faculty Registry</span>
+              </div>
+              <SheetTitle className="text-lg font-bold">
+                {formTarget ? `Edit ${formTarget.teacherId}` : 'Register New Faculty Member'}
+              </SheetTitle>
+              <SheetDescription className="text-xs">
+                {formTarget
+                  ? 'Update this instructor’s registered profile.'
+                  : 'Fill in instructor details to create portal login and assign teaching subjects.'}
+              </SheetDescription>
+            </SheetHeader>
 
-          <form onSubmit={handleCreateSubmit} className="space-y-4 pt-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="tFirstName" className="text-xs font-semibold">
-                  First Name <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="tFirstName"
-                  name="firstName"
-                  placeholder="e.g. Meenakshi"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  required
-                  className="h-9 text-xs"
-                />
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pb-4">
+              <div className="grid grid-cols-2 gap-3">
+                <TextField control={control} name="firstName" label="First Name" required />
+                <TextField control={control} name="lastName" label="Last Name" />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="tLastName" className="text-xs font-semibold">
-                  Last Name
-                </Label>
-                <Input
-                  id="tLastName"
-                  name="lastName"
-                  placeholder="e.g. Sundaram"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="h-9 text-xs"
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="tPhone" className="text-xs font-semibold">
-                  Mobile Number <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="tPhone"
-                  name="phone"
-                  placeholder="9876543210"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  required
-                  className="h-9 text-xs"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <DateField control={control} name="dob" label="Date of Birth" required />
+                <TextField control={control} name="phone" label="Mobile Number" required />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="salaryPerMonth" className="text-xs font-semibold">
-                  Monthly Salary (₹) <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="salaryPerMonth"
+
+              <div className="grid grid-cols-2 gap-3">
+                <DateField
+                  control={control}
+                  name="dateOfJoining"
+                  label="Date of Joining"
+                  required
+                />
+                <NumberField
+                  control={control}
                   name="salaryPerMonth"
-                  type="number"
-                  placeholder="65000"
-                  value={formData.salaryPerMonth}
-                  onChange={handleInputChange}
+                  label="Monthly Salary"
                   required
-                  className="h-9 text-xs"
+                  currency
+                  min={0}
                 />
               </div>
-            </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="qualifications" className="text-xs font-semibold">
-                Educational Qualifications <span className="text-rose-500">*</span>
-              </Label>
-              <Input
-                id="qualifications"
+              <TextField
+                control={control}
                 name="qualifications"
+                label="Educational Qualifications"
+                required
                 placeholder="e.g. M.Sc. Mathematics, B.Ed."
-                value={formData.qualifications}
-                onChange={handleInputChange}
-                required
-                className="h-9 text-xs"
               />
-            </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="subjectsHandled" className="text-xs font-semibold">
-                Subjects Handled (comma separated) <span className="text-rose-500">*</span>
-              </Label>
-              <Input
-                id="subjectsHandled"
-                placeholder="Mathematics, Calculus, Physics"
-                value={(formData.subjectsHandled || []).join(', ')}
-                onChange={(e) => handleSubjectsChange(e.target.value)}
+              <TagsField
+                control={control}
+                name="subjectHandled"
+                label="Subjects Handled"
                 required
-                className="h-9 text-xs"
+                description="Type a subject and press Enter to add it as a chip."
+                placeholder="e.g. Mathematics"
               />
-            </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="about" className="text-xs font-semibold">
-                Professional Summary / Bio
-              </Label>
-              <Input
-                id="about"
+              <TextField
+                control={control}
                 name="about"
-                placeholder="Senior faculty with 10+ years experience"
-                value={formData.about || ''}
-                onChange={handleInputChange}
-                className="h-9 text-xs"
+                label="Professional Summary / Bio"
+                multiline
               />
-            </div>
 
-            <DialogFooter className="pt-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCreateOpen(false)}
-                className="h-9 text-xs"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={createMutation.isPending}
-                className="h-9 bg-emerald-600 text-xs text-white hover:bg-emerald-700"
-              >
-                {createMutation.isPending ? 'Registering...' : 'Confirm Faculty'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+              <TextField control={control} name="address" label="Address" multiline />
+
+              <TextField
+                control={control}
+                name="teacherAadhar"
+                label="Aadhar Number"
+                placeholder="12 digits"
+              />
+
+              <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-zinc-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsFormOpen(false)}
+                  className="h-9 text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  className="h-9 bg-emerald-600 text-xs text-white hover:bg-emerald-700"
+                >
+                  {createMutation.isPending || updateMutation.isPending
+                    ? 'Saving...'
+                    : formTarget
+                      ? 'Save Changes'
+                      : 'Confirm Faculty'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Delete Confirmation */}
       <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
@@ -577,6 +592,42 @@ export const AdminTeachers: React.FC = () => {
               className="text-xs"
             >
               {deleteMutation.isPending ? 'Deleting...' : 'Delete Permanently'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Delete Confirmation */}
+      <Dialog open={!!bulkDeleteTargets} onOpenChange={() => setBulkDeleteTargets(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
+              <Users className="h-4 w-4" />
+              <span>Confirm Bulk Deletion</span>
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-xs">
+              Are you sure you want to permanently delete{' '}
+              <strong>{bulkDeleteTargets?.length ?? 0}</strong> teacher record
+              {bulkDeleteTargets?.length === 1 ? '' : 's'}?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkDeleteTargets(null)}
+              className="text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => bulkDeleteTargets && bulkDeleteMutation.mutate(bulkDeleteTargets)}
+              disabled={bulkDeleteMutation.isPending}
+              className="text-xs"
+            >
+              {bulkDeleteMutation.isPending ? 'Deleting...' : 'Delete All Selected'}
             </Button>
           </DialogFooter>
         </DialogContent>

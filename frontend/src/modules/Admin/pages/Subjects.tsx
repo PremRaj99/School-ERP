@@ -1,9 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { ErrorState } from '@/components/data-table';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -13,52 +17,62 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { adminService } from '@/lib/services/admin.service';
-import type { SubjectItem, CreateSubjectPayload } from '@/lib/types';
+import type { SubjectRecord, CreateSubjectBody } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
+import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { BookOpen, Plus, Trash2, Edit2, Search, Sparkles } from 'lucide-react';
+import {
+  BookOpen,
+  Plus,
+  Trash2,
+  Edit2,
+  Search,
+  Sparkles,
+  LayoutList,
+  GitBranch,
+  School,
+} from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
-const sampleSubjects: SubjectItem[] = [
-  { subjectCode: 'MATH101', subjectName: 'Mathematics & Applied Algebra' },
-  { subjectCode: 'PHY201', subjectName: 'General & Experimental Physics' },
-  { subjectCode: 'CHEM301', subjectName: 'Inorganic & Organic Chemistry' },
-  { subjectCode: 'BIO401', subjectName: 'Biology & Life Sciences' },
-  { subjectCode: 'ENG001', subjectName: 'English Literature & Composition' },
-  { subjectCode: 'HIST102', subjectName: 'World History & Civics' },
-  { subjectCode: 'CS501', subjectName: 'Computer Science & Python' },
-  { subjectCode: 'ECON601', subjectName: 'Macroeconomics & Commerce' },
-];
 
 export const AdminSubjects: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingSubject, setEditingSubject] = useState<SubjectItem | null>(null);
+  const [editingSubject, setEditingSubject] = useState<SubjectRecord | null>(null);
   const [deleteConfirmCode, setDeleteConfirmCode] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<CreateSubjectPayload>({
+  const [formData, setFormData] = useState<CreateSubjectBody>({
     subjectName: '',
     subjectCode: '',
   });
 
-  const { data: apiSubjects } = useQuery({
-    queryKey: ['adminSubjects'],
+  const {
+    data: subjectsList,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: qk.admin.subjects(),
     queryFn: () => adminService.getSubjects(),
   });
 
-  const subjectsList: SubjectItem[] = useMemo(() => {
-    if (apiSubjects?.data && Array.isArray(apiSubjects.data) && apiSubjects.data.length > 0) {
-      return apiSubjects.data;
-    }
-    return sampleSubjects;
-  }, [apiSubjects]);
+  const {
+    data: groupedSubjects,
+    isLoading: groupedLoading,
+    isError: groupedErrored,
+    error: groupedError,
+    refetch: refetchGrouped,
+  } = useQuery({
+    queryKey: qk.admin.subjectsGrouped(),
+    queryFn: () => adminService.getAllClassSubjects(),
+  });
 
   const createMutation = useMutation({
-    mutationFn: (payload: CreateSubjectPayload) => adminService.createSubject(payload),
-    onSuccess: (res) => {
-      toast.success(res.message || 'Subject added successfully!');
-      queryClient.invalidateQueries({ queryKey: ['adminSubjects'] });
+    mutationFn: (payload: CreateSubjectBody) => adminService.createSubject(payload),
+    onSuccess: () => {
+      toast.success('Subject added successfully!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.subjects() });
       setIsCreateOpen(false);
       setFormData({ subjectName: '', subjectCode: '' });
     },
@@ -70,9 +84,9 @@ export const AdminSubjects: React.FC = () => {
   const updateMutation = useMutation({
     mutationFn: ({ code, name }: { code: string; name: string }) =>
       adminService.updateSubject(code, { subjectName: name }),
-    onSuccess: (res) => {
-      toast.success(res.message || 'Subject updated successfully!');
-      queryClient.invalidateQueries({ queryKey: ['adminSubjects'] });
+    onSuccess: () => {
+      toast.success('Subject updated successfully!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.subjects() });
       setEditingSubject(null);
     },
     onError: (err) => {
@@ -84,7 +98,7 @@ export const AdminSubjects: React.FC = () => {
     mutationFn: (code: string) => adminService.deleteSubject(code),
     onSuccess: () => {
       toast.success('Subject removed');
-      queryClient.invalidateQueries({ queryKey: ['adminSubjects'] });
+      queryClient.invalidateQueries({ queryKey: qk.admin.subjects() });
       setDeleteConfirmCode(null);
     },
     onError: (err) => {
@@ -107,7 +121,7 @@ export const AdminSubjects: React.FC = () => {
     }
   };
 
-  const filteredSubjects = subjectsList.filter((s) =>
+  const filteredSubjects = (subjectsList ?? []).filter((s) =>
     `${s.subjectName} ${s.subjectCode}`.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
@@ -139,75 +153,206 @@ export const AdminSubjects: React.FC = () => {
         </Button>
       </div>
 
-      {/* Search Bar */}
-      <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardContent className="p-4">
-          <div className="relative w-full">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-            <Input
-              placeholder="Search by subject name or code (e.g. MATH101, Physics)..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9 pl-9 text-xs"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="h-10 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
+          <TabsTrigger value="all" className="rounded-lg px-4 text-xs font-semibold">
+            <LayoutList className="mr-1.5 h-3.5 w-3.5 text-indigo-500" />
+            <span>All Subjects</span>
+          </TabsTrigger>
+          <TabsTrigger value="byClass" className="rounded-lg px-4 text-xs font-semibold">
+            <GitBranch className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+            <span>Assigned by Class</span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Subjects Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {filteredSubjects.map((sub) => (
-          <Card
-            key={sub.subjectCode}
-            className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <Badge
-                  variant="secondary"
-                  className="bg-indigo-50 font-mono text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300"
-                >
-                  {sub.subjectCode}
-                </Badge>
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-indigo-600 dark:bg-zinc-800 dark:text-indigo-400">
-                  <BookOpen className="h-3.5 w-3.5" />
-                </div>
-              </div>
-              <CardTitle className="mt-2 text-base leading-snug font-bold text-slate-900 dark:text-white">
-                {sub.subjectName}
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="space-y-3 pt-0">
-              <div className="text-muted-foreground flex items-center justify-between rounded-lg bg-slate-50 p-2 text-[11px] dark:bg-zinc-800/50">
-                <span>Curriculum Credits</span>
-                <span className="font-semibold text-slate-800 dark:text-zinc-200">4.0 Credits</span>
-              </div>
-
-              <div className="flex items-center justify-end gap-1 border-t border-slate-100 pt-1 dark:border-zinc-800">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
-                  onClick={() => setEditingSubject(sub)}
-                  title="Edit Subject"
-                >
-                  <Edit2 className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-rose-600 hover:bg-rose-50 dark:text-rose-400"
-                  onClick={() => setDeleteConfirmCode(sub.subjectCode)}
-                  title="Delete Subject"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+        <TabsContent value="all" className="space-y-4 pt-4 focus:outline-hidden">
+          {/* Search Bar */}
+          <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+            <CardContent className="p-4">
+              <div className="relative w-full">
+                <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+                <Input
+                  placeholder="Search by subject name or code (e.g. MATH101, Physics)..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="h-9 pl-9 text-xs"
+                />
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+
+          {/* Subjects Grid */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-36 w-full" />
+              ))}
+            </div>
+          ) : isError ? (
+            <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
+          ) : filteredSubjects.length === 0 ? (
+            <Empty className="rounded-none border">
+              <EmptyMedia variant="icon">
+                <BookOpen className="size-5" />
+              </EmptyMedia>
+              <EmptyTitle>No subjects yet</EmptyTitle>
+              <EmptyDescription>
+                {searchTerm
+                  ? 'No subjects match your search.'
+                  : 'Add the first subject to get started.'}
+              </EmptyDescription>
+              {!searchTerm && (
+                <Button
+                  size="sm"
+                  className="mt-1 text-xs"
+                  onClick={() => {
+                    setFormData({ subjectName: '', subjectCode: '' });
+                    setIsCreateOpen(true);
+                  }}
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  Add Subject
+                </Button>
+              )}
+            </Empty>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {filteredSubjects.map((sub) => (
+                <Card
+                  key={sub.subjectCode}
+                  className="flex flex-col justify-between border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <Badge
+                        variant="secondary"
+                        className="bg-indigo-50 font-mono text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300"
+                      >
+                        {sub.subjectCode}
+                      </Badge>
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-indigo-600 dark:bg-zinc-800 dark:text-indigo-400">
+                        <BookOpen className="h-3.5 w-3.5" />
+                      </div>
+                    </div>
+                    <CardTitle className="mt-2 text-base leading-snug font-bold text-slate-900 dark:text-white">
+                      {sub.subjectName}
+                    </CardTitle>
+                  </CardHeader>
+
+                  <CardContent className="space-y-3 pt-0">
+                    <div className="flex items-center justify-end gap-1 border-t border-slate-100 pt-1 dark:border-zinc-800">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
+                        onClick={() => setEditingSubject(sub)}
+                        title="Edit Subject"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-rose-600 hover:bg-rose-50 dark:text-rose-400"
+                        onClick={() => setDeleteConfirmCode(sub.subjectCode)}
+                        title="Delete Subject"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Assigned-by-class two-panel view */}
+        <TabsContent value="byClass" className="pt-4 focus:outline-hidden">
+          {groupedLoading ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" />
+            </div>
+          ) : groupedErrored ? (
+            <ErrorState
+              description={getErrorMessage(groupedError)}
+              onRetry={() => refetchGrouped()}
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {/* Assigned */}
+              <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
+                    <School className="h-4 w-4 text-indigo-500" />
+                    Assigned to a Class
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {(groupedSubjects?.assignedSubjects ?? []).length === 0 ? (
+                    <p className="text-muted-foreground py-6 text-center text-xs">
+                      No subjects are assigned to a class yet.
+                    </p>
+                  ) : (
+                    groupedSubjects?.assignedSubjects.map((group) => (
+                      <div
+                        key={group.className}
+                        className="rounded-lg border border-slate-100 p-3 dark:border-zinc-800"
+                      >
+                        <Badge variant="secondary" className="mb-2 text-[10px] font-semibold">
+                          Class {group.className}
+                        </Badge>
+                        <div className="flex flex-wrap gap-1.5">
+                          {group.subjects.map((s) => (
+                            <Badge
+                              key={s.subjectCode}
+                              variant="outline"
+                              className="text-[10px] font-medium"
+                            >
+                              <BookOpen className="mr-1 h-2.5 w-2.5 text-indigo-500" />
+                              {s.subjectName}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Unassigned */}
+              <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
+                    <BookOpen className="h-4 w-4 text-amber-500" />
+                    Not Yet Assigned
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(groupedSubjects?.unassignedSubjects ?? []).length === 0 ? (
+                    <p className="text-muted-foreground py-6 text-center text-xs">
+                      Every subject is assigned to at least one class.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {groupedSubjects?.unassignedSubjects.map((s) => (
+                        <Badge
+                          key={s.subjectCode}
+                          variant="outline"
+                          className="bg-amber-50 text-[10px] font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                        >
+                          {s.subjectName}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Add Subject Modal */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
