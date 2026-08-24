@@ -47,36 +47,16 @@ export const HomePage: React.FC = () => {
           timetables.
         </p>
 
-        {/* Quick Launch Buttons */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+        {/* Single Primary CTA Button */}
+        <div className="mt-8 flex items-center justify-center">
           <Button
             size="lg"
-            onClick={() => navigate('/admin/dashboard')}
-            className="h-11 bg-indigo-600 px-6 font-semibold text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-700"
+            onClick={() => navigate('/auth/login')}
+            className="h-11 bg-indigo-600 px-7 font-semibold text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-700"
           >
             <ShieldCheck className="mr-2 h-4 w-4" />
-            <span>Launch Admin Portal</span>
+            <span>Sign In to School ERP</span>
             <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={() => navigate('/teacher/dashboard')}
-            className="h-11 border-slate-300 bg-white/80 px-5 font-semibold hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900/80 dark:hover:bg-zinc-800"
-          >
-            <Users className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Faculty Workspace</span>
-          </Button>
-
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={() => navigate('/student/dashboard')}
-            className="h-11 border-slate-300 bg-white/80 px-5 font-semibold hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900/80 dark:hover:bg-zinc-800"
-          >
-            <GraduationCap className="mr-2 h-4 w-4 text-sky-600 dark:text-sky-400" />
-            <span>Student Hub</span>
           </Button>
         </div>
 
@@ -500,7 +480,7 @@ export const HomePage: React.FC = () => {
             Test any module instantly with our pre-populated sample database and interactive
             portals.
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-4">
+          <div className="mt-6 flex justify-center">
             <Button
               size="lg"
               onClick={() => navigate('/auth/login')}
@@ -508,14 +488,7 @@ export const HomePage: React.FC = () => {
             >
               <ShieldCheck className="mr-2 h-4 w-4 text-indigo-600" />
               <span>Sign In to School ERP</span>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate('/contact')}
-              className="border-indigo-400/40 text-white hover:bg-white/10"
-            >
-              <span>Contact Administration</span>
+              <ArrowRight className="ml-2 h-4 w-4 text-indigo-600" />
             </Button>
           </div>
         </div>

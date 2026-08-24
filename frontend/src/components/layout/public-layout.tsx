@@ -1,17 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import {
-  School,
-  Sun,
-  Moon,
-  Menu,
-  X,
-  ArrowRight,
-  ShieldCheck,
-  Phone,
-  Mail,
-  MapPin,
-} from 'lucide-react';
+import { School, Sun, Moon, ArrowRight, ShieldCheck, Phone, Mail, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/shared/common/theme';
 
@@ -22,7 +11,6 @@ interface PublicLayoutProps {
 export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const { resolvedTheme, setTheme } = useTheme();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <div className="text-foreground flex min-h-screen flex-col bg-slate-50/70 font-sans selection:bg-indigo-500/20 selection:text-indigo-600 dark:bg-zinc-950">
@@ -44,52 +32,6 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
             </div>
           </NavLink>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                `transition-colors ${
-                  isActive
-                    ? 'font-semibold text-indigo-600 dark:text-indigo-400'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100'
-                }`
-              }
-            >
-              Home
-            </NavLink>
-            <NavLink
-              to="/contact"
-              className={({ isActive }) =>
-                `transition-colors ${
-                  isActive
-                    ? 'font-semibold text-indigo-600 dark:text-indigo-400'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100'
-                }`
-              }
-            >
-              Contact Us
-            </NavLink>
-            <NavLink
-              to="/admin/dashboard"
-              className="text-slate-600 transition-colors hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400"
-            >
-              Admin Suite
-            </NavLink>
-            <NavLink
-              to="/teacher/dashboard"
-              className="text-slate-600 transition-colors hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400"
-            >
-              Faculty Hub
-            </NavLink>
-            <NavLink
-              to="/student/dashboard"
-              className="text-slate-600 transition-colors hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400"
-            >
-              Student Portal
-            </NavLink>
-          </nav>
-
           {/* Actions: Theme Toggle & Sign In */}
           <div className="flex items-center gap-3">
             <Button
@@ -109,77 +51,14 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
             <Button
               size="sm"
               onClick={() => navigate('/auth/login')}
-              className="hidden bg-linear-to-r from-indigo-600 to-violet-600 font-medium text-white shadow-sm shadow-indigo-500/20 hover:from-indigo-700 hover:to-violet-700 sm:inline-flex"
+              className="inline-flex bg-linear-to-r from-indigo-600 to-violet-600 font-medium text-white shadow-sm shadow-indigo-500/20 hover:from-indigo-700 hover:to-violet-700"
             >
               <ShieldCheck className="mr-1.5 h-4 w-4" />
               <span>Portal Login</span>
               <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Button>
-
-            {/* Mobile Menu Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-slate-600 md:hidden dark:text-zinc-400"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
           </div>
         </div>
-
-        {/* Mobile Navigation Dropdown */}
-        {isMobileMenuOpen && (
-          <div className="space-y-3 border-b border-slate-200 bg-white/95 px-4 pt-2 pb-5 backdrop-blur-xl md:hidden dark:border-zinc-800 dark:bg-zinc-900/95">
-            <NavLink
-              to="/"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block py-2 text-sm font-medium text-slate-800 hover:text-indigo-600 dark:text-zinc-200"
-            >
-              Home
-            </NavLink>
-            <NavLink
-              to="/contact"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block py-2 text-sm font-medium text-slate-800 hover:text-indigo-600 dark:text-zinc-200"
-            >
-              Contact Us
-            </NavLink>
-            <NavLink
-              to="/admin/dashboard"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block py-2 text-sm font-medium text-slate-800 hover:text-indigo-600 dark:text-zinc-200"
-            >
-              Admin Suite
-            </NavLink>
-            <NavLink
-              to="/teacher/dashboard"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block py-2 text-sm font-medium text-slate-800 hover:text-indigo-600 dark:text-zinc-200"
-            >
-              Faculty Hub
-            </NavLink>
-            <NavLink
-              to="/student/dashboard"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block py-2 text-sm font-medium text-slate-800 hover:text-indigo-600 dark:text-zinc-200"
-            >
-              Student Portal
-            </NavLink>
-            <div className="pt-2">
-              <Button
-                className="w-full bg-indigo-600 text-white hover:bg-indigo-700"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  navigate('/auth/login');
-                }}
-              >
-                <ShieldCheck className="mr-1.5 h-4 w-4" />
-                <span>Portal Sign In</span>
-              </Button>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Page Content */}
@@ -187,8 +66,8 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
 
       {/* Modern Footer */}
       <footer className="border-t border-slate-200 bg-white px-4 py-12 sm:px-6 lg:px-8 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 md:grid-cols-4">
-          <div className="space-y-3 md:col-span-1">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 md:grid-cols-3">
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white">
                 <School className="h-4 w-4" />
@@ -199,40 +78,6 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
               Unified educational enterprise management platform empowering administrators,
               teachers, and students.
             </p>
-          </div>
-
-          <div>
-            <h4 className="mb-3 text-xs font-semibold tracking-wider text-slate-900 uppercase dark:text-zinc-100">
-              Portals
-            </h4>
-            <ul className="text-muted-foreground space-y-2 text-xs">
-              <li>
-                <NavLink to="/admin/dashboard" className="transition-colors hover:text-indigo-600">
-                  Administration Suite
-                </NavLink>
-              </li>
-              <li>
-                <NavLink
-                  to="/teacher/dashboard"
-                  className="transition-colors hover:text-indigo-600"
-                >
-                  Teacher Workplace
-                </NavLink>
-              </li>
-              <li>
-                <NavLink
-                  to="/student/dashboard"
-                  className="transition-colors hover:text-indigo-600"
-                >
-                  Student Dashboard
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/auth/login" className="transition-colors hover:text-indigo-600">
-                  Staff & Student Login
-                </NavLink>
-              </li>
-            </ul>
           </div>
 
           <div>
