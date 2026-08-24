@@ -1,24 +1,23 @@
-import React, { useState } from 'react';
-import { useNavigate, useSearchParams, NavLink } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { authService } from '@/lib/services/auth.service';
 import { getErrorMessage } from '@/lib/api';
-import { useAuthStore, roleHomePath } from '@/stores/auth.store';
-import { toast } from 'sonner';
+import { authService } from '@/lib/services/auth.service';
+import { roleHomePath, useAuthStore } from '@/stores/auth.store';
 import {
+  ArrowLeft,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  GraduationCap,
   School,
   ShieldCheck,
   Users,
-  GraduationCap,
   Wallet,
-  Eye,
-  EyeOff,
-  ArrowRight,
-  ArrowLeft,
 } from 'lucide-react';
+import React, { useState } from 'react';
+import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -75,181 +74,154 @@ export const LoginPage: React.FC = () => {
       <div className="pointer-events-none fixed top-1/4 left-1/3 -z-10 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
       <div className="pointer-events-none fixed right-1/3 bottom-1/4 -z-10 h-96 w-96 rounded-full bg-violet-500/10 blur-3xl" />
 
-      <div className="grid w-full max-w-4xl grid-cols-1 overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-2xl lg:grid-cols-12 dark:border-zinc-800 dark:bg-zinc-900">
-        {/* Left Side Banner */}
-        <div className="relative flex flex-col justify-between overflow-hidden bg-linear-to-br from-indigo-900 via-indigo-950 to-slate-950 p-8 text-white lg:col-span-5">
-          <div className="pointer-events-none absolute top-0 right-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-indigo-500/20 blur-2xl" />
-
-          <div className="relative z-10 space-y-6">
-            <NavLink to="/" className="group inline-flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white backdrop-blur-xs">
-                <School className="h-5 w-5 text-indigo-300" />
-              </div>
-              <div>
-                <span className="text-base font-bold tracking-tight">Gyan Deep BVM</span>
-                <p className="text-[10px] text-indigo-300">Baal Vikas Vidya Mandir</p>
-              </div>
-            </NavLink>
-
-            <div className="space-y-2 pt-4">
-              <Badge variant="outline" className="border-indigo-400/30 text-[10px] text-indigo-300">
-                Single Sign-On Portal
-              </Badge>
-              <h2 className="text-2xl font-bold tracking-tight">
-                Welcome back to your educational hub
-              </h2>
-              <p className="text-xs leading-relaxed text-indigo-200">
-                Seamlessly access attendance rosters, real-time fee ledgers, exam grade sheets, and
-                institutional notices.
-              </p>
+      <div className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-2xl sm:p-8 dark:border-zinc-800 dark:bg-zinc-900">
+        {/* Brand & Logo Header */}
+        <div className="mb-6 flex flex-col items-center text-center">
+          <NavLink to="/" className="group mb-3 flex items-center justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white shadow-lg shadow-indigo-500/25 transition-transform duration-200 group-hover:scale-105">
+              <School className="h-6 w-6" />
             </div>
-          </div>
-
-          <div className="relative z-10 mt-8 space-y-3 border-t border-white/10 pt-8">
-            <div className="flex items-center gap-2 text-xs text-indigo-200">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" />
-              <span>Role-Based Access Control</span>
-            </div>
+          </NavLink>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Gyan Deep BVM
+          </h1>
+          <p className="text-muted-foreground text-xs">Baal Vikas Vidya Mandir</p>
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>Portal Sign In</span>
           </div>
         </div>
 
-        {/* Right Side Login Form */}
-        <div className="flex flex-col justify-center p-6 sm:p-8 lg:col-span-7">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Portal Sign In</h3>
-              <p className="text-muted-foreground mt-0.5 text-xs">
-                Choose your role and enter credentials
-              </p>
-            </div>
-            <NavLink
-              to="/"
-              className="text-muted-foreground flex items-center gap-1 text-xs hover:text-indigo-600"
-            >
-              <ArrowLeft className="h-3 w-3" />
-              <span>Home</span>
-            </NavLink>
+        {/* Role Switcher Tabs */}
+        <div className="mb-5 grid grid-cols-4 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
+          <button
+            type="button"
+            onClick={() => handleRoleSelect('Admin')}
+            className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
+              selectedRole === 'Admin'
+                ? 'bg-white text-indigo-600 shadow-xs dark:bg-zinc-900 dark:text-indigo-400'
+                : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+            }`}
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>Admin</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleRoleSelect('Teacher')}
+            className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
+              selectedRole === 'Teacher'
+                ? 'bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400'
+                : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span>Teacher</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleRoleSelect('Student')}
+            className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
+              selectedRole === 'Student'
+                ? 'bg-white text-sky-600 shadow-xs dark:bg-zinc-900 dark:text-sky-400'
+                : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+            }`}
+          >
+            <GraduationCap className="h-3.5 w-3.5" />
+            <span>Student</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleRoleSelect('Finance')}
+            className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
+              selectedRole === 'Finance'
+                ? 'bg-white text-amber-600 shadow-xs dark:bg-zinc-900 dark:text-amber-400'
+                : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+            }`}
+          >
+            <Wallet className="h-3.5 w-3.5" />
+            <span>Finance</span>
+          </button>
+        </div>
+
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="username" className="text-xs font-semibold">
+              Username / Identifier
+            </Label>
+            <Input
+              id="username"
+              name="username"
+              type="text"
+              placeholder="Enter username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+              disabled={loading}
+              className="h-10 text-xs"
+            />
           </div>
 
-          {/* Role Switcher Tabs */}
-          <div className="mb-5 grid grid-cols-4 gap-1.5 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
-            <button
-              type="button"
-              onClick={() => handleRoleSelect('Admin')}
-              className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all ${
-                selectedRole === 'Admin'
-                  ? 'bg-white text-indigo-600 shadow-xs dark:bg-zinc-900 dark:text-indigo-400'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
-              }`}
-            >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span>Admin</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleRoleSelect('Teacher')}
-              className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all ${
-                selectedRole === 'Teacher'
-                  ? 'bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
-              }`}
-            >
-              <Users className="h-3.5 w-3.5" />
-              <span>Teacher</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleRoleSelect('Student')}
-              className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all ${
-                selectedRole === 'Student'
-                  ? 'bg-white text-sky-600 shadow-xs dark:bg-zinc-900 dark:text-sky-400'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
-              }`}
-            >
-              <GraduationCap className="h-3.5 w-3.5" />
-              <span>Student</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleRoleSelect('Finance')}
-              className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all ${
-                selectedRole === 'Finance'
-                  ? 'bg-white text-amber-600 shadow-xs dark:bg-zinc-900 dark:text-amber-400'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
-              }`}
-            >
-              <Wallet className="h-3.5 w-3.5" />
-              <span>Finance</span>
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="username" className="text-xs font-semibold">
-                Username / Identifier
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-xs font-semibold">
+                Password
               </Label>
+              <NavLink
+                to="/auth/change-password"
+                className="text-[11px] text-indigo-600 hover:underline dark:text-indigo-400"
+              >
+                Change Password?
+              </NavLink>
+            </div>
+            <div className="relative">
               <Input
-                id="username"
-                name="username"
-                type="text"
-                placeholder="Enter username"
-                value={formData.username}
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter password"
+                value={formData.password}
                 onChange={handleChange}
                 required
                 disabled={loading}
-                className="h-10 text-xs"
+                className="h-10 pr-10 text-xs"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
+          </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-xs font-semibold">
-                  Password
-                </Label>
-                <NavLink
-                  to="/auth/change-password"
-                  className="text-[11px] text-indigo-600 hover:underline dark:text-indigo-400"
-                >
-                  Change Password?
-                </NavLink>
-              </div>
-              <div className="relative">
-                <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                  className="h-10 pr-10 text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
+          <Button
+            type="submit"
+            className="h-10 w-full rounded-xl bg-indigo-600 text-xs font-semibold text-white shadow-md shadow-indigo-500/20 hover:bg-indigo-700"
+            disabled={loading}
+          >
+            {loading ? (
+              'Verifying Credentials...'
+            ) : (
+              <>
+                <span>Sign In as {selectedRole}</span>
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </form>
 
-            <Button
-              type="submit"
-              className="h-10 w-full bg-indigo-600 text-xs font-semibold text-white shadow-md shadow-indigo-500/20 hover:bg-indigo-700"
-              disabled={loading}
-            >
-              {loading ? (
-                'Verifying Credentials...'
-              ) : (
-                <>
-                  <span>Sign In as {selectedRole}</span>
-                  <ArrowRight className="ml-1.5 h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
+        {/* Back Link */}
+        <div className="mt-6 border-t border-slate-100 pt-4 text-center dark:border-zinc-800">
+          <NavLink
+            to="/"
+            className="text-muted-foreground inline-flex items-center gap-1.5 text-xs transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Back to Public Website</span>
+          </NavLink>
         </div>
       </div>
     </div>
