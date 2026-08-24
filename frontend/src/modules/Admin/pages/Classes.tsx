@@ -30,7 +30,6 @@ import {
   PiUsers,
   PiSparkle,
   PiMagnifyingGlass,
-  PiSquaresFour,
   PiLock,
   PiEye,
 } from 'react-icons/pi';
@@ -209,10 +208,8 @@ export const AdminClasses: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : filteredClasses.length === 0 ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiSquaresFour className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="users" illustrationSize={120} />
           <EmptyTitle>No class sections yet</EmptyTitle>
           <EmptyDescription>
             {searchTerm

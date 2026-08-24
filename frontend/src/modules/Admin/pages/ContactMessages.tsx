@@ -27,14 +27,7 @@ import { MAX_PAGE_SIZE, type ContactRecord } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import {
-  PiEnvelope,
-  PiPhone,
-  PiPaperPlaneTilt,
-  PiMagnifyingGlass,
-  PiTray,
-  PiTrash,
-} from 'react-icons/pi';
+import { PiEnvelope, PiPhone, PiPaperPlaneTilt, PiMagnifyingGlass, PiTrash } from 'react-icons/pi';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const AdminContactMessages: React.FC = () => {
@@ -129,10 +122,8 @@ export const AdminContactMessages: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : filteredMessages.length === 0 ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiTray className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="search" illustrationSize={120} />
           <EmptyTitle>No inquiries yet</EmptyTitle>
           <EmptyDescription>
             {searchTerm

@@ -1,13 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import {
-  PiBuildings,
-  PiArrowRight,
-  PiShieldCheck,
-  PiPhone,
-  PiEnvelopeSimple,
-  PiMapPin,
-} from 'react-icons/pi';
+import { PiBuildings, PiArrowRight, PiPhone, PiEnvelopeSimple, PiMapPin } from 'react-icons/pi';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './theme-toggle';
 
@@ -43,13 +36,11 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
             <ThemeToggle className="h-8.5 w-8.5 rounded-full text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100" />
 
             <Button
-              size="sm"
               onClick={() => navigate('/auth/login')}
-              className="bg-primary inline-flex font-medium text-white shadow-sm hover:opacity-90"
+              className="bg-primary inline-flex py-4 font-medium text-white shadow-sm hover:opacity-90"
             >
-              <PiShieldCheck className="mr-1.5 h-4 w-4" />
-              <span>Portal Login</span>
-              <PiArrowRight className="ml-1 h-3.5 w-3.5" />
+              <span>Login</span>
+              <PiArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>

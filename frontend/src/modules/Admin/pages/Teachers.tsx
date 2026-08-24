@@ -408,6 +408,7 @@ export const AdminTeachers: React.FC = () => {
             columns={columns}
             data={teachers}
             isLoading={isLoading}
+            emptyIllustration="teachers"
             emptyTitle="No faculty registered yet"
             emptyDescription="Add the first teacher to get started."
             emptyAction={

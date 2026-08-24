@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-
+import React from 'react';
 import { cn } from '@/lib/utils';
+import { EmptyIllustration, type EmptyStateVariant } from './empty-illustrations';
 
 function Empty({ className, ...props }: React.ComponentProps<'div'>) {
   return (
@@ -32,6 +33,7 @@ const emptyMediaVariants = cva(
       variant: {
         default: 'bg-transparent',
         icon: "flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary [&_svg:not([class*='size-'])]:size-5",
+        illustration: 'bg-transparent',
       },
     },
     defaultVariants: {
@@ -40,18 +42,35 @@ const emptyMediaVariants = cva(
   },
 );
 
+export interface EmptyMediaProps
+  extends React.ComponentProps<'div'>, VariantProps<typeof emptyMediaVariants> {
+  illustration?: EmptyStateVariant;
+  illustrationSize?: number | string;
+}
+
 function EmptyMedia({
   className,
   variant = 'default',
+  illustration,
+  illustrationSize = 120,
+  children,
   ...props
-}: React.ComponentProps<'div'> & VariantProps<typeof emptyMediaVariants>) {
+}: EmptyMediaProps) {
   return (
     <div
       data-slot="empty-icon"
-      data-variant={variant}
-      className={cn(emptyMediaVariants({ variant, className }))}
+      data-variant={illustration ? 'illustration' : variant}
+      className={cn(
+        emptyMediaVariants({ variant: illustration ? 'illustration' : variant, className }),
+      )}
       {...props}
-    />
+    >
+      {illustration ? (
+        <EmptyIllustration variant={illustration} size={illustrationSize} />
+      ) : (
+        children
+      )}
+    </div>
   );
 }
 
@@ -91,4 +110,13 @@ function EmptyContent({ className, ...props }: React.ComponentProps<'div'>) {
   );
 }
 
-export { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, EmptyMedia };
+export {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+  EmptyMedia,
+  EmptyIllustration,
+};
+export type { EmptyStateVariant };

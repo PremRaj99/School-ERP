@@ -7,7 +7,7 @@ import { ErrorState } from '@/components/data-table';
 import { studentService } from '@/lib/services/student.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import { PiUser, PiClock, PiBookOpen } from 'react-icons/pi';
+import { PiUser, PiClock } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 export const StudentSubjects: React.FC = () => {
@@ -72,10 +72,8 @@ export const StudentSubjects: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : (subjects ?? []).length === 0 ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiBookOpen className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="subjects" illustrationSize={120} />
           <EmptyTitle>No subjects yet</EmptyTitle>
           <EmptyDescription>Your class has no subjects on its timetable yet.</EmptyDescription>
         </Empty>

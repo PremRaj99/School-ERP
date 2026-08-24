@@ -390,10 +390,8 @@ export const AdminClassDetail: React.FC = () => {
             ))}
           </div>
         ) : schedule.length === 0 ? (
-          <Empty className="rounded-md border-0 border-t">
-            <EmptyMedia variant="icon">
-              <PiCalendarDots className="size-5" />
-            </EmptyMedia>
+          <Empty className="rounded-md border-0 border-t p-6">
+            <EmptyMedia illustration="timetable" illustrationSize={120} />
             <EmptyTitle>No timetable slots yet</EmptyTitle>
             <EmptyDescription>No periods have been scheduled for this section.</EmptyDescription>
           </Empty>

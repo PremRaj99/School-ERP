@@ -1,6 +1,7 @@
-import { PiWarningCircle } from 'react-icons/pi';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { cn } from '@/lib/utils';
 
 export interface ErrorStateProps {
   title?: string;
@@ -8,28 +9,66 @@ export interface ErrorStateProps {
   description?: string;
   onRetry?: () => void;
   className?: string;
+  size?: number | string;
 }
 
 /**
- * The third state every data-fetching page needs alongside `<Skeleton>`/`<Empty>` (ALIGNMENT_PLAN.md
- * Phase 4, item 6) — a failed query should never silently fall back to stale mock data, it should say
- * so and offer a retry (`query.refetch`).
+ * Calm, matter-of-fact connection interruption illustration:
+ * - Device/monitor in lower-left
+ * - Cloud outline in upper-right
+ * - Interrupted dotted line between them (with a visible gap)
+ * - Semantic red (#dc2626 / #f87171)
+ */
+export const ErrorConnectionIllustration: React.FC<
+  React.ImgHTMLAttributes<HTMLImageElement> & { size?: number | string }
+> = ({
+  size = 64,
+  className,
+  alt = 'Interrupted network connection illustration',
+  style,
+  ...props
+}) => {
+  const dimension = typeof size === 'number' ? `${size}px` : size;
+
+  return (
+    <img
+      src="/error-connection.jpg"
+      alt={alt}
+      style={{
+        width: dimension,
+        height: dimension,
+        ...style,
+      }}
+      className={cn(
+        'shrink-0 object-contain mix-blend-multiply transition-transform duration-200 dark:mix-blend-screen dark:hue-rotate-180 dark:invert',
+        className,
+      )}
+      loading="lazy"
+      {...props}
+    />
+  );
+};
+
+/**
+ * The error fallback state across all data-fetching pages:
+ * Displays a calm, semantic interrupted-connection illustration with a clear retry trigger.
  */
 export function ErrorState({
   title = 'Couldn’t load this',
   description = 'Something went wrong talking to the server.',
   onRetry,
   className,
+  size = 120,
 }: ErrorStateProps) {
   return (
-    <Empty className={className ? `rounded-md border ${className}` : 'rounded-md border'}>
-      <EmptyMedia variant="icon" className="bg-destructive/10 text-destructive">
-        <PiWarningCircle className="size-5" />
+    <Empty className={cn('rounded-md border p-8', className)}>
+      <EmptyMedia className="mb-1 bg-transparent">
+        <ErrorConnectionIllustration size={size} />
       </EmptyMedia>
-      <EmptyTitle>{title}</EmptyTitle>
-      <EmptyDescription>{description}</EmptyDescription>
+      <EmptyTitle className="text-slate-900 dark:text-white">{title}</EmptyTitle>
+      <EmptyDescription className="max-w-md">{description}</EmptyDescription>
       {onRetry && (
-        <Button variant="outline" size="sm" className="mt-1 text-xs" onClick={onRetry}>
+        <Button variant="outline" size="sm" className="mt-2 text-xs" onClick={onRetry}>
           Try again
         </Button>
       )}

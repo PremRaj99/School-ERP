@@ -91,10 +91,8 @@ export const TeacherNotices: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : filteredNotices.length === 0 ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiBell className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="notices" illustrationSize={120} />
           <EmptyTitle>No notices yet</EmptyTitle>
           <EmptyDescription>
             {searchTerm ? 'No notices match your search.' : 'Announcements will show up here.'}

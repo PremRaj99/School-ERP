@@ -21,13 +21,7 @@ import { getErrorMessage } from '@/lib/api';
 import { dateToIsoDate } from '@/lib/date';
 import type { ClassAttendanceStudentRow } from '@schoolerp/contracts';
 import { toast } from 'sonner';
-import {
-  PiCheckCircle,
-  PiFloppyDisk,
-  PiCalendarCheck,
-  PiUsers,
-  PiChalkboardTeacher,
-} from 'react-icons/pi';
+import { PiCheckCircle, PiFloppyDisk, PiCalendarCheck } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const currentMonthString = () => new Date().toISOString().slice(0, 7);
@@ -371,10 +365,8 @@ function ClassAttendanceTab() {
       </Card>
 
       {!className ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiChalkboardTeacher className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="studentAttendance" illustrationSize={120} />
           <EmptyTitle>Pick a class</EmptyTitle>
           <EmptyDescription>
             Select one of your classes and a date to mark attendance.
@@ -387,10 +379,8 @@ function ClassAttendanceTab() {
           ))}
         </div>
       ) : !students || students.length === 0 ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiUsers className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="students" illustrationSize={120} />
           <EmptyTitle>No students enrolled</EmptyTitle>
           <EmptyDescription>This class section has no enrolled students.</EmptyDescription>
         </Empty>

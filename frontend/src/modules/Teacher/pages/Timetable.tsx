@@ -117,10 +117,8 @@ export const TeacherTimetable: React.FC = () => {
 
       {/* Weekly Grid */}
       {grid.size === 0 ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiCalendarDots className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="timetable" illustrationSize={120} />
           <EmptyTitle>No periods scheduled</EmptyTitle>
           <EmptyDescription>You have no timetable slots assigned yet.</EmptyDescription>
         </Empty>

@@ -68,8 +68,19 @@ export const HomePage: React.FC = () => {
           </Button>
         </div>
 
+        {/* Hero Illustration Showcase */}
+        <div className="mx-auto mt-10 max-w-3xl p-4 sm:p-8">
+          <div className="relative mx-auto flex items-center justify-center">
+            <img
+              src="/hero-illustration.jpg"
+              alt="School Campus & Real-Time Dashboard Connectivity"
+              className="h-auto w-full max-w-xl object-contain dark:hue-rotate-180 dark:invert"
+            />
+          </div>
+        </div>
+
         {/* Quick Demo Credentials Bar */}
-        <div className="mx-auto mt-10 max-w-3xl rounded-md border border-slate-200/80 bg-white/90 p-4 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90">
+        <div className="mx-auto mt-8 max-w-3xl rounded-md border border-slate-200/80 bg-white/90 p-4 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 dark:border-zinc-800">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300">
               <PiLock className="text-primary h-3.5 w-3.5" />

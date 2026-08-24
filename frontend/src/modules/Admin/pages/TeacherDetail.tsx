@@ -383,10 +383,8 @@ export const AdminTeacherDetail: React.FC = () => {
         ) : salariesErrored ? (
           <div className="text-muted-foreground p-4 text-xs">Couldn't load salary history.</div>
         ) : sortedSalaries.length === 0 ? (
-          <Empty className="rounded-md border-0 border-t">
-            <EmptyMedia variant="icon">
-              <PiWallet className="size-5" />
-            </EmptyMedia>
+          <Empty className="rounded-md border-0 border-t p-6">
+            <EmptyMedia illustration="salaries" illustrationSize={120} />
             <EmptyTitle>No salary records yet</EmptyTitle>
             <EmptyDescription>No salary has been raised for this teacher.</EmptyDescription>
           </Empty>

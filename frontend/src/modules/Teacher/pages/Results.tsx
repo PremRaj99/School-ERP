@@ -20,7 +20,7 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import type { ResultSheet } from '@schoolerp/contracts';
 import { toast } from 'sonner';
-import { PiFloppyDisk, PiMedal, PiFileDashed } from 'react-icons/pi';
+import { PiFloppyDisk, PiMedal } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 /** Mirrors `backend/src/shared/helpers/getGrade.ts` exactly, for the live preview only — the
@@ -356,10 +356,8 @@ export const TeacherResults: React.FC = () => {
 
       {/* Grading Grid */}
       {!examId || !subjectId ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiFileDashed className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="exams" illustrationSize={120} />
           <EmptyTitle>Pick an exam and subject</EmptyTitle>
           <EmptyDescription>
             Select an examination and one of your subjects to begin grading.

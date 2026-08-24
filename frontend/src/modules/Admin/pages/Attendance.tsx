@@ -186,10 +186,8 @@ export const AdminAttendance: React.FC = () => {
           }}
         />
       ) : rows.length === 0 ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiUsers className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="attendance" illustrationSize={120} />
           <EmptyTitle>No faculty registered yet</EmptyTitle>
           <EmptyDescription>Add teachers before marking attendance.</EmptyDescription>
         </Empty>

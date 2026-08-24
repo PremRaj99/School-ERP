@@ -105,10 +105,8 @@ export const StudentAcademic: React.FC = () => {
               onRetry={() => refetchTimetable()}
             />
           ) : grid.size === 0 ? (
-            <Empty className="rounded-md border">
-              <EmptyMedia variant="icon">
-                <PiClock className="size-5" />
-              </EmptyMedia>
+            <Empty className="rounded-md border p-8">
+              <EmptyMedia illustration="timetable" illustrationSize={120} />
               <EmptyTitle>No timetable yet</EmptyTitle>
               <EmptyDescription>Your class has no timetable slots scheduled yet.</EmptyDescription>
             </Empty>

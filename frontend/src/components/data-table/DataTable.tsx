@@ -18,7 +18,6 @@ import {
   PiDownload,
   PiSlidersHorizontal,
   PiMagnifyingGlass,
-  PiTray,
 } from 'react-icons/pi';
 import {
   Table,
@@ -37,7 +36,13 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyTitle,
+  type EmptyStateVariant,
+} from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { downloadCsv } from './csv';
 
@@ -45,6 +50,8 @@ export interface DataTableProps<TData> {
   columns: ColumnDef<TData, unknown>[];
   data: TData[];
   isLoading?: boolean;
+  /** Empty state monoline vector illustration variant */
+  emptyIllustration?: EmptyStateVariant;
   /** Rendered instead of the table when `data` is empty and not loading. */
   emptyTitle?: string;
   emptyDescription?: string;
@@ -93,6 +100,7 @@ export function DataTable<TData>({
   columns,
   data,
   isLoading,
+  emptyIllustration = 'general',
   emptyTitle = 'Nothing here yet',
   emptyDescription = 'No records to show.',
   emptyAction,
@@ -119,16 +127,18 @@ export function DataTable<TData>({
             <Checkbox
               checked={table.getIsAllPageRowsSelected()}
               indeterminate={table.getIsSomePageRowsSelected()}
-              onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
-              aria-label="Select all rows on this page"
+              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+              aria-label="Select all"
+              className="translate-y-0.5"
             />
           ),
           cell: ({ row }) => (
             <Checkbox
               checked={row.getIsSelected()}
-              onCheckedChange={(checked) => row.toggleSelected(!!checked)}
-              onClick={(e) => e.stopPropagation()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
               aria-label="Select row"
+              onClick={(e) => e.stopPropagation()}
+              className="translate-y-0.5"
             />
           ),
           enableSorting: false,
@@ -167,7 +177,7 @@ export function DataTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: isManual ? undefined : getSortedRowModel(),
     getFilteredRowModel: isManual ? undefined : getFilteredRowModel(),
-    getPaginationRowModel: isManual ? undefined : getPaginationRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     manualPagination: isManual,
     manualSorting: isManual,
     pageCount: isManual ? manual.pageCount : undefined,
@@ -207,10 +217,8 @@ export function DataTable<TData>({
   // when the server says there are genuinely zero matching rows.
   if (isManual ? manual.totalRows === 0 : data.length === 0) {
     return (
-      <Empty className="rounded-md border">
-        <EmptyMedia variant="icon">
-          <PiTray className="size-5" />
-        </EmptyMedia>
+      <Empty className="rounded-md border p-8">
+        <EmptyMedia illustration={emptyIllustration} illustrationSize={120} />
         <EmptyTitle>{emptyTitle}</EmptyTitle>
         <EmptyDescription>{emptyDescription}</EmptyDescription>
         {emptyAction}

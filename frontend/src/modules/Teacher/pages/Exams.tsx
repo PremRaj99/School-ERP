@@ -63,10 +63,8 @@ export const TeacherExams: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : (exams ?? []).length === 0 ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiMedal className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="exams" illustrationSize={120} />
           <EmptyTitle>No exams assigned yet</EmptyTitle>
           <EmptyDescription>You have no subjects scheduled in any examination.</EmptyDescription>
         </Empty>

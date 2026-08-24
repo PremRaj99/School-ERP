@@ -232,10 +232,8 @@ export const AdminAcademic: React.FC = () => {
                 onRetry={() => refetchTimetable()}
               />
             ) : !activeClass ? (
-              <Empty className="rounded-md border-0">
-                <EmptyMedia variant="icon">
-                  <PiClock className="size-5" />
-                </EmptyMedia>
+              <Empty className="rounded-md border-0 p-8">
+                <EmptyMedia illustration="timetable" illustrationSize={120} />
                 <EmptyTitle>No classes yet</EmptyTitle>
                 <EmptyDescription>
                   Create a class section first, then build its timetable here.
@@ -327,10 +325,8 @@ export const AdminAcademic: React.FC = () => {
               onRetry={() => refetchCalendar()}
             />
           ) : (calendarEvents ?? []).length === 0 ? (
-            <Empty className="rounded-md border">
-              <EmptyMedia variant="icon">
-                <PiCalendar className="size-5" />
-              </EmptyMedia>
+            <Empty className="rounded-md border p-8">
+              <EmptyMedia illustration="calendar" illustrationSize={120} />
               <EmptyTitle>No calendar events yet</EmptyTitle>
               <EmptyDescription>Add the first holiday, exam, or event date.</EmptyDescription>
               <Button size="sm" className="mt-1 text-xs" onClick={() => setIsAddEventOpen(true)}>

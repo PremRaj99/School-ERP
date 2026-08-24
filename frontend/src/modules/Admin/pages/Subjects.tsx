@@ -191,10 +191,8 @@ export const AdminSubjects: React.FC = () => {
           ) : isError ? (
             <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
           ) : filteredSubjects.length === 0 ? (
-            <Empty className="rounded-md border">
-              <EmptyMedia variant="icon">
-                <PiBookOpen className="size-5" />
-              </EmptyMedia>
+            <Empty className="rounded-md border p-8">
+              <EmptyMedia illustration="subjects" illustrationSize={120} />
               <EmptyTitle>No subjects yet</EmptyTitle>
               <EmptyDescription>
                 {searchTerm

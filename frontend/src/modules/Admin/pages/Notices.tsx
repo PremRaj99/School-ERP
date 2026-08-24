@@ -31,7 +31,6 @@ import {
   PiSparkle,
   PiMagnifyingGlass,
   PiFunnel,
-  PiMegaphone,
 } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -249,10 +248,8 @@ export const AdminNotices: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : filteredNotices.length === 0 ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiMegaphone className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="notices" illustrationSize={120} />
           <EmptyTitle>No notices published yet</EmptyTitle>
           <EmptyDescription>
             {searchTerm || targetFilter !== 'All' || statusFilter !== 'All'

@@ -176,10 +176,8 @@ export const AdminExams: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : filteredExams.length === 0 ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiMedal className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="exams" illustrationSize={120} />
           <EmptyTitle>No exams scheduled yet</EmptyTitle>
           <EmptyDescription>
             {searchTerm ? 'No exams match your search.' : 'Create the first examination schedule.'}

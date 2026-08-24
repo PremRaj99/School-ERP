@@ -162,10 +162,8 @@ export const StudentFees: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : (fees ?? []).length === 0 ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiReceipt className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="fees" illustrationSize={120} />
           <EmptyTitle>No fee invoices</EmptyTitle>
           <EmptyDescription>No fee has been raised for session {year} yet.</EmptyDescription>
         </Empty>

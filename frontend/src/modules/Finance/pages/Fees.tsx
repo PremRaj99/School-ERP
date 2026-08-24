@@ -223,6 +223,7 @@ export const FinanceFees: React.FC = () => {
             columns={columns}
             data={fees}
             isLoading={isLoading}
+            emptyIllustration="fees"
             emptyTitle="No fee records yet"
             emptyDescription="Collect the first student fee to get started."
             searchPlaceholder="Search by student name or ID…"

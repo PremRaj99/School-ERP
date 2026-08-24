@@ -16,7 +16,7 @@ import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { dateToIsoDate, isoToDisplayDate } from '@/lib/date';
-import { PiClipboardText, PiUsers } from 'react-icons/pi';
+import { PiUsers } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 function monthAgo(): string {
@@ -117,10 +117,8 @@ export const AdminStudentAttendance: React.FC = () => {
       </Card>
 
       {!classId ? (
-        <Empty className="rounded-md border">
-          <EmptyMedia variant="icon">
-            <PiClipboardText className="size-5" />
-          </EmptyMedia>
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="studentAttendance" illustrationSize={120} />
           <EmptyTitle>Pick a class to get started</EmptyTitle>
           <EmptyDescription>
             Select a class above to see its attendance summary for the chosen date range.
@@ -151,10 +149,8 @@ export const AdminStudentAttendance: React.FC = () => {
           </CardHeader>
 
           {report.totalMarkedDays === 0 ? (
-            <Empty className="rounded-md border-0 border-t">
-              <EmptyMedia variant="icon">
-                <PiClipboardText className="size-5" />
-              </EmptyMedia>
+            <Empty className="rounded-md border-0 border-t p-8">
+              <EmptyMedia illustration="studentAttendance" illustrationSize={120} />
               <EmptyTitle>No attendance marked in this range</EmptyTitle>
               <EmptyDescription>
                 The class teacher hasn't marked attendance for any day in this date range yet.

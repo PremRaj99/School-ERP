@@ -208,6 +208,7 @@ export const FinanceSalaries: React.FC = () => {
             columns={columns}
             data={salaries}
             isLoading={isLoading}
+            emptyIllustration="fees"
             emptyTitle="No salary records yet"
             emptyDescription="Process the first payout to get started."
             searchPlaceholder="Search by teacher name or ID…"

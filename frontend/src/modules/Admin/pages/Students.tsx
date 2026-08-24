@@ -456,8 +456,9 @@ export const AdminStudents: React.FC = () => {
             columns={columns}
             data={students}
             isLoading={isLoading}
-            emptyTitle="No student records yet"
-            emptyDescription="Admit the first student to get started."
+            emptyIllustration="students"
+            emptyTitle="No Students Enrolled"
+            emptyDescription="No student records found matching the active filter criteria."
             emptyAction={
               <Button size="sm" className="mt-1 text-xs" onClick={openCreateForm}>
                 <PiPlus className="mr-1 h-3.5 w-3.5" />

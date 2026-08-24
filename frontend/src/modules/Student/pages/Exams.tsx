@@ -111,10 +111,8 @@ export const StudentExams: React.FC = () => {
           Past Examinations
         </h2>
         {past.length === 0 ? (
-          <Empty className="rounded-md border">
-            <EmptyMedia variant="icon">
-              <PiMedal className="size-5" />
-            </EmptyMedia>
+          <Empty className="rounded-md border p-8">
+            <EmptyMedia illustration="exams" illustrationSize={120} />
             <EmptyTitle>No past examinations</EmptyTitle>
             <EmptyDescription>Your examination history will show up here.</EmptyDescription>
           </Empty>
