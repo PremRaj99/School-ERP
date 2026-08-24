@@ -23,7 +23,7 @@ import { ErrorState } from '@/components/data-table';
 import { studentService } from '@/lib/services/student.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import { Receipt } from 'lucide-react';
+import { PiReceipt } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 /** Matches `useSessionOptions()` (`hooks/options/useAdminOptions.ts`) — a session starts in April.
@@ -136,9 +136,7 @@ export const StudentFees: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="p-4">
             <span className="text-muted-foreground text-xs font-semibold">Total Paid</span>
-            <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-              ₹{paidTotal.toLocaleString()}
-            </p>
+            <p className="text-primary mt-1 text-2xl font-bold">₹{paidTotal.toLocaleString()}</p>
             <span className="text-muted-foreground text-[11px]">Session {year}</span>
           </CardContent>
         </Card>
@@ -164,9 +162,9 @@ export const StudentFees: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : (fees ?? []).length === 0 ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <Receipt className="size-5" />
+            <PiReceipt className="size-5" />
           </EmptyMedia>
           <EmptyTitle>No fee invoices</EmptyTitle>
           <EmptyDescription>No fee has been raised for session {year} yet.</EmptyDescription>
@@ -205,10 +203,10 @@ export const StudentFees: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
+                        className="text-primary hover:bg-primary/10 h-7 text-xs"
                         onClick={() => setSelectedFeeId(fee.id)}
                       >
-                        <Receipt className="mr-1 h-3.5 w-3.5" />
+                        <PiReceipt className="mr-1 h-3.5 w-3.5" />
                         <span>View Receipt</span>
                       </Button>
                     </TableCell>
@@ -228,8 +226,8 @@ export const StudentFees: React.FC = () => {
             ) : feeDetail ? (
               <>
                 <SheetHeader>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                    <Receipt className="h-4 w-4" />
+                  <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+                    <PiReceipt className="h-4 w-4" />
                     <span>Fee Receipt</span>
                   </div>
                   <SheetTitle className="text-lg font-bold">{feeDetail.month}</SheetTitle>
@@ -239,7 +237,7 @@ export const StudentFees: React.FC = () => {
                   </SheetDescription>
                 </SheetHeader>
 
-                <div className="space-y-1 rounded-lg border bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
+                <div className="space-y-1 rounded-md border bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
                   {feeDetail.feeBreakdown.length === 0 ? (
                     <p className="text-muted-foreground">No fee breakdown recorded.</p>
                   ) : (

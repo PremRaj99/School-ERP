@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
-import { CheckIcon, ChevronDownIcon, XIcon } from 'lucide-react';
+import { PiCheck, PiCaretDown, PiX } from 'react-icons/pi';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -102,12 +102,12 @@ export function MultiSelectField<TValues extends FieldValues>({
                         }}
                       >
                         {labelFor(value)}
-                        <XIcon className="size-3" />
+                        <PiX className="size-3" />
                       </Badge>
                     ))
                   )}
                 </span>
-                <ChevronDownIcon className="text-muted-foreground size-4 shrink-0" />
+                <PiCaretDown className="text-muted-foreground size-4 shrink-0" />
               </PopoverTrigger>
               <PopoverContent className="w-(--anchor-width) p-0" align="start">
                 <Command>
@@ -125,11 +125,11 @@ export function MultiSelectField<TValues extends FieldValues>({
                           >
                             <span
                               className={cn(
-                                'border-input mr-1 flex size-3.5 items-center justify-center rounded-none border',
+                                'border-input mr-1 flex size-3.5 items-center justify-center rounded-md border',
                                 isSelected && 'bg-primary border-primary text-primary-foreground',
                               )}
                             >
-                              {isSelected && <CheckIcon className="size-3" />}
+                              {isSelected && <PiCheck className="size-3" />}
                             </span>
                             {opt.label}
                           </CommandItem>

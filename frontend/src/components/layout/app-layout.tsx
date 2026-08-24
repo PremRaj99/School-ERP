@@ -1,34 +1,32 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  Users,
-  GraduationCap,
-  BookOpen,
-  Calendar,
-  CreditCard,
-  Bell,
-  FileSpreadsheet,
-  UserCheck,
-  ClipboardCheck,
-  Award,
-  MessageSquare,
-  Search,
-  Sun,
-  Moon,
-  LogOut,
-  KeyRound,
-  Menu,
-  X,
-  ChevronDown,
-  School,
-  CheckCircle2,
-  AlertCircle,
-  Info,
-  UserCircle2,
-  Settings,
-  BarChart3,
-} from 'lucide-react';
+  PiSquaresFour,
+  PiUsers,
+  PiGraduationCap,
+  PiBookOpen,
+  PiCalendar,
+  PiCreditCard,
+  PiBell,
+  PiFileXls,
+  PiUserCheck,
+  PiListChecks,
+  PiCertificate,
+  PiChatCircleText,
+  PiMagnifyingGlass,
+  PiSignOut,
+  PiKey,
+  PiList,
+  PiX,
+  PiCaretDown,
+  PiBuildings,
+  PiCheckCircle,
+  PiWarningCircle,
+  PiInfo,
+  PiUserCircle,
+  PiGear,
+  PiChartBar,
+} from 'react-icons/pi';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -40,9 +38,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useTheme } from '@/shared/common/theme';
 import { useAuthStore } from '@/stores/auth.store';
 import { CommandMenu } from './command-menu';
+import { ThemeToggle } from './theme-toggle';
 import { authService } from '@/lib/services/auth.service';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
@@ -64,35 +62,35 @@ const adminNavSections: NavSection[] = [
   {
     title: 'Overview',
     items: [
-      { title: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-      { title: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+      { title: 'Dashboard', href: '/admin/dashboard', icon: PiSquaresFour },
+      { title: 'Analytics', href: '/admin/analytics', icon: PiChartBar },
     ],
   },
   {
     title: 'People',
     items: [
-      { title: 'Students', href: '/admin/students', icon: GraduationCap },
-      { title: 'Teachers', href: '/admin/teachers', icon: Users },
-      { title: 'Teacher Attendance', href: '/admin/attendance', icon: UserCheck },
-      { title: 'Student Attendance', href: '/admin/attendance/student', icon: ClipboardCheck },
+      { title: 'Students', href: '/admin/students', icon: PiGraduationCap },
+      { title: 'Teachers', href: '/admin/teachers', icon: PiUsers },
+      { title: 'Teacher Attendance', href: '/admin/attendance', icon: PiUserCheck },
+      { title: 'Student Attendance', href: '/admin/attendance/student', icon: PiListChecks },
     ],
   },
   {
     title: 'Academics',
     items: [
-      { title: 'Classes & Sections', href: '/admin/classes', icon: BookOpen },
-      { title: 'Subjects', href: '/admin/subjects', icon: BookOpen },
-      { title: 'Exams & Results', href: '/admin/exams', icon: Award },
-      { title: 'Timetable & Calendar', href: '/admin/academic', icon: Calendar },
+      { title: 'Classes & Sections', href: '/admin/classes', icon: PiBookOpen },
+      { title: 'Subjects', href: '/admin/subjects', icon: PiBookOpen },
+      { title: 'Exams & Results', href: '/admin/exams', icon: PiCertificate },
+      { title: 'Timetable & Calendar', href: '/admin/academic', icon: PiCalendar },
     ],
   },
   {
     title: 'Administration',
     items: [
-      { title: 'Finance & Fees', href: '/admin/finance', icon: CreditCard },
-      { title: 'Notices & Circulars', href: '/admin/notices', icon: Bell },
-      { title: 'Inquiries', href: '/admin/contact', icon: MessageSquare },
-      { title: 'Account Settings', href: '/admin/settings', icon: Settings },
+      { title: 'Finance & Fees', href: '/admin/finance', icon: PiCreditCard },
+      { title: 'Notices & Circulars', href: '/admin/notices', icon: PiBell },
+      { title: 'Inquiries', href: '/admin/contact', icon: PiChatCircleText },
+      { title: 'Account Settings', href: '/admin/settings', icon: PiGear },
     ],
   },
 ];
@@ -101,25 +99,25 @@ const teacherNavSections: NavSection[] = [
   {
     title: 'Overview',
     items: [
-      { title: 'Teacher Dashboard', href: '/teacher/dashboard', icon: LayoutDashboard },
-      { title: 'Analytics', href: '/teacher/analytics', icon: BarChart3 },
+      { title: 'Teacher Dashboard', href: '/teacher/dashboard', icon: PiSquaresFour },
+      { title: 'Analytics', href: '/teacher/analytics', icon: PiChartBar },
     ],
   },
   {
     title: 'Classroom',
     items: [
-      { title: 'My Timetable', href: '/teacher/timetable', icon: Calendar },
-      { title: 'Mark Attendance', href: '/teacher/attendance', icon: UserCheck },
-      { title: 'Grading & Marks', href: '/teacher/results', icon: FileSpreadsheet },
-      { title: 'Exam Schedules', href: '/teacher/exams', icon: Award },
+      { title: 'My Timetable', href: '/teacher/timetable', icon: PiCalendar },
+      { title: 'Mark Attendance', href: '/teacher/attendance', icon: PiUserCheck },
+      { title: 'Grading & Marks', href: '/teacher/results', icon: PiFileXls },
+      { title: 'Exam Schedules', href: '/teacher/exams', icon: PiCertificate },
     ],
   },
   {
     title: 'Personal',
     items: [
-      { title: 'School Notices', href: '/teacher/notices', icon: Bell },
-      { title: 'Salary Slips', href: '/teacher/salary', icon: CreditCard },
-      { title: 'My Profile', href: '/teacher/profile', icon: Users },
+      { title: 'School Notices', href: '/teacher/notices', icon: PiBell },
+      { title: 'Salary Slips', href: '/teacher/salary', icon: PiCreditCard },
+      { title: 'My Profile', href: '/teacher/profile', icon: PiUsers },
     ],
   },
 ];
@@ -128,25 +126,25 @@ const studentNavSections: NavSection[] = [
   {
     title: 'Overview',
     items: [
-      { title: 'Student Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
-      { title: 'Analytics', href: '/student/analytics', icon: BarChart3 },
+      { title: 'Student Dashboard', href: '/student/dashboard', icon: PiSquaresFour },
+      { title: 'Analytics', href: '/student/analytics', icon: PiChartBar },
     ],
   },
   {
     title: 'Academics',
     items: [
-      { title: 'My Attendance', href: '/student/attendance', icon: UserCheck },
-      { title: 'Subjects & Syllabus', href: '/student/subjects', icon: BookOpen },
-      { title: 'Exams & Reports', href: '/student/exams', icon: Award },
-      { title: 'Timetable & Events', href: '/student/academic', icon: Calendar },
+      { title: 'My Attendance', href: '/student/attendance', icon: PiUserCheck },
+      { title: 'Subjects & Syllabus', href: '/student/subjects', icon: PiBookOpen },
+      { title: 'Exams & Reports', href: '/student/exams', icon: PiCertificate },
+      { title: 'Timetable & Events', href: '/student/academic', icon: PiCalendar },
     ],
   },
   {
     title: 'Accounts & Info',
     items: [
-      { title: 'Fees & Invoices', href: '/student/fees', icon: CreditCard },
-      { title: 'Notice Board', href: '/student/notices', icon: Bell },
-      { title: 'Digital ID & Profile', href: '/student/profile', icon: GraduationCap },
+      { title: 'Fees & Invoices', href: '/student/fees', icon: PiCreditCard },
+      { title: 'Notice Board', href: '/student/notices', icon: PiBell },
+      { title: 'Digital ID & Profile', href: '/student/profile', icon: PiGraduationCap },
     ],
   },
 ];
@@ -155,16 +153,16 @@ const financeNavSections: NavSection[] = [
   {
     title: 'Overview',
     items: [
-      { title: 'Finance Dashboard', href: '/finance/dashboard', icon: LayoutDashboard },
-      { title: 'Analytics', href: '/finance/analytics', icon: BarChart3 },
+      { title: 'Finance Dashboard', href: '/finance/dashboard', icon: PiSquaresFour },
+      { title: 'Analytics', href: '/finance/analytics', icon: PiChartBar },
     ],
   },
   {
     title: 'Ledger',
     items: [
-      { title: 'Student Fees', href: '/finance/fees', icon: GraduationCap },
-      { title: 'Teacher Salaries', href: '/finance/salaries', icon: Users },
-      { title: 'Expenses', href: '/finance/expenses', icon: CreditCard },
+      { title: 'Student Fees', href: '/finance/fees', icon: PiGraduationCap },
+      { title: 'Teacher Salaries', href: '/finance/salaries', icon: PiUsers },
+      { title: 'Expenses', href: '/finance/expenses', icon: PiCreditCard },
     ],
   },
 ];
@@ -177,7 +175,6 @@ interface AppLayoutProps {
 export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { resolvedTheme, setTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [notifications, setNotifications] = useState([
@@ -228,29 +225,22 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
     finance: '/finance/dashboard',
   };
 
-  const roleLabels: Record<string, { label: string; badgeClass: string; avatarBg: string }> = {
+  const roleLabels: Record<string, { label: string; badgeClass: string }> = {
     admin: {
       label: 'Admin Portal',
-      badgeClass:
-        'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 font-medium',
-      avatarBg: 'from-indigo-600 to-violet-600',
+      badgeClass: 'bg-primary/10 text-primary border-primary/30 font-medium',
     },
     teacher: {
       label: 'Faculty Portal',
-      badgeClass:
-        'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 font-medium',
-      avatarBg: 'from-emerald-600 to-teal-600',
+      badgeClass: 'bg-primary/10 text-primary border-primary/30 font-medium',
     },
     student: {
       label: 'Student Portal',
-      badgeClass: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30 font-medium',
-      avatarBg: 'from-sky-600 to-blue-600',
+      badgeClass: 'bg-primary/10 text-primary border-primary/30 font-medium',
     },
     finance: {
       label: 'Finance Portal',
-      badgeClass:
-        'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 font-medium',
-      avatarBg: 'from-amber-600 to-orange-600',
+      badgeClass: 'bg-primary/10 text-primary border-primary/30 font-medium',
     },
   };
 
@@ -285,13 +275,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-slate-200/70 px-4 dark:border-zinc-800/80">
           <NavLink to={`/${role}/dashboard`} className="group flex items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white shadow-md shadow-indigo-500/20 transition-transform duration-200 group-hover:scale-105">
-              <School className="h-5 w-5" />
+            <div className="bg-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white shadow-md transition-transform duration-200 group-hover:scale-105">
+              <PiBuildings className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="truncate text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-                  Gyan Deep BVM
+                  Gyan Deep
                 </span>
                 <Badge variant="outline" className="h-4 px-1 py-0 text-[9px] font-medium">
                   ERP
@@ -325,9 +315,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                   <NavLink
                     key={item.href}
                     to={item.href}
-                    className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150 ${
+                    className={`group flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-all duration-150 ${
                       isActive
-                        ? 'bg-indigo-50 font-semibold text-indigo-600 shadow-xs dark:bg-indigo-950/50 dark:text-indigo-300'
+                        ? 'bg-primary/10 text-primary font-semibold shadow-xs'
                         : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100'
                     }`}
                   >
@@ -335,7 +325,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                       <Icon
                         className={`h-4 w-4 transition-colors ${
                           isActive
-                            ? 'text-indigo-600 dark:text-indigo-400'
+                            ? 'text-primary'
                             : 'text-slate-400 group-hover:text-slate-700 dark:text-zinc-500 dark:group-hover:text-zinc-300'
                         }`}
                       />
@@ -344,7 +334,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                     {item.badge && (
                       <Badge
                         variant="secondary"
-                        className="h-4.5 bg-indigo-100 px-1.5 text-[10px] text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
+                        className="bg-primary/10 text-primary h-4.5 px-1.5 text-[10px]"
                       >
                         {item.badge}
                       </Badge>
@@ -360,9 +350,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
         <div className="border-t border-slate-200/70 bg-slate-50/50 p-3 dark:border-zinc-800/80 dark:bg-zinc-900/40">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div
-                className={`h-8 w-8 rounded-full bg-linear-to-tr ${currentRoleConfig.avatarBg} flex items-center justify-center text-xs font-bold text-white shadow-xs`}
-              >
+              <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white shadow-xs">
                 {role.charAt(0).toUpperCase()}
               </div>
               <div className="flex flex-col">
@@ -379,7 +367,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
               onClick={handleLogout}
               title="Sign out"
             >
-              <LogOut className="h-3.5 w-3.5" />
+              <PiSignOut className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
@@ -399,11 +387,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="group flex items-center gap-2"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white shadow-xs transition-transform group-hover:scale-105">
-                  <School className="h-4 w-4" />
+                <div className="bg-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-md font-bold text-white shadow-xs transition-transform group-hover:scale-105">
+                  <PiBuildings className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs leading-tight font-bold">Gyan Deep BVM</span>
+                  <span className="text-xs leading-tight font-bold">Gyan Deep</span>
                   <span className="text-muted-foreground text-[9px]">Baal Vikas Vidya Mandir</span>
                 </div>
               </NavLink>
@@ -413,7 +401,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                 className="h-8 w-8"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <X className="h-4 w-4" />
+                <PiX className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
@@ -429,9 +417,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                         key={item.href}
                         to={item.href}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                        className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
                       >
-                        <Icon className="h-4 w-4 text-indigo-500" />
+                        <Icon className="text-primary h-4 w-4" />
                         <span>{item.title}</span>
                       </NavLink>
                     );
@@ -454,7 +442,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
               className="h-9 w-9 text-slate-600 lg:hidden dark:text-zinc-400"
               onClick={() => setIsMobileMenuOpen(true)}
             >
-              <Menu className="h-5 w-5" />
+              <PiList className="h-5 w-5" />
             </Button>
 
             {/* Role Badge */}
@@ -470,9 +458,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
               onClick={() => setIsCommandOpen(true)}
               className="text-muted-foreground hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-100/80 px-3 py-1.5 text-xs transition-colors hover:bg-slate-200/70 md:flex dark:border-zinc-700 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/60"
             >
-              <Search className="h-3.5 w-3.5" />
+              <PiMagnifyingGlass className="h-3.5 w-3.5" />
               <span>Search modules, commands...</span>
-              <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-2xs dark:border-zinc-700 dark:bg-zinc-900">
+              <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-2xs dark:border-zinc-700 dark:bg-zinc-900">
                 ⌘K
               </kbd>
             </button>
@@ -487,28 +475,16 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
               className="h-8 w-8 text-slate-600 md:hidden dark:text-zinc-400"
               onClick={() => setIsCommandOpen(true)}
             >
-              <Search className="h-4 w-4" />
+              <PiMagnifyingGlass className="h-4 w-4" />
             </Button>
 
             {/* Theme Toggle Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8.5 w-8.5 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-              title="Toggle Theme"
-            >
-              {resolvedTheme === 'dark' ? (
-                <Sun className="h-4 w-4 text-amber-400 transition-transform hover:rotate-45" />
-              ) : (
-                <Moon className="h-4 w-4 text-slate-600 transition-transform hover:-rotate-12" />
-              )}
-            </Button>
+            <ThemeToggle className="h-8.5 w-8.5 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100" />
 
             {/* Notifications Popover */}
             <Popover>
               <PopoverTrigger className="relative flex h-8.5 w-8.5 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100">
-                <Bell className="h-4 w-4" />
+                <PiBell className="h-4 w-4" />
                 {unreadCount > 0 && (
                   <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-zinc-900" />
                 )}
@@ -528,7 +504,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllNotificationsRead}
-                      className="text-[11px] text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="text-primary text-[11px] hover:underline"
                     >
                       Mark all read
                     </button>
@@ -540,17 +516,17 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                       key={n.id}
                       className={`p-3 text-xs transition-colors ${
                         n.unread
-                          ? 'bg-indigo-50/40 dark:bg-indigo-950/20'
+                          ? 'bg-primary/5 dark:bg-primary/10'
                           : 'hover:bg-slate-50 dark:hover:bg-zinc-800/40'
                       }`}
                     >
                       <div className="flex items-start gap-2">
                         {n.type === 'success' ? (
-                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                          <PiCheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
                         ) : n.type === 'warning' ? (
-                          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                          <PiWarningCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                         ) : (
-                          <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+                          <PiInfo className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
                         )}
                         <div className="flex-1 space-y-0.5">
                           <p className="font-medium text-slate-800 dark:text-zinc-200">{n.title}</p>
@@ -567,12 +543,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
             {/* User Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 rounded-full py-1 pr-2 pl-1 transition-colors hover:bg-slate-100 focus:outline-hidden dark:hover:bg-zinc-800">
-                <div
-                  className={`h-7 w-7 rounded-full bg-linear-to-tr ${currentRoleConfig.avatarBg} flex items-center justify-center text-xs font-bold text-white shadow-xs`}
-                >
+                <div className="bg-primary flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white shadow-xs">
                   {role.charAt(0).toUpperCase()}
                 </div>
-                <ChevronDown className="text-muted-foreground hidden h-3 w-3 sm:block" />
+                <PiCaretDown className="text-muted-foreground hidden h-3 w-3 sm:block" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
@@ -587,15 +561,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate(profileRoute[role])}>
-                  <UserCircle2 className="mr-2 h-3.5 w-3.5 text-slate-500" />
+                  <PiUserCircle className="mr-2 h-3.5 w-3.5 text-slate-500" />
                   <span className="text-xs">My Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/auth/change-password')}>
-                  <KeyRound className="mr-2 h-3.5 w-3.5 text-slate-500" />
+                  <PiKey className="mr-2 h-3.5 w-3.5 text-slate-500" />
                   <span className="text-xs">Change Password</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/')}>
-                  <School className="mr-2 h-3.5 w-3.5 text-indigo-500" />
+                  <PiBuildings className="text-primary mr-2 h-3.5 w-3.5" />
                   <span className="text-xs">Public Website</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -603,7 +577,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                   onClick={handleLogout}
                   className="text-rose-600 dark:text-rose-400"
                 >
-                  <LogOut className="mr-2 h-3.5 w-3.5" />
+                  <PiSignOut className="mr-2 h-3.5 w-3.5" />
                   <span className="text-xs">Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

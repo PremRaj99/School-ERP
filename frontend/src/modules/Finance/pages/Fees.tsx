@@ -26,7 +26,7 @@ import {
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { Plus, Sparkles, Trash2 } from 'lucide-react';
+import { PiPlus, PiSparkle, PiTrash } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const STATUS_OPTIONS: { value: TxnStatus; label: string }[] = [
@@ -183,7 +183,7 @@ export const FinanceFees: React.FC = () => {
           }}
           title="Delete"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <PiTrash className="h-3.5 w-3.5" />
         </Button>
       ),
     },
@@ -208,9 +208,9 @@ export const FinanceFees: React.FC = () => {
             reset(emptyFeeDefaults);
             setIsCollectOpen(true);
           }}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <PiPlus className="h-3.5 w-3.5" />
           <span>Collect Fee</span>
         </Button>
       </div>
@@ -233,8 +233,8 @@ export const FinanceFees: React.FC = () => {
       <Dialog open={isCollectOpen} onOpenChange={setIsCollectOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="h-4 w-4" />
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiSparkle className="h-4 w-4" />
               <span>Accounts Desk</span>
             </div>
             <DialogTitle className="text-lg font-bold">Collect Student Term Fee</DialogTitle>
@@ -254,7 +254,7 @@ export const FinanceFees: React.FC = () => {
               <TextField control={control} name="title" label="Fee Title" placeholder="Term Fee" />
             </div>
 
-            <div className="space-y-2 rounded-xl bg-slate-50 p-3 dark:bg-zinc-800/50">
+            <div className="space-y-2 rounded-md bg-slate-50 p-3 dark:bg-zinc-800/50">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold">Fee Breakdown</span>
                 <Button
@@ -264,7 +264,7 @@ export const FinanceFees: React.FC = () => {
                   className="h-7 text-xs"
                   onClick={() => appendFeeRow({ feeType: '', amount: 0 })}
                 >
-                  <Plus className="mr-1 h-3 w-3" />
+                  <PiPlus className="mr-1 h-3 w-3" />
                   Add Row
                 </Button>
               </div>
@@ -295,7 +295,7 @@ export const FinanceFees: React.FC = () => {
                     disabled={feeRows.length === 1}
                     onClick={() => removeFeeRow(index)}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <PiTrash className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ))}
@@ -326,7 +326,7 @@ export const FinanceFees: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Delete Fee Record</span>
             </DialogTitle>
           </DialogHeader>

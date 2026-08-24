@@ -9,18 +9,19 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { CHART_COLORS, chartTooltipStyle } from '@/lib/charts';
 import { useSessionOptions } from '@/hooks/options/useAdminOptions';
-import { Users, GraduationCap, BookOpen, Layers, Wallet, UserCheck, BarChart3 } from 'lucide-react';
+import {
+  PiUsers,
+  PiGraduationCap,
+  PiBookOpen,
+  PiStack,
+  PiWallet,
+  PiUserCheck,
+  PiChartBar,
+} from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 
-const KPI_STYLES = {
-  indigo: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
-  emerald: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  violet: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
-  amber: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  teal: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
-  sky: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
-} as const;
+const KPI_TILE_STYLE = 'bg-primary/10 text-primary';
 
 export function AnalyticsOverviewTab() {
   const navigate = useNavigate();
@@ -65,45 +66,39 @@ export function AnalyticsOverviewTab() {
     {
       label: 'Students',
       value: data.kpis.totalStudents,
-      icon: GraduationCap,
-      color: 'indigo',
+      icon: PiGraduationCap,
       href: '/admin/students',
     },
     {
       label: 'Teachers',
       value: data.kpis.totalTeachers,
-      icon: Users,
-      color: 'emerald',
+      icon: PiUsers,
       href: '/admin/teachers',
     },
     {
       label: 'Classes',
       value: data.kpis.totalClasses,
-      icon: Layers,
-      color: 'violet',
+      icon: PiStack,
       href: '/admin/classes',
     },
     {
       label: 'Subjects',
       value: data.kpis.totalSubjects,
-      icon: BookOpen,
-      color: 'amber',
+      icon: PiBookOpen,
       href: '/admin/subjects',
     },
     {
       label: 'Fee Collection',
       value:
         data.kpis.collectionRatePct !== null ? `${Math.round(data.kpis.collectionRatePct)}%` : '—',
-      icon: Wallet,
-      color: 'teal',
+      icon: PiWallet,
       href: '/admin/finance',
     },
     {
       label: 'Attendance (Month)',
       value:
         data.kpis.attendanceRatePct !== null ? `${Math.round(data.kpis.attendanceRatePct)}%` : '—',
-      icon: UserCheck,
-      color: 'sky',
+      icon: PiUserCheck,
       href: '/admin/attendance',
     },
   ] as const;
@@ -132,10 +127,10 @@ export function AnalyticsOverviewTab() {
             <button
               key={kpi.label}
               onClick={() => navigate(kpi.href)}
-              className="rounded-lg border border-slate-200/80 bg-white/90 p-4 text-left shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
+              className="rounded-md border border-slate-200/80 bg-white/90 p-4 text-left shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
             >
               <div
-                className={`mb-2 flex h-8 w-8 items-center justify-center rounded-lg ${KPI_STYLES[kpi.color]}`}
+                className={`mb-2 flex h-8 w-8 items-center justify-center rounded-md ${KPI_TILE_STYLE}`}
               >
                 <Icon className="h-4 w-4" />
               </div>
@@ -246,9 +241,9 @@ export function AnalyticsOverviewTab() {
 
 export function EmptyChart() {
   return (
-    <Empty className="h-full rounded-none border-0">
+    <Empty className="h-full rounded-md border-0">
       <EmptyMedia variant="icon">
-        <BarChart3 className="size-5" />
+        <PiChartBar className="size-5" />
       </EmptyMedia>
       <EmptyTitle>No data yet</EmptyTitle>
       <EmptyDescription>Nothing to show here yet.</EmptyDescription>

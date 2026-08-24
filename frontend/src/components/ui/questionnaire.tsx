@@ -6,7 +6,7 @@ import { Questionnaire as QuestionnairePrimitive } from '@shadcn/react/questionn
 import { cn } from '@/lib/utils';
 import { type Button } from '@/components/ui/button';
 import { buttonVariants } from '@/components/ui/button-variants';
-import { CheckIcon } from 'lucide-react';
+import { PiCheck } from 'react-icons/pi';
 
 function Questionnaire({
   className,
@@ -101,7 +101,7 @@ function QuestionnaireChoice({
     <QuestionnairePrimitive.Choice
       data-slot="questionnaire-choice"
       className={cn(
-        'group/questionnaire-choice border-input hover:bg-muted/50 has-[>input:focus-visible]:border-ring has-[>input:focus-visible]:ring-ring/50 data-invalid:border-destructive data-checked:border-foreground/30 data-checked:bg-muted relative flex min-h-11 cursor-pointer items-start gap-2.5 rounded-none border bg-transparent px-3 py-2.5 text-start text-xs transition-colors outline-none select-none has-[>input:focus-visible]:ring-1',
+        'group/questionnaire-choice border-input hover:bg-muted/50 has-[>input:focus-visible]:border-ring has-[>input:focus-visible]:ring-ring/50 data-invalid:border-destructive data-checked:border-foreground/30 data-checked:bg-muted relative flex min-h-11 cursor-pointer items-start gap-2.5 rounded-md border bg-transparent px-3 py-2.5 text-start text-xs transition-colors outline-none select-none has-[>input:focus-visible]:ring-1',
         'data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50',
         className,
       )}
@@ -114,13 +114,13 @@ function QuestionnaireChoice({
       <span
         aria-hidden="true"
         data-slot="questionnaire-choice-indicator"
-        className="border-input group-data-checked/questionnaire-choice:border-primary group-data-checked/questionnaire-choice:bg-primary group-data-checked/questionnaire-choice:text-primary-foreground pointer-events-none relative flex size-4 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-none border group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 group-data-[type=radio]/questionnaire-choice:rounded-full"
+        className="border-input group-data-checked/questionnaire-choice:border-primary group-data-checked/questionnaire-choice:bg-primary group-data-checked/questionnaire-choice:text-primary-foreground pointer-events-none relative flex size-4 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-md border group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 group-data-[type=radio]/questionnaire-choice:rounded-full"
       >
         <span
           data-slot="questionnaire-choice-indicator-dot"
           className="bg-primary-foreground hidden size-2 rounded-full group-data-checked/questionnaire-choice:block group-data-[type=checkbox]/questionnaire-choice:hidden"
         />
-        <CheckIcon
+        <PiCheck
           data-slot="questionnaire-choice-indicator-check"
           className="hidden size-3.5 group-data-checked/questionnaire-choice:block group-data-[type=radio]/questionnaire-choice:hidden"
         />
@@ -133,7 +133,7 @@ function QuestionnaireChoice({
       </QuestionnairePrimitive.ChoiceLabel>
       <QuestionnairePrimitive.ChoiceShortcut
         data-slot="questionnaire-choice-shortcut"
-        className="border-input bg-background text-muted-foreground pointer-events-none ms-auto hidden size-4 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-none border font-mono text-[0.625rem] leading-none font-medium group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 group-data-[shortcut]/questionnaire-choice:inline-flex"
+        className="border-input bg-background text-muted-foreground pointer-events-none ms-auto hidden size-4 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-md border font-mono text-[0.625rem] leading-none font-medium group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 group-data-[shortcut]/questionnaire-choice:inline-flex"
       />
     </QuestionnairePrimitive.Choice>
   );
@@ -161,7 +161,7 @@ function QuestionnaireInput({
       <QuestionnairePrimitive.Input
         data-slot="questionnaire-input"
         className={cn(
-          'border-input focus-visible:border-ring focus-visible:ring-ring/50 disabled:bg-input/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 h-8 min-h-11 w-full min-w-0 rounded-none border bg-transparent px-2.5 py-1 text-xs transition-[color,box-shadow,background-color] outline-none focus-visible:ring-1 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-1 sm:min-h-0 md:text-xs',
+          'border-input focus-visible:border-ring focus-visible:ring-ring/50 disabled:bg-input/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 h-8 min-h-11 w-full min-w-0 rounded-md border bg-transparent px-2.5 py-1 text-xs transition-[color,box-shadow,background-color] outline-none focus-visible:ring-1 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-1 sm:min-h-0 md:text-xs',
           'selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground',
           className,
         )}

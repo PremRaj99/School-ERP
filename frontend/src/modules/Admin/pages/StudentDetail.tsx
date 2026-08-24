@@ -29,16 +29,16 @@ import { isoToDisplayDate } from '@/lib/date';
 import { MAX_PAGE_SIZE } from '@schoolerp/contracts';
 import { toast } from 'sonner';
 import {
-  ArrowLeft,
-  Pencil,
-  Trash2,
-  IdCard,
-  School,
-  QrCode,
-  Receipt,
-  UserRoundX,
-  KeyRound,
-} from 'lucide-react';
+  PiArrowLeft,
+  PiPencilSimple,
+  PiTrash,
+  PiIdentificationCard,
+  PiBuildings,
+  PiQrCode,
+  PiReceipt,
+  PiUserMinus,
+  PiKeyhole,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ResetPasswordDialog } from './ResetPasswordDialog';
 
@@ -121,7 +121,7 @@ export const AdminStudentDetail: React.FC = () => {
           className="text-xs"
           onClick={() => navigate('/admin/students')}
         >
-          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+          <PiArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           Back to Roster
         </Button>
         <ErrorState
@@ -146,7 +146,7 @@ export const AdminStudentDetail: React.FC = () => {
             className="mb-1 -ml-2 text-xs"
             onClick={() => navigate('/admin/students')}
           >
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+            <PiArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back to Roster
           </Button>
           <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ export const AdminStudentDetail: React.FC = () => {
             className="h-9 text-xs"
             onClick={() => navigate(`/admin/students?edit=${student.studentId}`)}
           >
-            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            <PiPencilSimple className="mr-1.5 h-3.5 w-3.5" />
             Edit Record
           </Button>
           <Button
@@ -180,7 +180,7 @@ export const AdminStudentDetail: React.FC = () => {
             disabled={resetPasswordMutation.isPending}
             onClick={() => resetPasswordMutation.mutate()}
           >
-            <KeyRound className="mr-1.5 h-3.5 w-3.5" />
+            <PiKeyhole className="mr-1.5 h-3.5 w-3.5" />
             {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
           </Button>
           <Button
@@ -189,53 +189,53 @@ export const AdminStudentDetail: React.FC = () => {
             className="h-9 text-xs"
             onClick={() => setDeleteConfirmOpen(true)}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <PiTrash className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Digital ID Card */}
-        <div className="space-y-4 rounded-2xl border border-indigo-400/30 bg-linear-to-br from-indigo-900 via-indigo-950 to-slate-900 p-5 text-white shadow-xl">
+        <div className="bg-primary space-y-4 rounded-md border border-white/20 p-5 text-white shadow-xl">
           <div className="flex items-center justify-between border-b border-white/15 pb-2">
             <div className="flex items-center gap-1.5">
-              <School className="h-4 w-4 text-indigo-300" />
-              <span className="text-xs font-bold tracking-tight">GYAN DEEP BVM</span>
+              <PiBuildings className="h-4 w-4 text-white/70" />
+              <span className="text-xs font-bold tracking-tight">GYAN DEEP</span>
             </div>
-            <Badge variant="outline" className="border-indigo-400/40 text-[9px] text-indigo-200">
+            <Badge variant="outline" className="border-white/40 text-[9px] text-white/80">
               STUDENT PASS
             </Badge>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-2 border-white/30 bg-linear-to-tr from-indigo-500 to-sky-400 text-xl font-black text-white shadow-md">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border-2 border-white/30 bg-white/15 text-xl font-black text-white shadow-md">
               {student.firstName.charAt(0)}
             </div>
             <div className="space-y-0.5">
               <p className="text-sm font-bold">
                 {student.firstName} {student.lastName || ''}
               </p>
-              <p className="text-xs text-indigo-200">
+              <p className="text-xs text-white/80">
                 Class {student.className}-{student.section} (Roll #{student.rollNo})
               </p>
-              <p className="text-[11px] text-indigo-300">DOB: {isoToDisplayDate(student.dob)}</p>
+              <p className="text-[11px] text-white/70">DOB: {isoToDisplayDate(student.dob)}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 border-t border-white/15 pt-2 text-[11px]">
             <div>
-              <span className="text-[10px] text-indigo-300">Guardian:</span>
+              <span className="text-[10px] text-white/70">Guardian:</span>
               <p className="font-semibold">{student.fatherName || 'Guardian Registered'}</p>
             </div>
             <div>
-              <span className="text-[10px] text-indigo-300">Emergency Phone:</span>
+              <span className="text-[10px] text-white/70">Emergency Phone:</span>
               <p className="font-semibold">{student.phone}</p>
             </div>
           </div>
 
           <div className="flex items-center justify-between pt-1">
-            <span className="font-mono text-[10px] text-indigo-300">VALID: {student.session}</span>
-            <QrCode className="h-6 w-6 text-white/80" />
+            <span className="font-mono text-[10px] text-white/70">VALID: {student.session}</span>
+            <PiQrCode className="h-6 w-6 text-white/80" />
           </div>
         </div>
 
@@ -243,7 +243,7 @@ export const AdminStudentDetail: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <IdCard className="h-4 w-4 text-indigo-500" />
+              <PiIdentificationCard className="text-primary h-4 w-4" />
               Registration Information
             </CardTitle>
             <CardDescription className="text-xs">
@@ -252,43 +252,43 @@ export const AdminStudentDetail: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-3 text-xs">
             <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+              <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
                 <span className="text-muted-foreground text-[10px]">Gender</span>
                 <p className="font-semibold">{student.gender ?? 'N/A'}</p>
               </div>
-              <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+              <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
                 <span className="text-muted-foreground text-[10px]">Father's Name</span>
                 <p className="font-semibold">{student.fatherName || 'N/A'}</p>
               </div>
-              <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+              <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
                 <span className="text-muted-foreground text-[10px]">Mother's Name</span>
                 <p className="font-semibold">{student.motherName || 'N/A'}</p>
               </div>
-              <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+              <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
                 <span className="text-muted-foreground text-[10px]">Father's Occupation</span>
                 <p className="font-semibold">{student.fatherOccupation || 'N/A'}</p>
               </div>
-              <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+              <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
                 <span className="text-muted-foreground text-[10px]">Mother's Occupation</span>
                 <p className="font-semibold">{student.motherOccupation || 'N/A'}</p>
               </div>
             </div>
-            <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+            <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
               <span className="text-muted-foreground text-[10px]">Residential Address</span>
               <p className="mt-0.5 font-semibold">
                 {student.address || 'Address provided during admission'}
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+              <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
                 <span className="text-muted-foreground text-[10px]">Student Aadhar</span>
                 <p className="font-mono font-semibold">{student.studentAadhar || '—'}</p>
               </div>
-              <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+              <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
                 <span className="text-muted-foreground text-[10px]">Father Aadhar</span>
                 <p className="font-mono font-semibold">{student.fatherAadhar || '—'}</p>
               </div>
-              <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+              <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
                 <span className="text-muted-foreground text-[10px]">Mother Aadhar</span>
                 <p className="font-mono font-semibold">{student.motherAadhar || '—'}</p>
               </div>
@@ -301,7 +301,7 @@ export const AdminStudentDetail: React.FC = () => {
       <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-            <Receipt className="h-4 w-4 text-indigo-500" />
+            <PiReceipt className="text-primary h-4 w-4" />
             Fee Payment History
           </CardTitle>
           <CardDescription className="text-xs">
@@ -317,9 +317,9 @@ export const AdminStudentDetail: React.FC = () => {
         ) : feesErrored ? (
           <div className="text-muted-foreground p-4 text-xs">Couldn't load fee history.</div>
         ) : sortedFees.length === 0 ? (
-          <Empty className="rounded-none border-0 border-t">
+          <Empty className="rounded-md border-0 border-t">
             <EmptyMedia variant="icon">
-              <Receipt className="size-5" />
+              <PiReceipt className="size-5" />
             </EmptyMedia>
             <EmptyTitle>No fee invoices yet</EmptyTitle>
             <EmptyDescription>No fee has been raised for this student.</EmptyDescription>
@@ -362,7 +362,7 @@ export const AdminStudentDetail: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <UserRoundX className="h-4 w-4" />
+              <PiUserMinus className="h-4 w-4" />
               <span>Confirm Student Record Deletion</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">

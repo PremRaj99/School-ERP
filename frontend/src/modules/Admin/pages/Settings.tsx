@@ -10,7 +10,7 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { toast } from 'sonner';
-import { KeyRound, LogOut, ShieldCheck, UserCircle2 } from 'lucide-react';
+import { PiKeyhole, PiSignOut, PiShieldCheck, PiUserCircle } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 export const AdminSettings: React.FC = () => {
@@ -61,12 +61,12 @@ export const AdminSettings: React.FC = () => {
         <Card className="max-w-xl border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-tr from-indigo-600 to-violet-600 text-lg font-bold text-white">
+              <div className="bg-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white">
                 {profile?.username.charAt(0).toUpperCase()}
               </div>
               <div>
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <UserCircle2 className="h-4 w-4 text-indigo-500" />
+                  <PiUserCircle className="text-primary h-4 w-4" />
                   {profile?.username}
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -78,9 +78,9 @@ export const AdminSettings: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center justify-between rounded-lg bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
+            <div className="flex items-center justify-between rounded-md bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                <PiShieldCheck className="h-4 w-4 text-emerald-500" />
                 <div>
                   <p className="font-semibold">Password</p>
                   <p className="text-muted-foreground text-[11px]">Update your login password.</p>
@@ -92,14 +92,14 @@ export const AdminSettings: React.FC = () => {
                 className="h-8 text-xs"
                 onClick={() => navigate('/auth/change-password')}
               >
-                <KeyRound className="mr-1.5 h-3.5 w-3.5" />
+                <PiKeyhole className="mr-1.5 h-3.5 w-3.5" />
                 Change Password
               </Button>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
+            <div className="flex items-center justify-between rounded-md bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
               <div className="flex items-center gap-2">
-                <LogOut className="h-4 w-4 text-rose-500" />
+                <PiSignOut className="h-4 w-4 text-rose-500" />
                 <div>
                   <p className="font-semibold">Sign Out</p>
                   <p className="text-muted-foreground text-[11px]">

@@ -10,7 +10,7 @@ import { teacherService } from '@/lib/services/teacher.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { isoToDisplayDate } from '@/lib/date';
-import { Award, ArrowRight, CalendarRange } from 'lucide-react';
+import { PiMedal, PiArrowRight, PiCalendarDots } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 export const TeacherExams: React.FC = () => {
@@ -36,7 +36,7 @@ export const TeacherExams: React.FC = () => {
             <h1 className="text-2xl font-extrabold tracking-tight">
               Faculty Examination Duty & Schedules
             </h1>
-            <Badge variant="outline" className="border-indigo-500/30 text-xs text-indigo-600">
+            <Badge variant="outline" className="border-primary/30 text-primary text-xs">
               Invigilation & Evaluation
             </Badge>
           </div>
@@ -47,9 +47,9 @@ export const TeacherExams: React.FC = () => {
 
         <Button
           onClick={() => navigate('/teacher/results')}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
-          <Award className="h-3.5 w-3.5" />
+          <PiMedal className="h-3.5 w-3.5" />
           <span>Open Grading Sheet</span>
         </Button>
       </div>
@@ -63,9 +63,9 @@ export const TeacherExams: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : (exams ?? []).length === 0 ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <Award className="size-5" />
+            <PiMedal className="size-5" />
           </EmptyMedia>
           <EmptyTitle>No exams assigned yet</EmptyTitle>
           <EmptyDescription>You have no subjects scheduled in any examination.</EmptyDescription>
@@ -97,7 +97,7 @@ export const TeacherExams: React.FC = () => {
                   {exam.title}
                 </CardTitle>
                 <CardDescription className="flex items-center gap-1 text-xs">
-                  <CalendarRange className="h-3 w-3 text-indigo-500" />
+                  <PiCalendarDots className="text-primary h-3 w-3" />
                   <span>
                     {isoToDisplayDate(exam.dateFrom)} to{' '}
                     {exam.dateTo ? isoToDisplayDate(exam.dateTo) : 'TBD'}
@@ -108,11 +108,11 @@ export const TeacherExams: React.FC = () => {
               <CardContent className="pt-0">
                 <Button
                   size="sm"
-                  className="h-8 w-full bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                  className="bg-primary hover:bg-primary/90 h-8 w-full text-xs text-white"
                   onClick={() => navigate(`/teacher/results?examId=${exam.id}`)}
                 >
                   <span>Evaluate & Enter Marks</span>
-                  <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                  <PiArrowRight className="ml-1 h-3.5 w-3.5" />
                 </Button>
               </CardContent>
             </Card>

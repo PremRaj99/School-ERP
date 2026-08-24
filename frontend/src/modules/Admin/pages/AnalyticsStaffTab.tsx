@@ -9,7 +9,7 @@ import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { CHART_COLORS, chartTooltipStyle } from '@/lib/charts';
-import { Users, Clock, CheckCircle2, BookOpen } from 'lucide-react';
+import { PiUsers, PiClock, PiCheckCircle, PiBookOpen } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import { EmptyChart } from './AnalyticsOverviewTab';
@@ -41,7 +41,7 @@ export function AnalyticsStaffTab() {
           type="month"
           value={month}
           onChange={(e) => setMonth(e.target.value)}
-          className="border-input h-9 rounded-none border bg-transparent px-2.5 text-xs font-semibold"
+          className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
         />
       </div>
 
@@ -56,7 +56,7 @@ export function AnalyticsStaffTab() {
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <PiCheckCircle className="h-4 w-4 text-emerald-500" />
                   Attendance Leaderboard
                 </CardTitle>
                 <CardDescription className="text-xs">Present % this month.</CardDescription>
@@ -87,7 +87,7 @@ export function AnalyticsStaffTab() {
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <Clock className="h-4 w-4 text-indigo-500" />
+                  <PiClock className="text-primary h-4 w-4" />
                   Weekly Workload
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -121,7 +121,7 @@ export function AnalyticsStaffTab() {
           <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                <Users className="h-4 w-4 text-emerald-500" />
+                <PiUsers className="h-4 w-4 text-emerald-500" />
                 Marking Completion by Teacher
               </CardTitle>
             </CardHeader>
@@ -155,7 +155,7 @@ export function AnalyticsStaffTab() {
           <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                <BookOpen className="h-4 w-4 text-amber-500" />
+                <PiBookOpen className="h-4 w-4 text-amber-500" />
                 Subject Coverage Gaps
               </CardTitle>
               <CardDescription className="text-xs">

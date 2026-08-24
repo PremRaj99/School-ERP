@@ -29,7 +29,7 @@ import {
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { CreditCard, Plus, Printer, Sparkles, Receipt, Trash2 } from 'lucide-react';
+import { PiCreditCard, PiPlus, PiPrinter, PiSparkle, PiReceipt, PiTrash } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const STATUS_OPTIONS: { value: TxnStatus; label: string }[] = [
@@ -205,9 +205,7 @@ export const AdminFinance: React.FC = () => {
       header: 'Student ID',
       enableSorting: false,
       cell: ({ row }) => (
-        <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
-          {row.original.studentId}
-        </span>
+        <span className="text-primary font-mono text-xs font-bold">{row.original.studentId}</span>
       ),
     },
     {
@@ -268,13 +266,13 @@ export const AdminFinance: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
+            className="text-primary hover:bg-primary/10 h-7 text-xs"
             onClick={(e) => {
               e.stopPropagation();
               openReceiptModal(row.original);
             }}
           >
-            <Printer className="mr-1 h-3.5 w-3.5" />
+            <PiPrinter className="mr-1 h-3.5 w-3.5" />
             <span>Print Receipt</span>
           </Button>
         ) : null,
@@ -365,9 +363,9 @@ export const AdminFinance: React.FC = () => {
 
         <Button
           onClick={() => setIsCollectFeeOpen(true)}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <PiPlus className="h-3.5 w-3.5" />
           <span>Collect Student Fee</span>
         </Button>
       </div>
@@ -396,7 +394,7 @@ export const AdminFinance: React.FC = () => {
             <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
               ₹{payrollDisbursed.toLocaleString()}
             </p>
-            <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+            <span className="text-primary text-[11px] font-semibold">
               {salariesResponse?.total ?? 0} records
             </span>
           </CardContent>
@@ -418,17 +416,17 @@ export const AdminFinance: React.FC = () => {
       </div>
 
       <Tabs defaultValue="studentFees" className="w-full">
-        <TabsList className="h-10 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
-          <TabsTrigger value="studentFees" className="rounded-lg px-4 text-xs font-semibold">
-            <Receipt className="mr-1.5 h-3.5 w-3.5 text-indigo-500" />
+        <TabsList className="h-10 rounded-md border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
+          <TabsTrigger value="studentFees" className="rounded-md px-4 text-xs font-semibold">
+            <PiReceipt className="mr-1.5 h-3.5 w-3.5" />
             <span>Student Fee Collection</span>
           </TabsTrigger>
-          <TabsTrigger value="teacherSalary" className="rounded-lg px-4 text-xs font-semibold">
-            <CreditCard className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+          <TabsTrigger value="teacherSalary" className="rounded-md px-4 text-xs font-semibold">
+            <PiCreditCard className="mr-1.5 h-3.5 w-3.5" />
             <span>Faculty Payroll Ledger</span>
           </TabsTrigger>
-          <TabsTrigger value="expenses" className="rounded-lg px-4 text-xs font-semibold">
-            <Receipt className="mr-1.5 h-3.5 w-3.5 text-amber-500" />
+          <TabsTrigger value="expenses" className="rounded-md px-4 text-xs font-semibold">
+            <PiReceipt className="mr-1.5 h-3.5 w-3.5" />
             <span>Expenses</span>
           </TabsTrigger>
         </TabsList>
@@ -457,7 +455,7 @@ export const AdminFinance: React.FC = () => {
                       className="mt-1 text-xs"
                       onClick={() => setIsCollectFeeOpen(true)}
                     >
-                      <Plus className="mr-1 h-3.5 w-3.5" />
+                      <PiPlus className="mr-1 h-3.5 w-3.5" />
                       Collect Student Fee
                     </Button>
                   )
@@ -569,8 +567,8 @@ export const AdminFinance: React.FC = () => {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="h-4 w-4" />
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiSparkle className="h-4 w-4" />
               <span>Accounts Desk</span>
             </div>
             <DialogTitle className="text-lg font-bold">Collect Student Term Fee</DialogTitle>
@@ -591,7 +589,7 @@ export const AdminFinance: React.FC = () => {
               <TextField control={control} name="title" label="Fee Title" placeholder="Term Fee" />
             </div>
 
-            <div className="space-y-2 rounded-xl bg-slate-50 p-3 dark:bg-zinc-800/50">
+            <div className="space-y-2 rounded-md bg-slate-50 p-3 dark:bg-zinc-800/50">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold">Fee Breakdown</span>
                 <Button
@@ -601,7 +599,7 @@ export const AdminFinance: React.FC = () => {
                   className="h-7 text-xs"
                   onClick={() => appendFeeRow({ feeType: '', amount: 0 })}
                 >
-                  <Plus className="mr-1 h-3 w-3" />
+                  <PiPlus className="mr-1 h-3 w-3" />
                   Add Row
                 </Button>
               </div>
@@ -633,7 +631,7 @@ export const AdminFinance: React.FC = () => {
                     disabled={feeRows.length === 1}
                     onClick={() => removeFeeRow(index)}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <PiTrash className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ))}
@@ -656,7 +654,7 @@ export const AdminFinance: React.FC = () => {
               <Button
                 type="submit"
                 disabled={collectFeeMutation.isPending}
-                className="h-9 bg-emerald-600 text-xs text-white hover:bg-emerald-700"
+                className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
               >
                 {collectFeeMutation.isPending ? 'Processing...' : 'Confirm Payment & Receipt'}
               </Button>
@@ -670,7 +668,7 @@ export const AdminFinance: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           {selectedReceipt && (
             <div className="space-y-4 pt-2">
-              <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-xs dark:border-zinc-700 dark:bg-zinc-800/60">
+              <div className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-5 text-xs dark:border-zinc-700 dark:bg-zinc-800/60">
                 <div className="flex items-center justify-between border-b pb-3">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
@@ -723,10 +721,10 @@ export const AdminFinance: React.FC = () => {
 
               <div className="flex gap-2">
                 <Button
-                  className="w-full bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                  className="bg-primary hover:bg-primary/90 w-full text-xs text-white"
                   onClick={() => toast.success('Sending receipt to printer...')}
                 >
-                  <Printer className="mr-1.5 h-3.5 w-3.5" />
+                  <PiPrinter className="mr-1.5 h-3.5 w-3.5" />
                   <span>Print Formal Receipt</span>
                 </Button>
               </div>

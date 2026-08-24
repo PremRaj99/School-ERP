@@ -1,7 +1,7 @@
 import { Accordion as AccordionPrimitive } from '@base-ui/react/accordion';
 
 import { cn } from '@/lib/utils';
-import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
+import { PiCaretDown, PiCaretUp } from 'react-icons/pi';
 
 function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
   return (
@@ -29,17 +29,17 @@ function AccordionTrigger({ className, children, ...props }: AccordionPrimitive.
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          'group/accordion-trigger focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:after:border-ring **:data-[slot=accordion-trigger-icon]:text-muted-foreground relative flex flex-1 items-start justify-between rounded-none border border-transparent py-2.5 text-left text-xs font-medium transition-all outline-none hover:underline focus-visible:ring-1 aria-disabled:pointer-events-none aria-disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4',
+          'group/accordion-trigger focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:after:border-ring **:data-[slot=accordion-trigger-icon]:text-muted-foreground relative flex flex-1 items-start justify-between rounded-md border border-transparent py-2.5 text-left text-xs font-medium transition-all outline-none hover:underline focus-visible:ring-1 aria-disabled:pointer-events-none aria-disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4',
           className,
         )}
         {...props}
       >
         {children}
-        <ChevronDownIcon
+        <PiCaretDown
           data-slot="accordion-trigger-icon"
           className="pointer-events-none shrink-0 group-aria-expanded/accordion-trigger:hidden"
         />
-        <ChevronUpIcon
+        <PiCaretUp
           data-slot="accordion-trigger-icon"
           className="pointer-events-none hidden shrink-0 group-aria-expanded/accordion-trigger:inline"
         />

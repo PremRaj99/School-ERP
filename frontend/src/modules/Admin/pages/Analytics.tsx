@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { BarChart3, LayoutGrid, UserCheck, Award, Wallet, Users } from 'lucide-react';
+import { PiChartBar, PiSquaresFour, PiUserCheck, PiMedal, PiWallet, PiUsers } from 'react-icons/pi';
 import { AnalyticsOverviewTab } from './AnalyticsOverviewTab';
 import { AnalyticsAttendanceTab } from './AnalyticsAttendanceTab';
 import { AnalyticsAcademicsTab } from './AnalyticsAcademicsTab';
@@ -15,8 +15,8 @@ export const AdminAnalytics: React.FC = () => {
       <div className="border-b border-slate-200/80 pb-2 dark:border-zinc-800">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-extrabold tracking-tight">Analytics</h1>
-          <Badge variant="outline" className="border-indigo-500/30 text-xs text-indigo-600">
-            <BarChart3 className="mr-1 h-3 w-3" />
+          <Badge variant="outline" className="border-primary/30 text-primary text-xs">
+            <PiChartBar className="mr-1 h-3 w-3" />
             School-wide Insights
           </Badge>
         </div>
@@ -26,25 +26,25 @@ export const AdminAnalytics: React.FC = () => {
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList className="h-10 flex-wrap rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
-          <TabsTrigger value="overview" className="rounded-lg px-3 text-xs font-semibold">
-            <LayoutGrid className="mr-1.5 h-3.5 w-3.5 text-indigo-500" />
+        <TabsList className="h-10 flex-wrap rounded-md border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
+          <TabsTrigger value="overview" className="rounded-md px-3 text-xs font-semibold">
+            <PiSquaresFour className="mr-1.5 h-3.5 w-3.5" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="attendance" className="rounded-lg px-3 text-xs font-semibold">
-            <UserCheck className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+          <TabsTrigger value="attendance" className="rounded-md px-3 text-xs font-semibold">
+            <PiUserCheck className="mr-1.5 h-3.5 w-3.5" />
             Attendance
           </TabsTrigger>
-          <TabsTrigger value="academics" className="rounded-lg px-3 text-xs font-semibold">
-            <Award className="mr-1.5 h-3.5 w-3.5 text-amber-500" />
+          <TabsTrigger value="academics" className="rounded-md px-3 text-xs font-semibold">
+            <PiMedal className="mr-1.5 h-3.5 w-3.5" />
             Academics
           </TabsTrigger>
-          <TabsTrigger value="finance" className="rounded-lg px-3 text-xs font-semibold">
-            <Wallet className="mr-1.5 h-3.5 w-3.5 text-teal-500" />
+          <TabsTrigger value="finance" className="rounded-md px-3 text-xs font-semibold">
+            <PiWallet className="mr-1.5 h-3.5 w-3.5" />
             Finance
           </TabsTrigger>
-          <TabsTrigger value="staff" className="rounded-lg px-3 text-xs font-semibold">
-            <Users className="mr-1.5 h-3.5 w-3.5 text-violet-500" />
+          <TabsTrigger value="staff" className="rounded-md px-3 text-xs font-semibold">
+            <PiUsers className="mr-1.5 h-3.5 w-3.5" />
             Staff
           </TabsTrigger>
         </TabsList>

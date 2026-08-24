@@ -28,7 +28,15 @@ import { qk } from '@/lib/query-keys';
 import { CreateTeacherBody, type TeacherRecord } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { toast } from 'sonner';
-import { UserPlus, Phone, Trash2, Eye, Pencil, Sparkles, Users } from 'lucide-react';
+import {
+  PiUserPlus,
+  PiPhone,
+  PiTrash,
+  PiEye,
+  PiPencilSimple,
+  PiSparkle,
+  PiUsers,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
@@ -245,7 +253,7 @@ export const AdminTeachers: React.FC = () => {
       accessorKey: 'teacherId',
       header: 'Teacher ID',
       cell: ({ row }) => (
-        <span className="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+        <span className="text-primary font-mono text-xs font-semibold">
           {row.original.teacherId}
         </span>
       ),
@@ -258,7 +266,7 @@ export const AdminTeachers: React.FC = () => {
         const t = row.original;
         return (
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-linear-to-tr from-emerald-600 to-teal-500 text-[10px] font-bold text-white">
+            <div className="bg-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white">
               {t.firstName.charAt(0)}
             </div>
             <span className="text-xs font-medium">
@@ -301,7 +309,7 @@ export const AdminTeachers: React.FC = () => {
       enableSorting: false,
       cell: ({ row }) => (
         <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
-          <Phone className="h-3 w-3 text-emerald-500" />
+          <PiPhone className="h-3 w-3 text-emerald-500" />
           <span>{row.original.phone}</span>
         </div>
       ),
@@ -327,14 +335,14 @@ export const AdminTeachers: React.FC = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
+              className="text-primary hover:bg-primary/10 h-7 w-7"
               onClick={(e) => {
                 e.stopPropagation();
                 viewTeacherDetails(teacher);
               }}
               title="View Profile"
             >
-              <Eye className="h-3.5 w-3.5" />
+              <PiEye className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
@@ -346,7 +354,7 @@ export const AdminTeachers: React.FC = () => {
               }}
               title="Edit Record"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <PiPencilSimple className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
@@ -358,7 +366,7 @@ export const AdminTeachers: React.FC = () => {
               }}
               title="Delete Record"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <PiTrash className="h-3.5 w-3.5" />
             </Button>
           </div>
         );
@@ -384,9 +392,9 @@ export const AdminTeachers: React.FC = () => {
 
         <Button
           onClick={openCreateForm}
-          className="h-9 gap-1.5 bg-emerald-600 text-xs text-white shadow-sm hover:bg-emerald-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
-          <UserPlus className="h-3.5 w-3.5" />
+          <PiUserPlus className="h-3.5 w-3.5" />
           <span>Add Faculty</span>
         </Button>
       </div>
@@ -404,7 +412,7 @@ export const AdminTeachers: React.FC = () => {
             emptyDescription="Add the first teacher to get started."
             emptyAction={
               <Button size="sm" className="mt-1 text-xs" onClick={openCreateForm}>
-                <UserPlus className="mr-1 h-3.5 w-3.5" />
+                <PiUserPlus className="mr-1 h-3.5 w-3.5" />
                 Add Faculty
               </Button>
             }
@@ -453,7 +461,7 @@ export const AdminTeachers: React.FC = () => {
                   className="h-8 text-xs"
                   onClick={() => setBulkDeleteTargets(selected)}
                 >
-                  <Trash2 className="mr-1 h-3.5 w-3.5" />
+                  <PiTrash className="mr-1 h-3.5 w-3.5" />
                   Delete Selected
                 </Button>
                 <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={clear}>
@@ -470,8 +478,8 @@ export const AdminTeachers: React.FC = () => {
         <SheetContent className="overflow-y-auto sm:max-w-lg">
           <div className="space-y-4 px-4 pt-4">
             <SheetHeader>
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                <Sparkles className="h-4 w-4" />
+              <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+                <PiSparkle className="h-4 w-4" />
                 <span>Faculty Registry</span>
               </div>
               <SheetTitle className="text-lg font-bold">
@@ -563,7 +571,7 @@ export const AdminTeachers: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="h-9 bg-emerald-600 text-xs text-white hover:bg-emerald-700"
+                  className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
                 >
                   {createMutation.isPending || updateMutation.isPending
                     ? 'Saving...'
@@ -582,7 +590,7 @@ export const AdminTeachers: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Confirm Faculty Removal</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">
@@ -616,7 +624,7 @@ export const AdminTeachers: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Users className="h-4 w-4" />
+              <PiUsers className="h-4 w-4" />
               <span>Confirm Bulk Deletion</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">

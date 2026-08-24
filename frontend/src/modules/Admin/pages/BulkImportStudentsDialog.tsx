@@ -15,7 +15,7 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import type { BulkImportStudentsBody, BulkImportStudentsResponse } from '@schoolerp/contracts';
 import { toast } from 'sonner';
-import { UploadCloud, FileDown, CheckCircle2, XCircle } from 'lucide-react';
+import { PiCloudArrowUp, PiFileArrowDown, PiCheckCircle, PiXCircle } from 'react-icons/pi';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 /** One column per `CreateStudentBody` field the CSV is expected to carry — the header row must
@@ -185,12 +185,12 @@ export const BulkImportStudentsDialog: React.FC<{
             className="h-8 text-xs"
             onClick={handleDownloadTemplate}
           >
-            <FileDown className="mr-1.5 h-3.5 w-3.5" />
+            <PiFileArrowDown className="mr-1.5 h-3.5 w-3.5" />
             Download CSV Template
           </Button>
 
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-800/50 dark:hover:bg-zinc-800">
-            <UploadCloud className="h-6 w-6 text-indigo-500" />
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-slate-300 bg-slate-50 p-6 text-center hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-800/50 dark:hover:bg-zinc-800">
+            <PiCloudArrowUp className="text-primary h-6 w-6" />
             <span className="text-xs font-semibold">
               {fileName ?? 'Click to choose a CSV file'}
             </span>
@@ -210,7 +210,7 @@ export const BulkImportStudentsDialog: React.FC<{
           </label>
 
           {parseErrors.length > 0 && (
-            <div className="rounded-lg border border-rose-300/60 bg-rose-50 p-2.5 text-xs text-rose-700 dark:border-rose-800/50 dark:bg-rose-950/40 dark:text-rose-300">
+            <div className="rounded-md border border-rose-300/60 bg-rose-50 p-2.5 text-xs text-rose-700 dark:border-rose-800/50 dark:bg-rose-950/40 dark:text-rose-300">
               {parseErrors.join(' ')}
             </div>
           )}
@@ -225,18 +225,18 @@ export const BulkImportStudentsDialog: React.FC<{
             <div className="space-y-2">
               <div className="flex items-center gap-3 text-xs">
                 <span className="flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <PiCheckCircle className="h-3.5 w-3.5" />
                   {result.successCount} imported
                 </span>
                 {result.failureCount > 0 && (
                   <span className="flex items-center gap-1 font-semibold text-rose-700 dark:text-rose-400">
-                    <XCircle className="h-3.5 w-3.5" />
+                    <PiXCircle className="h-3.5 w-3.5" />
                     {result.failureCount} failed
                   </span>
                 )}
               </div>
               {result.failures.length > 0 && (
-                <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border p-2">
+                <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border p-2">
                   {result.failures.map((f) => (
                     <div key={f.row} className="flex items-start gap-2 text-[11px]">
                       <Badge variant="outline" className="shrink-0 text-[10px]">
@@ -265,7 +265,7 @@ export const BulkImportStudentsDialog: React.FC<{
               type="button"
               disabled={!pendingPayload || pendingPayload.length === 0 || importMutation.isPending}
               onClick={() => pendingPayload && importMutation.mutate(pendingPayload)}
-              className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+              className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
             >
               {importMutation.isPending ? 'Importing...' : 'Import Students'}
             </Button>

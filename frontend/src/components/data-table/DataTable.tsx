@@ -11,7 +11,15 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowDown, ArrowUp, ArrowUpDown, Download, SlidersHorizontal } from 'lucide-react';
+import {
+  PiArrowDown,
+  PiArrowUp,
+  PiArrowsDownUp,
+  PiDownload,
+  PiSlidersHorizontal,
+  PiMagnifyingGlass,
+  PiTray,
+} from 'react-icons/pi';
 import {
   Table,
   TableBody,
@@ -32,7 +40,6 @@ import {
 import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { downloadCsv } from './csv';
-import { SearchIcon, Inbox } from 'lucide-react';
 
 export interface DataTableProps<TData> {
   columns: ColumnDef<TData, unknown>[];
@@ -186,7 +193,7 @@ export function DataTable<TData>({
     return (
       <div className="space-y-2">
         <Skeleton className="h-9 w-full max-w-sm" />
-        <div className="space-y-1.5 rounded-none border">
+        <div className="space-y-1.5 rounded-md border">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-full" />
           ))}
@@ -200,9 +207,9 @@ export function DataTable<TData>({
   // when the server says there are genuinely zero matching rows.
   if (isManual ? manual.totalRows === 0 : data.length === 0) {
     return (
-      <Empty className="rounded-none border">
+      <Empty className="rounded-md border">
         <EmptyMedia variant="icon">
-          <Inbox className="size-5" />
+          <PiTray className="size-5" />
         </EmptyMedia>
         <EmptyTitle>{emptyTitle}</EmptyTitle>
         <EmptyDescription>{emptyDescription}</EmptyDescription>
@@ -220,7 +227,7 @@ export function DataTable<TData>({
           </div>
         ) : (
           <div className="relative max-w-sm flex-1">
-            <SearchIcon className="text-muted-foreground absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
+            <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
             <Input
               placeholder={searchPlaceholder}
               value={isManual ? manual.search : globalFilter}
@@ -238,7 +245,7 @@ export function DataTable<TData>({
             <DropdownMenuTrigger
               render={
                 <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs">
-                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  <PiSlidersHorizontal className="h-3.5 w-3.5" />
                   <span>Columns</span>
                 </Button>
               }
@@ -267,14 +274,14 @@ export function DataTable<TData>({
               className="h-9 gap-1.5 text-xs"
               onClick={handleExport}
             >
-              <Download className="h-3.5 w-3.5" />
+              <PiDownload className="h-3.5 w-3.5" />
               <span>Export</span>
             </Button>
           )}
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-none border">
+      <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -289,10 +296,10 @@ export function DataTable<TData>({
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {{
-                          asc: <ArrowUp className="h-3 w-3" />,
-                          desc: <ArrowDown className="h-3 w-3" />,
+                          asc: <PiArrowUp className="h-3 w-3" />,
+                          desc: <PiArrowDown className="h-3 w-3" />,
                         }[header.column.getIsSorted() as string] ?? (
-                          <ArrowUpDown className="text-muted-foreground/50 h-3 w-3" />
+                          <PiArrowsDownUp className="text-muted-foreground/50 h-3 w-3" />
                         )}
                       </button>
                     ) : (

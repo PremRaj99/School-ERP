@@ -22,16 +22,16 @@ import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
 import {
-  BookOpen,
-  Plus,
-  Trash2,
-  Edit2,
-  Search,
-  Sparkles,
-  LayoutList,
-  GitBranch,
-  School,
-} from 'lucide-react';
+  PiBookOpen,
+  PiPlus,
+  PiTrash,
+  PiPencilSimpleLine,
+  PiMagnifyingGlass,
+  PiSparkle,
+  PiListBullets,
+  PiGitBranch,
+  PiChalkboard,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const AdminSubjects: React.FC = () => {
@@ -146,21 +146,21 @@ export const AdminSubjects: React.FC = () => {
             setFormData({ subjectName: '', subjectCode: '' });
             setIsCreateOpen(true);
           }}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <PiPlus className="h-3.5 w-3.5" />
           <span>Add Subject</span>
         </Button>
       </div>
 
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="h-10 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
-          <TabsTrigger value="all" className="rounded-lg px-4 text-xs font-semibold">
-            <LayoutList className="mr-1.5 h-3.5 w-3.5 text-indigo-500" />
+        <TabsList className="h-10 rounded-md border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
+          <TabsTrigger value="all" className="rounded-md px-4 text-xs font-semibold">
+            <PiListBullets className="mr-1.5 h-3.5 w-3.5" />
             <span>All Subjects</span>
           </TabsTrigger>
-          <TabsTrigger value="byClass" className="rounded-lg px-4 text-xs font-semibold">
-            <GitBranch className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+          <TabsTrigger value="byClass" className="rounded-md px-4 text-xs font-semibold">
+            <PiGitBranch className="mr-1.5 h-3.5 w-3.5" />
             <span>Assigned by Class</span>
           </TabsTrigger>
         </TabsList>
@@ -170,7 +170,7 @@ export const AdminSubjects: React.FC = () => {
           <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardContent className="p-4">
               <div className="relative w-full">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+                <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
                 <Input
                   placeholder="Search by subject name or code (e.g. MATH101, Physics)..."
                   value={searchTerm}
@@ -191,9 +191,9 @@ export const AdminSubjects: React.FC = () => {
           ) : isError ? (
             <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
           ) : filteredSubjects.length === 0 ? (
-            <Empty className="rounded-none border">
+            <Empty className="rounded-md border">
               <EmptyMedia variant="icon">
-                <BookOpen className="size-5" />
+                <PiBookOpen className="size-5" />
               </EmptyMedia>
               <EmptyTitle>No subjects yet</EmptyTitle>
               <EmptyDescription>
@@ -210,7 +210,7 @@ export const AdminSubjects: React.FC = () => {
                     setIsCreateOpen(true);
                   }}
                 >
-                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  <PiPlus className="mr-1 h-3.5 w-3.5" />
                   Add Subject
                 </Button>
               )}
@@ -226,12 +226,12 @@ export const AdminSubjects: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <Badge
                         variant="secondary"
-                        className="bg-indigo-50 font-mono text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300"
+                        className="bg-muted text-muted-foreground font-mono text-[10px] font-bold"
                       >
                         {sub.subjectCode}
                       </Badge>
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-indigo-600 dark:bg-zinc-800 dark:text-indigo-400">
-                        <BookOpen className="h-3.5 w-3.5" />
+                      <div className="bg-primary/10 text-primary flex h-7 w-7 items-center justify-center rounded-md">
+                        <PiBookOpen className="h-3.5 w-3.5" />
                       </div>
                     </div>
                     <CardTitle className="mt-2 text-base leading-snug font-bold text-slate-900 dark:text-white">
@@ -244,11 +244,11 @@ export const AdminSubjects: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
+                        className="text-primary hover:bg-primary/10 h-7 w-7"
                         onClick={() => setEditingSubject(sub)}
                         title="Edit Subject"
                       >
-                        <Edit2 className="h-3.5 w-3.5" />
+                        <PiPencilSimpleLine className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -257,7 +257,7 @@ export const AdminSubjects: React.FC = () => {
                         onClick={() => setDeleteConfirmCode(sub.subjectCode)}
                         title="Delete Subject"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <PiTrash className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </CardContent>
@@ -285,7 +285,7 @@ export const AdminSubjects: React.FC = () => {
               <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                    <School className="h-4 w-4 text-indigo-500" />
+                    <PiChalkboard className="text-primary h-4 w-4" />
                     Assigned to a Class
                   </CardTitle>
                 </CardHeader>
@@ -298,7 +298,7 @@ export const AdminSubjects: React.FC = () => {
                     groupedSubjects?.assignedSubjects.map((group) => (
                       <div
                         key={group.className}
-                        className="rounded-lg border border-slate-100 p-3 dark:border-zinc-800"
+                        className="rounded-md border border-slate-100 p-3 dark:border-zinc-800"
                       >
                         <Badge variant="secondary" className="mb-2 text-[10px] font-semibold">
                           Class {group.className}
@@ -310,7 +310,7 @@ export const AdminSubjects: React.FC = () => {
                               variant="outline"
                               className="text-[10px] font-medium"
                             >
-                              <BookOpen className="mr-1 h-2.5 w-2.5 text-indigo-500" />
+                              <PiBookOpen className="text-primary mr-1 h-2.5 w-2.5" />
                               {s.subjectName}
                             </Badge>
                           ))}
@@ -325,7 +325,7 @@ export const AdminSubjects: React.FC = () => {
               <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                    <BookOpen className="h-4 w-4 text-amber-500" />
+                    <PiBookOpen className="h-4 w-4 text-amber-500" />
                     Not Yet Assigned
                   </CardTitle>
                 </CardHeader>
@@ -358,8 +358,8 @@ export const AdminSubjects: React.FC = () => {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="h-4 w-4" />
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiSparkle className="h-4 w-4" />
               <span>Curriculum Registry</span>
             </div>
             <DialogTitle className="text-lg font-bold">Add New Course Subject</DialogTitle>
@@ -410,7 +410,7 @@ export const AdminSubjects: React.FC = () => {
               <Button
                 type="submit"
                 disabled={createMutation.isPending}
-                className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
               >
                 {createMutation.isPending ? 'Adding...' : 'Add Subject'}
               </Button>
@@ -459,7 +459,7 @@ export const AdminSubjects: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={updateMutation.isPending}
-                  className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                  className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
                 >
                   {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
@@ -474,7 +474,7 @@ export const AdminSubjects: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Confirm Subject Removal</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">

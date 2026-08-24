@@ -10,7 +10,7 @@ import { teacherService } from '@/lib/services/teacher.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import type { WeekDay } from '@schoolerp/contracts';
-import { CalendarDays, UserCheck, Award, BookOpen } from 'lucide-react';
+import { PiCalendarDots, PiUserCheck, PiMedal, PiBookOpen } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 const WEEKDAYS: WeekDay[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -104,8 +104,8 @@ export const TeacherTimetable: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold tracking-tight">My Weekly Timetable</h1>
-            <Badge variant="outline" className="border-emerald-500/30 text-xs text-emerald-600">
-              <CalendarDays className="mr-1 h-3 w-3" />
+            <Badge variant="outline" className="border-primary/30 text-primary text-xs">
+              <PiCalendarDots className="mr-1 h-3 w-3" />
               Teaching Schedule
             </Badge>
           </div>
@@ -117,9 +117,9 @@ export const TeacherTimetable: React.FC = () => {
 
       {/* Weekly Grid */}
       {grid.size === 0 ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <CalendarDays className="size-5" />
+            <PiCalendarDots className="size-5" />
           </EmptyMedia>
           <EmptyTitle>No periods scheduled</EmptyTitle>
           <EmptyDescription>You have no timetable slots assigned yet.</EmptyDescription>
@@ -134,9 +134,7 @@ export const TeacherTimetable: React.FC = () => {
                   <th
                     key={day}
                     className={`text-center text-[11px] font-bold ${
-                      day === TODAY_WEEKDAY
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-slate-500 dark:text-zinc-400'
+                      day === TODAY_WEEKDAY ? 'text-primary' : 'text-slate-500 dark:text-zinc-400'
                     }`}
                   >
                     {WEEKDAY_LABELS[day]}
@@ -158,21 +156,19 @@ export const TeacherTimetable: React.FC = () => {
                       <td key={day} className="p-0">
                         {cell ? (
                           <div
-                            className={`rounded-lg border p-2 text-center text-[10px] leading-tight ${
+                            className={`rounded-md border p-2 text-center text-[10px] leading-tight ${
                               isToday
-                                ? 'border-emerald-500/40 bg-emerald-50/70 dark:bg-emerald-950/30'
+                                ? 'border-primary/40 bg-primary/10'
                                 : 'border-slate-200/80 bg-slate-50/60 dark:border-zinc-800 dark:bg-zinc-800/40'
                             }`}
                           >
                             <div className="font-bold text-slate-900 dark:text-white">
                               {cell.className}-{cell.section}
                             </div>
-                            <div className="text-indigo-600 dark:text-indigo-400">
-                              {cell.subjectCode}
-                            </div>
+                            <div className="text-primary">{cell.subjectCode}</div>
                           </div>
                         ) : (
-                          <div className="h-11 rounded-lg border border-dashed border-slate-200/60 dark:border-zinc-800/60" />
+                          <div className="h-11 rounded-md border border-dashed border-slate-200/60 dark:border-zinc-800/60" />
                         )}
                       </td>
                     );
@@ -201,7 +197,7 @@ export const TeacherTimetable: React.FC = () => {
                     Class {cls.className}-{cls.section}
                   </CardTitle>
                   <CardDescription className="flex items-center gap-1 text-xs">
-                    <BookOpen className="h-3 w-3 text-indigo-500" />
+                    <PiBookOpen className="text-primary h-3 w-3" />
                     {Array.from(cls.subjects).join(', ')}
                   </CardDescription>
                 </CardHeader>
@@ -217,7 +213,7 @@ export const TeacherTimetable: React.FC = () => {
                       navigate(`/teacher/attendance?class=${cls.className}|${cls.section}`)
                     }
                   >
-                    <UserCheck className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+                    <PiUserCheck className="text-primary mr-1.5 h-3.5 w-3.5" />
                     Take Attendance
                   </Button>
                   <Button
@@ -226,7 +222,7 @@ export const TeacherTimetable: React.FC = () => {
                     className="h-8 w-full text-xs"
                     onClick={() => navigate('/teacher/exams')}
                   >
-                    <Award className="mr-1.5 h-3.5 w-3.5 text-indigo-500" />
+                    <PiMedal className="text-primary mr-1.5 h-3.5 w-3.5" />
                     Enter Marks
                   </Button>
                 </CardContent>

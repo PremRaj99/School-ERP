@@ -23,7 +23,17 @@ import { CreateClassBody, MAX_PAGE_SIZE, type ClassRecord } from '@schoolerp/con
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { Plus, Trash2, Pencil, Users, Sparkles, Search, LayoutGrid, Lock, Eye } from 'lucide-react';
+import {
+  PiPlus,
+  PiTrash,
+  PiPencilSimple,
+  PiUsers,
+  PiSparkle,
+  PiMagnifyingGlass,
+  PiSquaresFour,
+  PiLock,
+  PiEye,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const GRADE_OPTIONS = Array.from({ length: 12 }, (_, i) => {
@@ -167,9 +177,9 @@ export const AdminClasses: React.FC = () => {
             reset(emptyDefaults);
             setIsCreateOpen(true);
           }}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <PiPlus className="h-3.5 w-3.5" />
           <span>Add New Class Section</span>
         </Button>
       </div>
@@ -178,7 +188,7 @@ export const AdminClasses: React.FC = () => {
       <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardContent className="p-4">
           <div className="relative w-full">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+            <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
             <Input
               placeholder="Search class sections (e.g. Class 10-A, 2025-2026)..."
               value={searchTerm}
@@ -199,9 +209,9 @@ export const AdminClasses: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : filteredClasses.length === 0 ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <LayoutGrid className="size-5" />
+            <PiSquaresFour className="size-5" />
           </EmptyMedia>
           <EmptyTitle>No class sections yet</EmptyTitle>
           <EmptyDescription>
@@ -211,7 +221,7 @@ export const AdminClasses: React.FC = () => {
           </EmptyDescription>
           {!searchTerm && (
             <Button size="sm" className="mt-1 text-xs" onClick={() => setIsCreateOpen(true)}>
-              <Plus className="mr-1 h-3.5 w-3.5" />
+              <PiPlus className="mr-1 h-3.5 w-3.5" />
               Add Class Section
             </Button>
           )}
@@ -227,13 +237,13 @@ export const AdminClasses: React.FC = () => {
                 onClick={() => navigate(`/admin/classes/${classId}`)}
                 className="group relative cursor-pointer overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/90"
               >
-                <div className="h-2 w-full bg-linear-to-r from-indigo-500 to-violet-600" />
+                <div className="bg-primary h-2 w-full" />
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground font-mono text-xs">{cls.session}</span>
                     <Badge
                       variant="secondary"
-                      className="bg-indigo-50 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300"
+                      className="bg-muted text-muted-foreground text-[10px] font-semibold"
                     >
                       Sec {cls.section}
                     </Badge>
@@ -247,9 +257,9 @@ export const AdminClasses: React.FC = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2.5 text-xs dark:bg-zinc-800/50">
+                  <div className="flex items-center justify-between rounded-md bg-slate-50 p-2.5 text-xs dark:bg-zinc-800/50">
                     <div className="text-muted-foreground flex items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5 text-indigo-500" />
+                      <PiUsers className="text-primary h-3.5 w-3.5" />
                       <span>Enrolled Students</span>
                     </div>
                     <span className="font-bold text-slate-900 dark:text-zinc-100">
@@ -267,7 +277,7 @@ export const AdminClasses: React.FC = () => {
                         navigate(`/admin/classes/${classId}`);
                       }}
                     >
-                      <Eye className="mr-1 h-3.5 w-3.5" />
+                      <PiEye className="mr-1 h-3.5 w-3.5" />
                       <span>View</span>
                     </Button>
                     <Button
@@ -279,7 +289,7 @@ export const AdminClasses: React.FC = () => {
                         setEditingClass(cls);
                       }}
                     >
-                      <Pencil className="mr-1 h-3.5 w-3.5" />
+                      <PiPencilSimple className="mr-1 h-3.5 w-3.5" />
                       <span>Edit</span>
                     </Button>
                     <Button
@@ -295,7 +305,7 @@ export const AdminClasses: React.FC = () => {
                         });
                       }}
                     >
-                      <Trash2 className="mr-1 h-3.5 w-3.5" />
+                      <PiTrash className="mr-1 h-3.5 w-3.5" />
                       <span>Remove</span>
                     </Button>
                   </div>
@@ -310,8 +320,8 @@ export const AdminClasses: React.FC = () => {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="h-4 w-4" />
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiSparkle className="h-4 w-4" />
               <span>Curriculum Setup</span>
             </div>
             <DialogTitle className="text-lg font-bold">Create Class Section</DialogTitle>
@@ -349,7 +359,7 @@ export const AdminClasses: React.FC = () => {
               <Button
                 type="submit"
                 disabled={createMutation.isPending}
-                className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
               >
                 {createMutation.isPending ? 'Creating...' : 'Create Class'}
               </Button>
@@ -397,7 +407,7 @@ export const AdminClasses: React.FC = () => {
               <Button
                 type="submit"
                 disabled={updateMutation.isPending}
-                className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
               >
                 {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
@@ -411,7 +421,7 @@ export const AdminClasses: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Confirm Class Section Deletion</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">
@@ -422,8 +432,8 @@ export const AdminClasses: React.FC = () => {
           </DialogHeader>
 
           {deleteTargetStudentCount > 0 && (
-            <div className="flex items-start gap-2 rounded-lg border border-amber-300/60 bg-amber-50 p-2.5 text-[11px] text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
-              <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <div className="flex items-start gap-2 rounded-md border border-amber-300/60 bg-amber-50 p-2.5 text-[11px] text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
+              <PiLock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 {deleteTargetStudentCount} student{deleteTargetStudentCount === 1 ? ' is' : 's are'}{' '}
                 still enrolled in Class {deleteTarget?.className}-{deleteTarget?.section}. Transfer

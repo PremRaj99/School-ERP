@@ -29,17 +29,17 @@ import { isoToDisplayDate } from '@/lib/date';
 import { MAX_PAGE_SIZE } from '@schoolerp/contracts';
 import { toast } from 'sonner';
 import {
-  ArrowLeft,
-  Pencil,
-  Trash2,
-  Phone,
-  Calendar,
-  BookOpen,
-  Wallet,
-  CalendarCheck,
-  UserRoundX,
-  KeyRound,
-} from 'lucide-react';
+  PiArrowLeft,
+  PiPencilSimple,
+  PiTrash,
+  PiPhone,
+  PiCalendar,
+  PiBookOpen,
+  PiWallet,
+  PiCalendarCheck,
+  PiUserMinus,
+  PiKeyhole,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ResetPasswordDialog } from './ResetPasswordDialog';
 
@@ -152,7 +152,7 @@ export const AdminTeacherDetail: React.FC = () => {
           className="text-xs"
           onClick={() => navigate('/admin/teachers')}
         >
-          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+          <PiArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           Back to Faculty List
         </Button>
         <ErrorState
@@ -180,7 +180,7 @@ export const AdminTeacherDetail: React.FC = () => {
             className="mb-1 -ml-2 text-xs"
             onClick={() => navigate('/admin/teachers')}
           >
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+            <PiArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back to Faculty List
           </Button>
           <div className="flex items-center gap-2">
@@ -201,7 +201,7 @@ export const AdminTeacherDetail: React.FC = () => {
             className="h-9 text-xs"
             onClick={() => navigate(`/admin/teachers?edit=${teacher.teacherId}`)}
           >
-            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            <PiPencilSimple className="mr-1.5 h-3.5 w-3.5" />
             Edit Record
           </Button>
           <Button
@@ -211,7 +211,7 @@ export const AdminTeacherDetail: React.FC = () => {
             disabled={resetPasswordMutation.isPending}
             onClick={() => resetPasswordMutation.mutate()}
           >
-            <KeyRound className="mr-1.5 h-3.5 w-3.5" />
+            <PiKeyhole className="mr-1.5 h-3.5 w-3.5" />
             {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
           </Button>
           <Button
@@ -220,7 +220,7 @@ export const AdminTeacherDetail: React.FC = () => {
             className="h-9 text-xs"
             onClick={() => setDeleteConfirmOpen(true)}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <PiTrash className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -230,7 +230,7 @@ export const AdminTeacherDetail: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs lg:col-span-1 dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-tr from-emerald-600 to-teal-500 text-lg font-bold text-white">
+              <div className="bg-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white">
                 {teacher.firstName.charAt(0)}
               </div>
               <div>
@@ -240,7 +240,7 @@ export const AdminTeacherDetail: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-3 text-xs">
-            <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+            <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
               <span className="text-muted-foreground mb-1 block text-[10px]">Subjects Handled</span>
               <div className="flex flex-wrap gap-1">
                 {teacher.subjectHandled.length === 0 ? (
@@ -248,41 +248,41 @@ export const AdminTeacherDetail: React.FC = () => {
                 ) : (
                   teacher.subjectHandled.map((sub) => (
                     <Badge key={sub} variant="outline" className="text-[10px] font-medium">
-                      <BookOpen className="mr-1 h-2.5 w-2.5 text-indigo-500" />
+                      <PiBookOpen className="text-primary mr-1 h-2.5 w-2.5" />
                       {sub}
                     </Badge>
                   ))
                 )}
               </div>
             </div>
-            <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+            <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
               <span className="text-muted-foreground text-[10px]">Monthly Salary</span>
               <p className="font-semibold">₹{teacher.salaryPerMonth.toLocaleString()}</p>
             </div>
-            <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+            <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
               <span className="text-muted-foreground text-[10px]">Gender</span>
               <p className="font-semibold">{teacher.gender ?? 'N/A'}</p>
             </div>
-            <div className="text-muted-foreground flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+            <div className="text-muted-foreground flex items-center justify-between rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
               <div className="flex items-center gap-1">
-                <Phone className="h-3 w-3 text-emerald-500" />
+                <PiPhone className="h-3 w-3 text-emerald-500" />
                 <span>{teacher.phone}</span>
               </div>
               <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3 text-indigo-500" />
+                <PiCalendar className="text-primary h-3 w-3" />
                 <span>Joined {isoToDisplayDate(teacher.dateOfJoining)}</span>
               </div>
             </div>
-            <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+            <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
               <span className="text-muted-foreground text-[10px]">Address</span>
               <p className="mt-0.5 font-semibold">{teacher.address || 'N/A'}</p>
             </div>
-            <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+            <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
               <span className="text-muted-foreground text-[10px]">Aadhar Number</span>
               <p className="mt-0.5 font-mono font-semibold">{teacher.teacherAadhar || '—'}</p>
             </div>
             {teacher.about && (
-              <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+              <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
                 <span className="text-muted-foreground text-[10px]">Bio</span>
                 <p className="mt-0.5 leading-relaxed font-medium">{teacher.about}</p>
               </div>
@@ -295,7 +295,7 @@ export const AdminTeacherDetail: React.FC = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div>
               <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                <CalendarCheck className="h-4 w-4 text-indigo-500" />
+                <PiCalendarCheck className="text-primary h-4 w-4" />
                 Monthly Attendance
               </CardTitle>
               <CardDescription className="text-xs">
@@ -307,7 +307,7 @@ export const AdminTeacherDetail: React.FC = () => {
               type="month"
               value={month}
               onChange={(e) => setMonth(e.target.value)}
-              className="border-input h-8 rounded-none border bg-transparent px-2 text-xs font-semibold"
+              className="border-input h-8 rounded-md border bg-transparent px-2 text-xs font-semibold"
             />
           </CardHeader>
           {attendanceLoading ? (
@@ -321,9 +321,9 @@ export const AdminTeacherDetail: React.FC = () => {
               Couldn't load attendance for this month.
             </div>
           ) : sortedAttendance.length === 0 ? (
-            <Empty className="rounded-none border-0 border-t">
+            <Empty className="rounded-md border-0 border-t">
               <EmptyMedia variant="icon">
-                <CalendarCheck className="size-5" />
+                <PiCalendarCheck className="size-5" />
               </EmptyMedia>
               <EmptyTitle>No attendance marked</EmptyTitle>
               <EmptyDescription>No attendance was recorded for {month}.</EmptyDescription>
@@ -367,7 +367,7 @@ export const AdminTeacherDetail: React.FC = () => {
       <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-            <Wallet className="h-4 w-4 text-indigo-500" />
+            <PiWallet className="text-primary h-4 w-4" />
             Salary Disbursement History
           </CardTitle>
           <CardDescription className="text-xs">
@@ -383,9 +383,9 @@ export const AdminTeacherDetail: React.FC = () => {
         ) : salariesErrored ? (
           <div className="text-muted-foreground p-4 text-xs">Couldn't load salary history.</div>
         ) : sortedSalaries.length === 0 ? (
-          <Empty className="rounded-none border-0 border-t">
+          <Empty className="rounded-md border-0 border-t">
             <EmptyMedia variant="icon">
-              <Wallet className="size-5" />
+              <PiWallet className="size-5" />
             </EmptyMedia>
             <EmptyTitle>No salary records yet</EmptyTitle>
             <EmptyDescription>No salary has been raised for this teacher.</EmptyDescription>
@@ -428,7 +428,7 @@ export const AdminTeacherDetail: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <UserRoundX className="h-4 w-4" />
+              <PiUserMinus className="h-4 w-4" />
               <span>Confirm Faculty Removal</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">

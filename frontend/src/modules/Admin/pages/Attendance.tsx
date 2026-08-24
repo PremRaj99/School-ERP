@@ -19,7 +19,7 @@ import { getErrorMessage } from '@/lib/api';
 import { dateToIsoDate } from '@/lib/date';
 import { MAX_PAGE_SIZE, type AttendanceStatus } from '@schoolerp/contracts';
 import { toast } from 'sonner';
-import { CalendarCheck, Users, UserCheck, UserX } from 'lucide-react';
+import { PiCalendarCheck, PiUsers, PiUserCheck, PiUserMinus } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 /**
@@ -121,15 +121,15 @@ export const AdminAttendance: React.FC = () => {
               setSelectedDate(e.target.value);
               setDraft({});
             }}
-            className="border-input h-9 rounded-none border bg-transparent px-2.5 text-xs font-semibold"
+            className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
           />
           <Button
             size="sm"
             onClick={() => markMutation.mutate()}
             disabled={markMutation.isPending || rows.length === 0}
-            className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+            className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
           >
-            <CalendarCheck className="mr-1.5 h-3.5 w-3.5" />
+            <PiCalendarCheck className="mr-1.5 h-3.5 w-3.5" />
             {markMutation.isPending ? 'Saving...' : 'Save Attendance'}
           </Button>
         </div>
@@ -139,7 +139,7 @@ export const AdminAttendance: React.FC = () => {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="flex items-center gap-3 p-4">
-            <Users className="h-5 w-5 text-indigo-500" />
+            <PiUsers className="text-primary h-5 w-5" />
             <div>
               <span className="text-muted-foreground text-xs font-semibold">Total Faculty</span>
               <p className="text-xl font-bold">{rows.length}</p>
@@ -148,7 +148,7 @@ export const AdminAttendance: React.FC = () => {
         </Card>
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="flex items-center gap-3 p-4">
-            <UserCheck className="h-5 w-5 text-emerald-500" />
+            <PiUserCheck className="h-5 w-5 text-emerald-500" />
             <div>
               <span className="text-muted-foreground text-xs font-semibold">Present</span>
               <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
@@ -159,7 +159,7 @@ export const AdminAttendance: React.FC = () => {
         </Card>
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="flex items-center gap-3 p-4">
-            <UserX className="h-5 w-5 text-rose-500" />
+            <PiUserMinus className="h-5 w-5 text-rose-500" />
             <div>
               <span className="text-muted-foreground text-xs font-semibold">Absent</span>
               <p className="text-xl font-bold text-rose-600 dark:text-rose-400">
@@ -186,9 +186,9 @@ export const AdminAttendance: React.FC = () => {
           }}
         />
       ) : rows.length === 0 ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <Users className="size-5" />
+            <PiUsers className="size-5" />
           </EmptyMedia>
           <EmptyTitle>No faculty registered yet</EmptyTitle>
           <EmptyDescription>Add teachers before marking attendance.</EmptyDescription>
@@ -219,7 +219,7 @@ export const AdminAttendance: React.FC = () => {
                     key={r.teacherId}
                     className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30"
                   >
-                    <TableCell className="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                    <TableCell className="text-primary font-mono text-xs font-semibold">
                       {r.teacherId}
                     </TableCell>
                     <TableCell className="text-xs font-medium">

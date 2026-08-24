@@ -10,25 +10,25 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import {
-  Users,
-  GraduationCap,
-  BookOpen,
-  Calendar,
-  CreditCard,
-  Bell,
-  Sun,
-  Moon,
-  Laptop,
-  LayoutDashboard,
-  Home,
-  UserCheck,
-  ClipboardCheck,
-  Award,
-  MessageSquare,
-  Shield,
-  FileSpreadsheet,
-  Settings,
-} from 'lucide-react';
+  PiUsers,
+  PiGraduationCap,
+  PiBookOpen,
+  PiCalendar,
+  PiCreditCard,
+  PiBell,
+  PiSun,
+  PiMoon,
+  PiLaptop,
+  PiSquaresFour,
+  PiHouse,
+  PiUserCheck,
+  PiListChecks,
+  PiCertificate,
+  PiChatCircleText,
+  PiShield,
+  PiFileXls,
+  PiGear,
+} from 'react-icons/pi';
 import { useTheme } from '@/shared/common/theme';
 
 interface CommandMenuProps {
@@ -82,15 +82,15 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({
 
         <CommandGroup heading="Quick Navigation">
           <CommandItem onSelect={() => runCommand(() => navigate('/'))}>
-            <Home className="mr-2 h-4 w-4 text-indigo-500" />
+            <PiHouse className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Public Home</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/contact'))}>
-            <MessageSquare className="mr-2 h-4 w-4 text-sky-500" />
+            <PiChatCircleText className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Contact & Inquiries</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/auth/login'))}>
-            <Shield className="mr-2 h-4 w-4 text-amber-500" />
+            <PiShield className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Login Portal</span>
           </CommandItem>
         </CommandGroup>
@@ -99,51 +99,51 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({
 
         <CommandGroup heading="Admin Modules">
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/dashboard'))}>
-            <LayoutDashboard className="mr-2 h-4 w-4 text-indigo-500" />
+            <PiSquaresFour className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Admin Dashboard</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/students'))}>
-            <GraduationCap className="mr-2 h-4 w-4 text-blue-500" />
+            <PiGraduationCap className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Student Management</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/teachers'))}>
-            <Users className="mr-2 h-4 w-4 text-emerald-500" />
+            <PiUsers className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Teacher Management</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/classes'))}>
-            <BookOpen className="mr-2 h-4 w-4 text-violet-500" />
+            <PiBookOpen className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Classes & Sections</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/subjects'))}>
-            <BookOpen className="mr-2 h-4 w-4 text-pink-500" />
+            <PiBookOpen className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Subjects Curriculum</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/exams'))}>
-            <Award className="mr-2 h-4 w-4 text-amber-500" />
+            <PiCertificate className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Exams & Result Declaration</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/finance'))}>
-            <CreditCard className="mr-2 h-4 w-4 text-emerald-600" />
+            <PiCreditCard className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Finance & Fee Ledger</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/academic'))}>
-            <Calendar className="mr-2 h-4 w-4 text-purple-500" />
+            <PiCalendar className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Academic Timetable & Calendar</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/notices'))}>
-            <Bell className="mr-2 h-4 w-4 text-orange-500" />
+            <PiBell className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Notice Bulletin</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/attendance'))}>
-            <UserCheck className="mr-2 h-4 w-4 text-teal-500" />
+            <PiUserCheck className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Teacher Attendance</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/attendance/student'))}>
-            <ClipboardCheck className="mr-2 h-4 w-4 text-teal-500" />
+            <PiListChecks className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Student Attendance</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/admin/contact'))}>
-            <MessageSquare className="mr-2 h-4 w-4 text-blue-400" />
+            <PiChatCircleText className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Inquiry Messages</span>
           </CommandItem>
         </CommandGroup>
@@ -152,27 +152,27 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({
 
         <CommandGroup heading="Teacher Portal">
           <CommandItem onSelect={() => runCommand(() => navigate('/teacher/dashboard'))}>
-            <LayoutDashboard className="mr-2 h-4 w-4 text-indigo-500" />
+            <PiSquaresFour className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Teacher Dashboard</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/teacher/attendance'))}>
-            <UserCheck className="mr-2 h-4 w-4 text-emerald-500" />
+            <PiUserCheck className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Mark Daily Attendance</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/teacher/results'))}>
-            <FileSpreadsheet className="mr-2 h-4 w-4 text-blue-500" />
+            <PiFileXls className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Exam Grading & Marks Entry</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/teacher/exams'))}>
-            <Award className="mr-2 h-4 w-4 text-amber-500" />
+            <PiCertificate className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Exam Schedules</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/teacher/salary'))}>
-            <CreditCard className="mr-2 h-4 w-4 text-teal-500" />
+            <PiCreditCard className="text-muted-foreground mr-2 h-4 w-4" />
             <span>My Salary Slips</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/teacher/profile'))}>
-            <Settings className="mr-2 h-4 w-4 text-slate-500" />
+            <PiGear className="mr-2 h-4 w-4 text-slate-500" />
             <span>Teacher Profile</span>
           </CommandItem>
         </CommandGroup>
@@ -181,27 +181,27 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({
 
         <CommandGroup heading="Student Portal">
           <CommandItem onSelect={() => runCommand(() => navigate('/student/dashboard'))}>
-            <LayoutDashboard className="mr-2 h-4 w-4 text-indigo-500" />
+            <PiSquaresFour className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Student Dashboard</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/student/attendance'))}>
-            <UserCheck className="mr-2 h-4 w-4 text-emerald-500" />
+            <PiUserCheck className="text-muted-foreground mr-2 h-4 w-4" />
             <span>My Attendance Records</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/student/exams'))}>
-            <Award className="mr-2 h-4 w-4 text-amber-500" />
+            <PiCertificate className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Exams & Report Cards</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/student/fees'))}>
-            <CreditCard className="mr-2 h-4 w-4 text-emerald-500" />
+            <PiCreditCard className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Fee Dues & Payment Receipts</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/student/subjects'))}>
-            <BookOpen className="mr-2 h-4 w-4 text-purple-500" />
+            <PiBookOpen className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Enrolled Subjects & Syllabus</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/student/profile'))}>
-            <Settings className="mr-2 h-4 w-4 text-slate-500" />
+            <PiGear className="mr-2 h-4 w-4 text-slate-500" />
             <span>Digital ID Card & Profile</span>
           </CommandItem>
         </CommandGroup>
@@ -210,15 +210,15 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({
 
         <CommandGroup heading="Theme Settings">
           <CommandItem onSelect={() => runCommand(() => setTheme('light'))}>
-            <Sun className="mr-2 h-4 w-4 text-amber-500" />
+            <PiSun className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Light Mode</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => setTheme('dark'))}>
-            <Moon className="mr-2 h-4 w-4 text-indigo-400" />
+            <PiMoon className="text-muted-foreground mr-2 h-4 w-4" />
             <span>Dark Mode</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => setTheme('system'))}>
-            <Laptop className="mr-2 h-4 w-4 text-slate-400" />
+            <PiLaptop className="mr-2 h-4 w-4 text-slate-400" />
             <span>System Default</span>
           </CommandItem>
         </CommandGroup>

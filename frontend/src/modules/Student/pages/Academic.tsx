@@ -10,7 +10,7 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { isoToDisplayDate } from '@/lib/date';
 import type { WeekDay } from '@schoolerp/contracts';
-import { Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { PiCalendar as CalendarIcon, PiClock } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 const WEEKDAYS: WeekDay[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -18,7 +18,7 @@ const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const CATEGORY_STYLES: Record<string, string> = {
   HOLIDAY: 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
-  EXAM: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300',
+  EXAM: 'bg-primary/10 text-primary',
   EVENT: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300',
   OTHER: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300',
 };
@@ -73,7 +73,7 @@ export const StudentAcademic: React.FC = () => {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold tracking-tight">Academic Timetable & Events</h1>
             {classLabel && (
-              <Badge variant="outline" className="border-indigo-500/30 text-xs text-indigo-600">
+              <Badge variant="outline" className="border-primary/30 text-primary text-xs">
                 {classLabel}
               </Badge>
             )}
@@ -85,13 +85,13 @@ export const StudentAcademic: React.FC = () => {
       </div>
 
       <Tabs defaultValue="timetable" className="w-full">
-        <TabsList className="h-10 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
-          <TabsTrigger value="timetable" className="rounded-lg px-4 text-xs font-semibold">
-            <Clock className="mr-1.5 h-3.5 w-3.5 text-indigo-500" />
+        <TabsList className="h-10 rounded-md border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
+          <TabsTrigger value="timetable" className="rounded-md px-4 text-xs font-semibold">
+            <PiClock className="text-primary mr-1.5 h-3.5 w-3.5" />
             <span>Weekly Class Timetable</span>
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="rounded-lg px-4 text-xs font-semibold">
-            <CalendarIcon className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+          <TabsTrigger value="calendar" className="rounded-md px-4 text-xs font-semibold">
+            <CalendarIcon className="text-primary mr-1.5 h-3.5 w-3.5" />
             <span>School Event Calendar</span>
           </TabsTrigger>
         </TabsList>
@@ -105,9 +105,9 @@ export const StudentAcademic: React.FC = () => {
               onRetry={() => refetchTimetable()}
             />
           ) : grid.size === 0 ? (
-            <Empty className="rounded-none border">
+            <Empty className="rounded-md border">
               <EmptyMedia variant="icon">
-                <Clock className="size-5" />
+                <PiClock className="size-5" />
               </EmptyMedia>
               <EmptyTitle>No timetable yet</EmptyTitle>
               <EmptyDescription>Your class has no timetable slots scheduled yet.</EmptyDescription>
@@ -131,7 +131,7 @@ export const StudentAcademic: React.FC = () => {
                   <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80">
                     {PERIODS.map((period) => (
                       <tr key={period} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30">
-                        <td className="bg-slate-50/30 p-3 text-center font-semibold text-indigo-600 dark:bg-zinc-900 dark:text-indigo-400">
+                        <td className="text-primary bg-slate-50/30 p-3 text-center font-semibold dark:bg-zinc-900">
                           P{period}
                         </td>
                         {WEEKDAYS.map((day) => {
@@ -139,8 +139,8 @@ export const StudentAcademic: React.FC = () => {
                           return (
                             <td key={day} className="p-2.5 align-top">
                               {cell ? (
-                                <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-2 dark:border-indigo-900/40 dark:bg-indigo-950/30">
-                                  <span className="block text-[11px] font-semibold text-indigo-950 dark:text-indigo-200">
+                                <div className="border-primary/20 bg-primary/10 rounded-md border p-2">
+                                  <span className="text-primary block text-[11px] font-semibold">
                                     {cell.subjectName}
                                   </span>
                                   <span className="text-muted-foreground text-[10px]">
@@ -148,7 +148,7 @@ export const StudentAcademic: React.FC = () => {
                                   </span>
                                 </div>
                               ) : (
-                                <div className="h-10 rounded-lg border border-dashed border-slate-200/60 dark:border-zinc-800/60" />
+                                <div className="h-10 rounded-md border border-dashed border-slate-200/60 dark:border-zinc-800/60" />
                               )}
                             </td>
                           );
@@ -175,7 +175,7 @@ export const StudentAcademic: React.FC = () => {
               onRetry={() => refetchCalendar()}
             />
           ) : (events ?? []).length === 0 ? (
-            <Empty className="rounded-none border">
+            <Empty className="rounded-md border">
               <EmptyMedia variant="icon">
                 <CalendarIcon className="size-5" />
               </EmptyMedia>
@@ -202,7 +202,7 @@ export const StudentAcademic: React.FC = () => {
                           {ev.category}
                         </Badge>
                         <span className="text-muted-foreground flex items-center gap-1 text-[11px] font-semibold">
-                          <CalendarIcon className="h-3 w-3 text-indigo-500" />
+                          <CalendarIcon className="text-primary h-3 w-3" />
                           <span>{isoToDisplayDate(ev.date)}</span>
                         </span>
                       </div>

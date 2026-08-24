@@ -13,6 +13,7 @@ import HomePage from '@/modules/Home/pages/HomePage';
 import ContactPage from '@/modules/Contact/pages/ContactPage';
 import LoginPage from '@/modules/Auth/pages/LoginPage';
 import ChangePasswordPage from '@/modules/Auth/pages/ChangePasswordPage';
+import NotFoundPage from '@/modules/Home/pages/NotFoundPage';
 
 // Admin Module Pages
 import AdminDashboard from '@/modules/Admin/pages/Dashboard';
@@ -163,6 +164,9 @@ export const router = createBrowserRouter([
       { path: 'expenses', element: <FinanceExpenses /> },
     ],
   },
+
+  // Catch-all — any unmatched URL
+  { path: '*', element: <NotFoundPage /> },
 ]);
 
 export default router;

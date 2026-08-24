@@ -24,7 +24,15 @@ import { MAX_PAGE_SIZE, UpdateExamBody, type ExamRecord } from '@schoolerp/contr
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { Award, Plus, Trash2, Pencil, Calendar, Search, Check } from 'lucide-react';
+import {
+  PiMedal,
+  PiPlus,
+  PiTrash,
+  PiPencilSimple,
+  PiCalendar,
+  PiMagnifyingGlass,
+  PiCheck,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const AdminExams: React.FC = () => {
@@ -136,9 +144,9 @@ export const AdminExams: React.FC = () => {
 
         <Button
           onClick={() => setIsWizardOpen(true)}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <PiPlus className="h-3.5 w-3.5" />
           <span>Create Examination Schedule</span>
         </Button>
       </div>
@@ -147,7 +155,7 @@ export const AdminExams: React.FC = () => {
       <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardContent className="p-4">
           <div className="relative w-full">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+            <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
             <Input
               placeholder="Search by exam title or class..."
               value={searchTerm}
@@ -168,9 +176,9 @@ export const AdminExams: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : filteredExams.length === 0 ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <Award className="size-5" />
+            <PiMedal className="size-5" />
           </EmptyMedia>
           <EmptyTitle>No exams scheduled yet</EmptyTitle>
           <EmptyDescription>
@@ -178,7 +186,7 @@ export const AdminExams: React.FC = () => {
           </EmptyDescription>
           {!searchTerm && (
             <Button size="sm" className="mt-1 text-xs" onClick={() => setIsWizardOpen(true)}>
-              <Plus className="mr-1 h-3.5 w-3.5" />
+              <PiPlus className="mr-1 h-3.5 w-3.5" />
               Create Examination Schedule
             </Button>
           )}
@@ -217,7 +225,7 @@ export const AdminExams: React.FC = () => {
                     {exam.title}
                   </CardTitle>
                   <CardDescription className="mt-1 flex items-center gap-1 text-xs">
-                    <Calendar className="h-3 w-3 text-indigo-500" />
+                    <PiCalendar className="text-primary h-3 w-3" />
                     <span>
                       {exam.dateFrom} to {exam.dateTo || 'TBD'}
                     </span>
@@ -227,7 +235,7 @@ export const AdminExams: React.FC = () => {
                 <CardContent className="flex-1 space-y-3 pt-0 text-xs">
                   {/* The list endpoint doesn't return a subject breakdown — that's the exam detail
                     view (GET /admin/exam/:examId isn't wired into a page yet, Phase 5). */}
-                  <div className="text-muted-foreground rounded-lg bg-slate-50 p-2.5 text-[11px] dark:bg-zinc-800/50">
+                  <div className="text-muted-foreground rounded-md bg-slate-50 p-2.5 text-[11px] dark:bg-zinc-800/50">
                     {exam.isResultDecleared
                       ? 'Results have been published for this exam.'
                       : 'Subject-wise marking status is available on the exam detail view.'}
@@ -241,7 +249,7 @@ export const AdminExams: React.FC = () => {
                       className={`h-8 text-xs ${
                         exam.isResultDecleared
                           ? 'border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-                          : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          : 'bg-primary hover:bg-primary/90 text-white'
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -254,12 +262,12 @@ export const AdminExams: React.FC = () => {
                     >
                       {exam.isResultDecleared ? (
                         <>
-                          <Check className="mr-1 h-3.5 w-3.5 text-emerald-500" />
+                          <PiCheck className="mr-1 h-3.5 w-3.5 text-emerald-500" />
                           <span>Published</span>
                         </>
                       ) : (
                         <>
-                          <Award className="mr-1 h-3.5 w-3.5" />
+                          <PiMedal className="mr-1 h-3.5 w-3.5" />
                           <span>Publish Results</span>
                         </>
                       )}
@@ -276,7 +284,7 @@ export const AdminExams: React.FC = () => {
                         }}
                         title="Edit Exam"
                       >
-                        <Pencil className="h-3.5 w-3.5" />
+                        <PiPencilSimple className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -288,7 +296,7 @@ export const AdminExams: React.FC = () => {
                         }}
                         title="Delete Exam"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <PiTrash className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -333,7 +341,7 @@ export const AdminExams: React.FC = () => {
               <Button
                 type="submit"
                 disabled={updateMutation.isPending}
-                className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
               >
                 {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
@@ -347,7 +355,7 @@ export const AdminExams: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Confirm Exam Schedule Deletion</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">

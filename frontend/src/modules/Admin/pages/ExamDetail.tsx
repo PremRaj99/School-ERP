@@ -27,7 +27,14 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { isoToDisplayDate } from '@/lib/date';
 import { toast } from 'sonner';
-import { ArrowLeft, Trash2, Award, Check, CalendarRange, ListChecks } from 'lucide-react';
+import {
+  PiArrowLeft,
+  PiTrash,
+  PiMedal,
+  PiCheck,
+  PiCalendarDots,
+  PiListChecks,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const AdminExamDetail: React.FC = () => {
@@ -86,7 +93,7 @@ export const AdminExamDetail: React.FC = () => {
           className="text-xs"
           onClick={() => navigate('/admin/exams')}
         >
-          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+          <PiArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           Back to Examinations
         </Button>
         <ErrorState
@@ -112,7 +119,7 @@ export const AdminExamDetail: React.FC = () => {
             className="mb-1 -ml-2 text-xs"
             onClick={() => navigate('/admin/exams')}
           >
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+            <PiArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back to Examinations
           </Button>
           <div className="flex items-center gap-2">
@@ -133,7 +140,7 @@ export const AdminExamDetail: React.FC = () => {
               Class {exam.className}-{exam.section}
             </span>
             <span>·</span>
-            <CalendarRange className="h-3 w-3" />
+            <PiCalendarDots className="h-3 w-3" />
             <span>
               {isoToDisplayDate(exam.dateFrom)} to{' '}
               {exam.dateTo ? isoToDisplayDate(exam.dateTo) : 'TBD'}
@@ -148,19 +155,19 @@ export const AdminExamDetail: React.FC = () => {
             className={`h-9 text-xs ${
               exam.isResultDecleared
                 ? 'border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                : 'bg-primary hover:bg-primary/90 text-white'
             }`}
             onClick={() => declareMutation.mutate(!exam.isResultDecleared)}
             disabled={declareMutation.isPending}
           >
             {exam.isResultDecleared ? (
               <>
-                <Check className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+                <PiCheck className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
                 Published
               </>
             ) : (
               <>
-                <Award className="mr-1.5 h-3.5 w-3.5" />
+                <PiMedal className="mr-1.5 h-3.5 w-3.5" />
                 Publish Results
               </>
             )}
@@ -171,7 +178,7 @@ export const AdminExamDetail: React.FC = () => {
             className="h-9 text-xs"
             onClick={() => setDeleteConfirmOpen(true)}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <PiTrash className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -180,7 +187,7 @@ export const AdminExamDetail: React.FC = () => {
       <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-            <ListChecks className="h-4 w-4 text-indigo-500" />
+            <PiListChecks className="text-primary h-4 w-4" />
             Subject-wise Marking Status
           </CardTitle>
           <CardDescription className="text-xs">
@@ -189,9 +196,9 @@ export const AdminExamDetail: React.FC = () => {
           </CardDescription>
         </CardHeader>
         {exam.subjects.length === 0 ? (
-          <Empty className="rounded-none border-0 border-t">
+          <Empty className="rounded-md border-0 border-t">
             <EmptyMedia variant="icon">
-              <ListChecks className="size-5" />
+              <PiListChecks className="size-5" />
             </EmptyMedia>
             <EmptyTitle>No subjects scheduled</EmptyTitle>
             <EmptyDescription>This exam has no subject rows.</EmptyDescription>
@@ -218,7 +225,7 @@ export const AdminExamDetail: React.FC = () => {
                     <span className="text-muted-foreground font-mono">({s.subjectCode})</span>
                   </TableCell>
                   <TableCell
-                    className="cursor-pointer text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+                    className="text-primary cursor-pointer text-xs hover:underline"
                     onClick={() => navigate(`/admin/teachers/${s.teacherId}`)}
                   >
                     {s.teacherFullName}
@@ -251,7 +258,7 @@ export const AdminExamDetail: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Confirm Exam Schedule Deletion</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">

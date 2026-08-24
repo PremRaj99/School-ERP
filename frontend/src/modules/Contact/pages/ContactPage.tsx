@@ -21,7 +21,15 @@ import { Badge } from '@/components/ui/badge';
 import { contactService } from '@/lib/services/contact.service';
 import { getErrorMessage } from '@/lib/api';
 import { toast } from 'sonner';
-import { Mail, Phone, MapPin, Clock, Send, MessageSquare, HelpCircle } from 'lucide-react';
+import {
+  PiEnvelopeSimple,
+  PiPhone,
+  PiMapPin,
+  PiClock,
+  PiPaperPlaneTilt,
+  PiChatCircleText,
+  PiQuestion,
+} from 'react-icons/pi';
 
 export const ContactPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -54,7 +62,7 @@ export const ContactPage: React.FC = () => {
     <div className="mx-auto max-w-7xl space-y-12 px-4 py-12 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="mx-auto max-w-2xl space-y-3 text-center">
-        <Badge variant="outline" className="text-xs text-indigo-600 dark:text-indigo-400">
+        <Badge variant="outline" className="text-primary text-xs">
           Get In Touch
         </Badge>
         <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
@@ -74,7 +82,7 @@ export const ContactPage: React.FC = () => {
           <Card className="border border-slate-200/80 bg-white/90 shadow-md dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-bold">
-                <MapPin className="h-4 w-4 text-indigo-500" />
+                <PiMapPin className="text-primary h-4 w-4" />
                 <span>Campus & Office Information</span>
               </CardTitle>
               <CardDescription className="text-xs">
@@ -82,8 +90,8 @@ export const ContactPage: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-xs">
-              <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 dark:bg-zinc-800/50">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />
+              <div className="flex items-start gap-3 rounded-md bg-slate-50 p-3 dark:bg-zinc-800/50">
+                <PiMapPin className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                 <div>
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">
                     Main Campus Address
@@ -94,8 +102,8 @@ export const ContactPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 dark:bg-zinc-800/50">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+              <div className="flex items-start gap-3 rounded-md bg-slate-50 p-3 dark:bg-zinc-800/50">
+                <PiPhone className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                 <div>
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">
                     Phone Helpline
@@ -104,8 +112,8 @@ export const ContactPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 dark:bg-zinc-800/50">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-sky-500" />
+              <div className="flex items-start gap-3 rounded-md bg-slate-50 p-3 dark:bg-zinc-800/50">
+                <PiEnvelopeSimple className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                 <div>
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">
                     Email Desk
@@ -114,8 +122,8 @@ export const ContactPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 dark:bg-zinc-800/50">
-                <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+              <div className="flex items-start gap-3 rounded-md bg-slate-50 p-3 dark:bg-zinc-800/50">
+                <PiClock className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                 <div>
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">
                     Office Working Hours
@@ -133,7 +141,7 @@ export const ContactPage: React.FC = () => {
           <Card className="border border-slate-200/80 bg-white/90 shadow-md dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-bold">
-                <HelpCircle className="h-4 w-4 text-indigo-500" />
+                <PiQuestion className="text-primary h-4 w-4" />
                 <span>Frequently Asked Questions</span>
               </CardTitle>
             </CardHeader>
@@ -175,8 +183,8 @@ export const ContactPage: React.FC = () => {
         <div className="lg:col-span-7">
           <Card className="border border-slate-200/80 bg-white/90 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader>
-              <div className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                <MessageSquare className="h-3.5 w-3.5" />
+              <div className="text-primary inline-flex items-center gap-2 text-xs font-semibold">
+                <PiChatCircleText className="h-3.5 w-3.5" />
                 <span>Direct Inquiry Form</span>
               </div>
               <CardTitle className="text-xl font-bold">Send Us a Direct Message</CardTitle>
@@ -269,13 +277,13 @@ export const ContactPage: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="h-9 bg-indigo-600 px-5 text-xs font-semibold text-white shadow-sm shadow-indigo-500/20 hover:bg-indigo-700"
+                  className="bg-primary h-9 px-5 text-xs font-semibold text-white shadow-sm hover:opacity-90"
                 >
                   {loading ? (
                     'Submitting...'
                   ) : (
                     <>
-                      <Send className="mr-1.5 h-3.5 w-3.5" />
+                      <PiPaperPlaneTilt className="mr-1.5 h-3.5 w-3.5" />
                       <span>Submit Inquiry</span>
                     </>
                   )}

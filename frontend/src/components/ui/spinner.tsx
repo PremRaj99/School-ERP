@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils';
-import { Loader2Icon } from 'lucide-react';
+import { PiSpinnerGap } from 'react-icons/pi';
 
 function Spinner({ className, ...props }: React.ComponentProps<'svg'>) {
   return (
-    <Loader2Icon
+    <PiSpinnerGap
       data-slot="spinner"
       role="status"
       aria-label="Loading"

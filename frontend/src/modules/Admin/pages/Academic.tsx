@@ -23,14 +23,14 @@ import { useSubjectOptions, useTeacherOptions } from '@/hooks/options/useAdminOp
 import type { CreateCalendarEventBody, WeekDay } from '@schoolerp/contracts';
 import { toast } from 'sonner';
 import {
-  Calendar as CalendarIcon,
-  Clock,
-  Plus,
-  Trash2,
-  Sparkles,
-  Pencil,
-  AlertTriangle,
-} from 'lucide-react';
+  PiCalendar,
+  PiClock,
+  PiPlus,
+  PiTrash,
+  PiSparkle,
+  PiPencilSimple,
+  PiWarning,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const WEEKDAYS: WeekDay[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -169,21 +169,21 @@ export const AdminAcademic: React.FC = () => {
 
         <Button
           onClick={() => setIsAddEventOpen(true)}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <PiPlus className="h-3.5 w-3.5" />
           <span>Add Calendar Event</span>
         </Button>
       </div>
 
       <Tabs defaultValue="timetable" className="w-full">
-        <TabsList className="h-10 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
-          <TabsTrigger value="timetable" className="rounded-lg px-4 text-xs font-semibold">
-            <Clock className="mr-1.5 h-3.5 w-3.5 text-indigo-500" />
+        <TabsList className="h-10 rounded-md border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
+          <TabsTrigger value="timetable" className="rounded-md px-4 text-xs font-semibold">
+            <PiClock className="mr-1.5 h-3.5 w-3.5" />
             <span>Class Timetable Matrix</span>
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="rounded-lg px-4 text-xs font-semibold">
-            <CalendarIcon className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
+          <TabsTrigger value="calendar" className="rounded-md px-4 text-xs font-semibold">
+            <PiCalendar className="mr-1.5 h-3.5 w-3.5" />
             <span>Academic Event Calendar</span>
           </TabsTrigger>
         </TabsList>
@@ -232,9 +232,9 @@ export const AdminAcademic: React.FC = () => {
                 onRetry={() => refetchTimetable()}
               />
             ) : !activeClass ? (
-              <Empty className="rounded-none border-0">
+              <Empty className="rounded-md border-0">
                 <EmptyMedia variant="icon">
-                  <Clock className="size-5" />
+                  <PiClock className="size-5" />
                 </EmptyMedia>
                 <EmptyTitle>No classes yet</EmptyTitle>
                 <EmptyDescription>
@@ -262,7 +262,7 @@ export const AdminAcademic: React.FC = () => {
                         key={periodNumber}
                         className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30"
                       >
-                        <td className="bg-slate-50/30 p-3 font-semibold text-indigo-600 dark:bg-zinc-900 dark:text-indigo-400">
+                        <td className="text-primary bg-slate-50/30 p-3 font-semibold dark:bg-zinc-900">
                           Period {periodNumber}
                         </td>
                         {WEEKDAYS.map((day) => {
@@ -279,12 +279,12 @@ export const AdminAcademic: React.FC = () => {
                                     teacherId: slot?.teacherId ?? '',
                                   })
                                 }
-                                className="group w-full rounded-lg p-1.5 text-left transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800"
+                                className="group w-full rounded-md p-1.5 text-left transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800"
                               >
                                 {slot ? (
-                                  <div className="relative space-y-0.5 rounded-lg border border-indigo-100 bg-indigo-50/60 p-2 dark:border-indigo-900/40 dark:bg-indigo-950/30">
-                                    <Pencil className="absolute top-1.5 right-1.5 h-2.5 w-2.5 text-indigo-400 opacity-0 group-hover:opacity-100" />
-                                    <p className="leading-tight font-bold text-indigo-950 dark:text-indigo-200">
+                                  <div className="border-primary/20 bg-primary/5 dark:bg-primary/10 relative space-y-0.5 rounded-md border p-2">
+                                    <PiPencilSimple className="text-primary/70 absolute top-1.5 right-1.5 h-2.5 w-2.5 opacity-0 group-hover:opacity-100" />
+                                    <p className="text-primary leading-tight font-bold">
                                       {slot.subjectName}
                                     </p>
                                     <p className="text-muted-foreground font-mono text-[10px]">
@@ -296,7 +296,7 @@ export const AdminAcademic: React.FC = () => {
                                   </div>
                                 ) : (
                                   <span className="text-muted-foreground flex items-center gap-1 text-[10px]">
-                                    <Plus className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100" />
+                                    <PiPlus className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100" />
                                     Free Period
                                   </span>
                                 )}
@@ -327,14 +327,14 @@ export const AdminAcademic: React.FC = () => {
               onRetry={() => refetchCalendar()}
             />
           ) : (calendarEvents ?? []).length === 0 ? (
-            <Empty className="rounded-none border">
+            <Empty className="rounded-md border">
               <EmptyMedia variant="icon">
-                <CalendarIcon className="size-5" />
+                <PiCalendar className="size-5" />
               </EmptyMedia>
               <EmptyTitle>No calendar events yet</EmptyTitle>
               <EmptyDescription>Add the first holiday, exam, or event date.</EmptyDescription>
               <Button size="sm" className="mt-1 text-xs" onClick={() => setIsAddEventOpen(true)}>
-                <Plus className="mr-1 h-3.5 w-3.5" />
+                <PiPlus className="mr-1 h-3.5 w-3.5" />
                 Add Calendar Event
               </Button>
             </Empty>
@@ -356,13 +356,13 @@ export const AdminAcademic: React.FC = () => {
                               ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
                               : ev.category === 'EXAM'
                                 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                                : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
+                                : 'bg-muted text-muted-foreground'
                           }`}
                         >
                           {ev.category}
                         </Badge>
                         <span className="text-muted-foreground flex items-center gap-1 text-[11px] font-semibold">
-                          <CalendarIcon className="h-3 w-3 text-indigo-500" />
+                          <PiCalendar className="text-primary h-3 w-3" />
                           <span>{ev.date}</span>
                         </span>
                       </div>
@@ -379,7 +379,7 @@ export const AdminAcademic: React.FC = () => {
                         className="h-7 w-7 text-rose-600 hover:bg-rose-50"
                         onClick={() => deleteEventMutation.mutate(eventId)}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <PiTrash className="h-3.5 w-3.5" />
                       </Button>
                     </CardContent>
                   </Card>
@@ -394,8 +394,8 @@ export const AdminAcademic: React.FC = () => {
       <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="h-4 w-4" />
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiSparkle className="h-4 w-4" />
               <span>Event Scheduling</span>
             </div>
             <DialogTitle className="text-lg font-bold">Add Calendar Event</DialogTitle>
@@ -472,7 +472,7 @@ export const AdminAcademic: React.FC = () => {
               <Button
                 type="submit"
                 disabled={createEventMutation.isPending}
-                className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
               >
                 {createEventMutation.isPending ? 'Adding...' : 'Save Event'}
               </Button>
@@ -485,8 +485,8 @@ export const AdminAcademic: React.FC = () => {
       <Dialog open={!!editingCell} onOpenChange={() => setEditingCell(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <Clock className="h-4 w-4" />
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiClock className="h-4 w-4" />
               <span>Timetable Slot</span>
             </div>
             <DialogTitle className="text-base font-bold">
@@ -543,8 +543,8 @@ export const AdminAcademic: React.FC = () => {
               </div>
 
               {conflict && (
-                <div className="flex items-start gap-2 rounded-lg border border-amber-300/60 bg-amber-50 p-2.5 text-[11px] text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
-                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <div className="flex items-start gap-2 rounded-md border border-amber-300/60 bg-amber-50 p-2.5 text-[11px] text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
+                  <PiWarning className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                   <span>
                     {conflict.teacherName} is already teaching Class {conflict.className}-
                     {conflict.section} at this same time.
@@ -572,7 +572,7 @@ export const AdminAcademic: React.FC = () => {
                 updateSlotMutation.isPending
               }
               onClick={() => editingCell && updateSlotMutation.mutate(editingCell)}
-              className="bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+              className="bg-primary hover:bg-primary/90 text-xs text-white"
             >
               {updateSlotMutation.isPending ? 'Saving...' : conflict ? 'Save Anyway' : 'Save Slot'}
             </Button>

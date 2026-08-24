@@ -27,7 +27,14 @@ import { MAX_PAGE_SIZE, type ContactRecord } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { Mail, Phone, Send, Search, Inbox, Trash2 } from 'lucide-react';
+import {
+  PiEnvelope,
+  PiPhone,
+  PiPaperPlaneTilt,
+  PiMagnifyingGlass,
+  PiTray,
+  PiTrash,
+} from 'react-icons/pi';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const AdminContactMessages: React.FC = () => {
@@ -101,7 +108,7 @@ export const AdminContactMessages: React.FC = () => {
       <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardContent className="p-4">
           <div className="relative w-full">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+            <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
             <Input
               placeholder="Search inquiries by sender name, email, or keywords..."
               value={searchTerm}
@@ -122,9 +129,9 @@ export const AdminContactMessages: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : filteredMessages.length === 0 ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <Inbox className="size-5" />
+            <PiTray className="size-5" />
           </EmptyMedia>
           <EmptyTitle>No inquiries yet</EmptyTitle>
           <EmptyDescription>
@@ -147,7 +154,7 @@ export const AdminContactMessages: React.FC = () => {
                   <div className="flex items-center justify-end">
                     <Badge
                       variant="secondary"
-                      className="bg-blue-50 text-[10px] text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
+                      className="bg-muted text-muted-foreground text-[10px]"
                     >
                       New Inquiry
                     </Badge>
@@ -157,11 +164,11 @@ export const AdminContactMessages: React.FC = () => {
                   </CardTitle>
                   <CardDescription className="mt-1 space-y-0.5 text-xs">
                     <div className="text-muted-foreground flex items-center gap-1">
-                      <Mail className="h-3 w-3 text-indigo-500" />
+                      <PiEnvelope className="text-primary h-3 w-3" />
                       <span>{msg.email}</span>
                     </div>
                     <div className="text-muted-foreground flex items-center gap-1">
-                      <Phone className="h-3 w-3 text-emerald-500" />
+                      <PiPhone className="h-3 w-3 text-emerald-500" />
                       <span>{msg.mobile}</span>
                     </div>
                   </CardDescription>
@@ -184,8 +191,8 @@ export const AdminContactMessages: React.FC = () => {
           {selectedMessage && (
             <div className="space-y-4 px-4 pt-4">
               <SheetHeader>
-                <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                  <Mail className="h-4 w-4" />
+                <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+                  <PiEnvelope className="h-4 w-4" />
                   <span>Public Inquiry</span>
                 </div>
                 <SheetTitle className="text-lg font-bold">{selectedMessage.name}</SheetTitle>
@@ -194,7 +201,7 @@ export const AdminContactMessages: React.FC = () => {
                 </SheetDescription>
               </SheetHeader>
 
-              <div className="text-muted-foreground rounded-lg border bg-slate-50 p-2.5 text-xs leading-relaxed dark:bg-zinc-800/50">
+              <div className="text-muted-foreground rounded-md border bg-slate-50 p-2.5 text-xs leading-relaxed dark:bg-zinc-800/50">
                 <span className="mb-0.5 block font-semibold text-slate-800 dark:text-zinc-200">
                   Original Inquiry:
                 </span>
@@ -217,9 +224,9 @@ export const AdminContactMessages: React.FC = () => {
                 <div className="flex gap-2 pt-1">
                   <Button
                     type="submit"
-                    className="flex-1 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                    className="bg-primary hover:bg-primary/90 flex-1 text-xs text-white"
                   >
-                    <Send className="mr-1.5 h-3.5 w-3.5" />
+                    <PiPaperPlaneTilt className="mr-1.5 h-3.5 w-3.5" />
                     <span>Send Response Email</span>
                   </Button>
                   <Button
@@ -227,7 +234,7 @@ export const AdminContactMessages: React.FC = () => {
                     variant="destructive"
                     onClick={() => setDeleteConfirmId(selectedMessage.id)}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <PiTrash className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </form>
@@ -241,7 +248,7 @@ export const AdminContactMessages: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Delete Inquiry</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">

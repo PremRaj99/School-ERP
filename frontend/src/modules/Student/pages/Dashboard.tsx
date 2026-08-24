@@ -11,14 +11,14 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { isoToDisplayDate } from '@/lib/date';
 import {
-  GraduationCap,
-  Award,
-  Calendar,
-  CreditCard,
-  Bell,
-  ArrowRight,
-  CheckCircle2,
-} from 'lucide-react';
+  PiGraduationCap,
+  PiMedal,
+  PiCalendar,
+  PiCreditCard,
+  PiBell,
+  PiArrowRight,
+  PiCheckCircle,
+} from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 export const StudentDashboard: React.FC = () => {
@@ -32,7 +32,7 @@ export const StudentDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-32 w-full rounded-3xl" />
+        <Skeleton className="h-32 w-full rounded-md" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-24 w-full" />
@@ -57,15 +57,15 @@ export const StudentDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="flex flex-col items-start justify-between gap-4 rounded-3xl border border-sky-500/20 bg-linear-to-r from-indigo-900 via-sky-950 to-slate-900 p-6 text-white shadow-xl sm:flex-row sm:items-center sm:p-8">
+      <div className="border-primary/20 bg-primary flex flex-col items-start justify-between gap-4 rounded-md border p-6 text-white shadow-xl sm:flex-row sm:items-center sm:p-8">
         <div className="space-y-2">
-          <Badge variant="outline" className="border-sky-400/30 text-xs text-sky-300">
+          <Badge variant="outline" className="border-white/30 text-xs text-white/90">
             Student Academic Hub
           </Badge>
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
             Welcome back, {profile.firstName} {profile.lastName || ''}!
           </h1>
-          <p className="max-w-xl text-xs text-sky-200/90">
+          <p className="max-w-xl text-xs text-white/80">
             Class {profile.className}-{profile.section} • Roll No #{profile.rollNo} • Student ID:{' '}
             {profile.studentId} • Session {profile.session}
           </p>
@@ -73,9 +73,9 @@ export const StudentDashboard: React.FC = () => {
 
         <Button
           onClick={() => navigate('/student/profile')}
-          className="h-10 shrink-0 bg-white px-5 text-xs font-bold text-indigo-950 shadow-md hover:bg-sky-50"
+          className="text-primary h-10 shrink-0 bg-white px-5 text-xs font-bold shadow-md hover:bg-white/90"
         >
-          <GraduationCap className="mr-1.5 h-4 w-4 text-indigo-600" />
+          <PiGraduationCap className="text-primary mr-1.5 h-4 w-4" />
           <span>View Digital ID Card</span>
         </Button>
       </div>
@@ -96,8 +96,8 @@ export const StudentDashboard: React.FC = () => {
                 {attendanceThisMonth.leave}L
               </span>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
-              <CheckCircle2 className="h-5 w-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600">
+              <PiCheckCircle className="h-5 w-5" />
             </div>
           </CardContent>
         </Card>
@@ -113,8 +113,8 @@ export const StudentDashboard: React.FC = () => {
                 {nextExam ? nextExam.title : 'None scheduled'}
               </span>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
-              <Calendar className="h-5 w-5" />
+            <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-md">
+              <PiCalendar className="h-5 w-5" />
             </div>
           </CardContent>
         </Card>
@@ -134,8 +134,8 @@ export const StudentDashboard: React.FC = () => {
                   : `${pendingFees.count} invoice${pendingFees.count === 1 ? '' : 's'} pending`}
               </span>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600">
-              <CreditCard className="h-5 w-5" />
+            <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-md">
+              <PiCreditCard className="h-5 w-5" />
             </div>
           </CardContent>
         </Card>
@@ -144,13 +144,11 @@ export const StudentDashboard: React.FC = () => {
           <CardContent className="flex items-center justify-between p-4">
             <div>
               <span className="text-muted-foreground text-xs font-semibold">Notices</span>
-              <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {recentNotices.length}
-              </p>
+              <p className="text-primary mt-1 text-2xl font-bold">{recentNotices.length}</p>
               <span className="text-muted-foreground text-[10px]">Recent announcements</span>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600">
-              <Bell className="h-5 w-5" />
+            <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-md">
+              <PiBell className="h-5 w-5" />
             </div>
           </CardContent>
         </Card>
@@ -161,16 +159,16 @@ export const StudentDashboard: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs lg:col-span-8 dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="border-b border-slate-100 pb-3 dark:border-zinc-800">
             <CardTitle className="flex items-center gap-2 text-base font-bold">
-              <Award className="h-4 w-4 text-indigo-500" />
+              <PiMedal className="text-primary h-4 w-4" />
               <span>Upcoming Examinations</span>
             </CardTitle>
             <CardDescription className="text-xs">Your next scheduled assessments.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 p-4">
             {upcomingExams.length === 0 ? (
-              <Empty className="rounded-none border-0">
+              <Empty className="rounded-md border-0">
                 <EmptyMedia variant="icon">
-                  <Award className="size-5" />
+                  <PiMedal className="size-5" />
                 </EmptyMedia>
                 <EmptyTitle>No upcoming exams</EmptyTitle>
                 <EmptyDescription>You have no examinations scheduled right now.</EmptyDescription>
@@ -180,12 +178,12 @@ export const StudentDashboard: React.FC = () => {
                 <button
                   key={exam.id}
                   onClick={() => navigate('/student/exams')}
-                  className="flex w-full flex-col justify-between gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5 text-left sm:flex-row sm:items-center dark:border-zinc-800 dark:bg-zinc-800/40"
+                  className="flex w-full flex-col justify-between gap-2 rounded-md border border-slate-200/80 bg-slate-50/50 p-3.5 text-left sm:flex-row sm:items-center dark:border-zinc-800 dark:bg-zinc-800/40"
                 >
                   <span className="text-xs font-bold text-slate-900 dark:text-white">
                     {exam.title}
                   </span>
-                  <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                  <span className="text-primary font-semibold">
                     {isoToDisplayDate(exam.dateFrom)}
                     {exam.dateTo && ` – ${isoToDisplayDate(exam.dateTo)}`}
                   </span>
@@ -207,10 +205,10 @@ export const StudentDashboard: React.FC = () => {
                 onClick={() => navigate('/student/exams')}
               >
                 <div className="flex items-center gap-2">
-                  <Award className="h-4 w-4 text-amber-500" />
+                  <PiMedal className="text-primary h-4 w-4" />
                   <span>Term Marksheet & Report Card</span>
                 </div>
-                <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
+                <PiArrowRight className="text-muted-foreground h-3.5 w-3.5" />
               </Button>
 
               <Button
@@ -219,10 +217,10 @@ export const StudentDashboard: React.FC = () => {
                 onClick={() => navigate('/student/attendance')}
               >
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <PiCheckCircle className="h-4 w-4 text-emerald-500" />
                   <span>Monthly Attendance Calendar</span>
                 </div>
-                <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
+                <PiArrowRight className="text-muted-foreground h-3.5 w-3.5" />
               </Button>
 
               <Button
@@ -231,10 +229,10 @@ export const StudentDashboard: React.FC = () => {
                 onClick={() => navigate('/student/fees')}
               >
                 <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-teal-500" />
+                  <PiCreditCard className="text-primary h-4 w-4" />
                   <span>Fee Receipts & Payment</span>
                 </div>
-                <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
+                <PiArrowRight className="text-muted-foreground h-3.5 w-3.5" />
               </Button>
             </CardContent>
           </Card>
@@ -242,7 +240,7 @@ export const StudentDashboard: React.FC = () => {
           <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-bold">
-                <Bell className="h-4 w-4 text-orange-500" />
+                <PiBell className="text-primary h-4 w-4" />
                 <span>Notice Bulletin</span>
               </CardTitle>
             </CardHeader>
@@ -254,9 +252,9 @@ export const StudentDashboard: React.FC = () => {
                   <button
                     key={n.id}
                     onClick={() => navigate('/student/notices')}
-                    className="block w-full rounded-lg border border-indigo-100 bg-indigo-50/50 p-2.5 text-left dark:border-indigo-900/40 dark:bg-indigo-950/30"
+                    className="block w-full rounded-md border bg-slate-50 p-2.5 text-left dark:bg-zinc-800/50"
                   >
-                    <span className="block font-semibold text-indigo-950 dark:text-indigo-200">
+                    <span className="block font-semibold text-slate-800 dark:text-zinc-200">
                       {n.title}
                     </span>
                     <p className="text-muted-foreground mt-0.5 text-[11px]">

@@ -32,14 +32,14 @@ import { getErrorMessage } from '@/lib/api';
 import { MAX_PAGE_SIZE, PromoteClassBody, type WeekDay } from '@schoolerp/contracts';
 import { toast } from 'sonner';
 import {
-  ArrowLeft,
-  Trash2,
-  Users,
-  BookOpen,
-  CalendarClock,
-  Lock,
-  GraduationCap,
-} from 'lucide-react';
+  PiArrowLeft,
+  PiTrash,
+  PiUsers,
+  PiBookOpen,
+  PiCalendarDots,
+  PiLock,
+  PiGraduationCap,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const GRADE_OPTIONS = Array.from({ length: 12 }, (_, i) => {
@@ -198,7 +198,7 @@ export const AdminClassDetail: React.FC = () => {
           className="text-xs"
           onClick={() => navigate('/admin/classes')}
         >
-          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+          <PiArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           Back to Classes
         </Button>
         <ErrorState
@@ -223,7 +223,7 @@ export const AdminClassDetail: React.FC = () => {
             className="mb-1 -ml-2 text-xs"
             onClick={() => navigate('/admin/classes')}
           >
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+            <PiArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back to Classes
           </Button>
           <div className="flex items-center gap-2">
@@ -243,7 +243,7 @@ export const AdminClassDetail: React.FC = () => {
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+            className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
             disabled={roster.length === 0}
             onClick={() => {
               resetPromote({ toClassName: '', toSection: '', toSession: '' });
@@ -251,7 +251,7 @@ export const AdminClassDetail: React.FC = () => {
               setIsPromoteOpen(true);
             }}
           >
-            <GraduationCap className="mr-1.5 h-3.5 w-3.5" />
+            <PiGraduationCap className="mr-1.5 h-3.5 w-3.5" />
             Promote Class
           </Button>
           <Button
@@ -260,7 +260,7 @@ export const AdminClassDetail: React.FC = () => {
             className="h-9 text-xs"
             onClick={() => setDeleteConfirmOpen(true)}
           >
-            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+            <PiTrash className="mr-1.5 h-3.5 w-3.5" />
             Remove Section
           </Button>
         </div>
@@ -271,7 +271,7 @@ export const AdminClassDetail: React.FC = () => {
         <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <Users className="h-4 w-4 text-indigo-500" />
+              <PiUsers className="text-primary h-4 w-4" />
               Class Roster
             </CardTitle>
             <CardDescription className="text-xs">
@@ -285,9 +285,9 @@ export const AdminClassDetail: React.FC = () => {
               ))}
             </div>
           ) : roster.length === 0 ? (
-            <Empty className="rounded-none border-0 border-t">
+            <Empty className="rounded-md border-0 border-t">
               <EmptyMedia variant="icon">
-                <Users className="size-5" />
+                <PiUsers className="size-5" />
               </EmptyMedia>
               <EmptyTitle>No students enrolled</EmptyTitle>
               <EmptyDescription>No student is currently enrolled in this section.</EmptyDescription>
@@ -314,7 +314,7 @@ export const AdminClassDetail: React.FC = () => {
                       <TableCell className="text-xs font-medium">
                         {s.firstName} {s.lastName ?? ''}
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-indigo-600 dark:text-indigo-400">
+                      <TableCell className="text-primary font-mono text-xs">
                         {s.studentId}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-xs">{s.phone}</TableCell>
@@ -330,7 +330,7 @@ export const AdminClassDetail: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <BookOpen className="h-4 w-4 text-indigo-500" />
+              <PiBookOpen className="text-primary h-4 w-4" />
               Assigned Subjects
             </CardTitle>
             <CardDescription className="text-xs">
@@ -369,13 +369,13 @@ export const AdminClassDetail: React.FC = () => {
       <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-            <CalendarClock className="h-4 w-4 text-indigo-500" />
+            <PiCalendarDots className="text-primary h-4 w-4" />
             Weekly Timetable
           </CardTitle>
           <CardDescription className="text-xs">
             Read-only view — edit slots from{' '}
             <button
-              className="text-indigo-600 hover:underline dark:text-indigo-400"
+              className="text-primary hover:underline"
               onClick={() => navigate('/admin/academic')}
             >
               Academic → Timetable
@@ -390,9 +390,9 @@ export const AdminClassDetail: React.FC = () => {
             ))}
           </div>
         ) : schedule.length === 0 ? (
-          <Empty className="rounded-none border-0 border-t">
+          <Empty className="rounded-md border-0 border-t">
             <EmptyMedia variant="icon">
-              <CalendarClock className="size-5" />
+              <PiCalendarDots className="size-5" />
             </EmptyMedia>
             <EmptyTitle>No timetable slots yet</EmptyTitle>
             <EmptyDescription>No periods have been scheduled for this section.</EmptyDescription>
@@ -475,7 +475,7 @@ export const AdminClassDetail: React.FC = () => {
               />
             </div>
 
-            <div className="max-h-56 overflow-y-auto rounded-lg border">
+            <div className="max-h-56 overflow-y-auto rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
@@ -524,7 +524,7 @@ export const AdminClassDetail: React.FC = () => {
               <Button
                 type="submit"
                 disabled={promoteMutation.isPending}
-                className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
               >
                 {promoteMutation.isPending ? 'Promoting...' : 'Promote Class'}
               </Button>
@@ -538,7 +538,7 @@ export const AdminClassDetail: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Confirm Class Section Deletion</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">
@@ -549,8 +549,8 @@ export const AdminClassDetail: React.FC = () => {
           </DialogHeader>
 
           {roster.length > 0 && (
-            <div className="flex items-start gap-2 rounded-lg border border-amber-300/60 bg-amber-50 p-2.5 text-[11px] text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
-              <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <div className="flex items-start gap-2 rounded-md border border-amber-300/60 bg-amber-50 p-2.5 text-[11px] text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
+              <PiLock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 {roster.length} student{roster.length === 1 ? ' is' : 's are'} still enrolled in
                 Class {cls.className}-{cls.section}. Transfer or remove them first.

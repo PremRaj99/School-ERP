@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'lucide-react';
+import { PiWarningCircle } from 'react-icons/pi';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 
@@ -22,9 +22,9 @@ export function ErrorState({
   className,
 }: ErrorStateProps) {
   return (
-    <Empty className={className ? `rounded-none border ${className}` : 'rounded-none border'}>
-      <EmptyMedia variant="icon">
-        <AlertTriangle className="size-5" />
+    <Empty className={className ? `rounded-md border ${className}` : 'rounded-md border'}>
+      <EmptyMedia variant="icon" className="bg-destructive/10 text-destructive">
+        <PiWarningCircle className="size-5" />
       </EmptyMedia>
       <EmptyTitle>{title}</EmptyTitle>
       <EmptyDescription>{description}</EmptyDescription>

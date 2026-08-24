@@ -34,7 +34,16 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { CreateStudentBody, type StudentRecord } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { toast } from 'sonner';
-import { Plus, Eye, Pencil, Trash2, Phone, Sparkles, Users, UploadCloud } from 'lucide-react';
+import {
+  PiPlus,
+  PiEye,
+  PiPencilSimple,
+  PiTrash,
+  PiPhone,
+  PiSparkle,
+  PiUsers,
+  PiCloudArrowUp,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BulkImportStudentsDialog } from './BulkImportStudentsDialog';
 
@@ -293,7 +302,7 @@ export const AdminStudents: React.FC = () => {
       accessorKey: 'studentId',
       header: 'Student ID',
       cell: ({ row }) => (
-        <span className="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+        <span className="text-primary font-mono text-xs font-semibold">
           {row.original.studentId}
         </span>
       ),
@@ -306,7 +315,7 @@ export const AdminStudents: React.FC = () => {
         const s = row.original;
         return (
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-sky-500 text-[10px] font-bold text-white">
+            <div className="bg-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white">
               {s.firstName.charAt(0)}
             </div>
             <span className="text-xs font-medium">
@@ -338,7 +347,7 @@ export const AdminStudents: React.FC = () => {
       enableSorting: false,
       cell: ({ row }) => (
         <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
-          <Phone className="h-3 w-3 text-emerald-500" />
+          <PiPhone className="h-3 w-3 text-emerald-500" />
           <span>{row.original.phone}</span>
         </div>
       ),
@@ -363,14 +372,14 @@ export const AdminStudents: React.FC = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950"
+              className="text-primary hover:bg-primary/10 h-7 w-7"
               onClick={(e) => {
                 e.stopPropagation();
                 viewStudentDetails(student);
               }}
               title="View Full Profile"
             >
-              <Eye className="h-3.5 w-3.5" />
+              <PiEye className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
@@ -382,7 +391,7 @@ export const AdminStudents: React.FC = () => {
               }}
               title="Edit Record"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <PiPencilSimple className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
@@ -394,7 +403,7 @@ export const AdminStudents: React.FC = () => {
               }}
               title="Delete Record"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <PiTrash className="h-3.5 w-3.5" />
             </Button>
           </div>
         );
@@ -425,14 +434,14 @@ export const AdminStudents: React.FC = () => {
             onClick={() => setIsImportOpen(true)}
             className="h-9 gap-1.5 text-xs"
           >
-            <UploadCloud className="h-3.5 w-3.5" />
+            <PiCloudArrowUp className="h-3.5 w-3.5" />
             <span>Bulk Import</span>
           </Button>
           <Button
             onClick={openCreateForm}
-            className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+            className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <PiPlus className="h-3.5 w-3.5" />
             <span>Admit New Student</span>
           </Button>
         </div>
@@ -451,7 +460,7 @@ export const AdminStudents: React.FC = () => {
             emptyDescription="Admit the first student to get started."
             emptyAction={
               <Button size="sm" className="mt-1 text-xs" onClick={openCreateForm}>
-                <Plus className="mr-1 h-3.5 w-3.5" />
+                <PiPlus className="mr-1 h-3.5 w-3.5" />
                 Admit New Student
               </Button>
             }
@@ -545,7 +554,7 @@ export const AdminStudents: React.FC = () => {
                   className="h-8 text-xs"
                   onClick={() => setBulkDeleteTargets(selected)}
                 >
-                  <Trash2 className="mr-1 h-3.5 w-3.5" />
+                  <PiTrash className="mr-1 h-3.5 w-3.5" />
                   Delete Selected
                 </Button>
                 <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={clear}>
@@ -562,8 +571,8 @@ export const AdminStudents: React.FC = () => {
         <SheetContent className="overflow-y-auto sm:max-w-lg">
           <div className="space-y-4 px-4 pt-4">
             <SheetHeader>
-              <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                <Sparkles className="h-4 w-4" />
+              <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+                <PiSparkle className="h-4 w-4" />
                 <span>Admissions Office</span>
               </div>
               <SheetTitle className="text-lg font-bold">
@@ -667,7 +676,7 @@ export const AdminStudents: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                  className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
                 >
                   {createMutation.isPending || updateMutation.isPending
                     ? 'Saving...'
@@ -686,7 +695,7 @@ export const AdminStudents: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Confirm Student Record Deletion</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">
@@ -721,7 +730,7 @@ export const AdminStudents: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Users className="h-4 w-4" />
+              <PiUsers className="h-4 w-4" />
               <span>Confirm Bulk Deletion</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">

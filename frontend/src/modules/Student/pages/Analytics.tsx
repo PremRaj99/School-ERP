@@ -8,7 +8,7 @@ import { studentService } from '@/lib/services/student.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { CHART_COLORS, chartTooltipStyle } from '@/lib/charts';
-import { BarChart3, TrendingUp, Award, Trophy, CreditCard } from 'lucide-react';
+import { PiChartBar, PiTrendUp, PiMedal, PiTrophy, PiCreditCard } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 import {
   ResponsiveContainer,
@@ -81,8 +81,8 @@ export const StudentAnalytics: React.FC = () => {
       <div className="border-b border-slate-200/80 pb-2 dark:border-zinc-800">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-extrabold tracking-tight">My Analytics</h1>
-          <Badge variant="outline" className="border-sky-500/30 text-xs text-sky-600">
-            <BarChart3 className="mr-1 h-3 w-3" />
+          <Badge variant="outline" className="border-primary/30 text-primary text-xs">
+            <PiChartBar className="mr-1 h-3 w-3" />
             Performance Insights
           </Badge>
         </div>
@@ -96,7 +96,7 @@ export const StudentAnalytics: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <TrendingUp className="h-4 w-4 text-emerald-500" />
+              <PiTrendUp className="text-primary h-4 w-4" />
               Attendance Trend
             </CardTitle>
             <CardDescription className="text-xs">
@@ -132,7 +132,7 @@ export const StudentAnalytics: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <Award className="h-4 w-4 text-indigo-500" />
+              <PiMedal className="text-primary h-4 w-4" />
               Marks Per Subject
             </CardTitle>
             <CardDescription className="text-xs">
@@ -170,7 +170,7 @@ export const StudentAnalytics: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <Award className="h-4 w-4 text-amber-500" />
+              <PiMedal className="text-primary h-4 w-4" />
               Latest Exam — Subject Breakdown
             </CardTitle>
           </CardHeader>
@@ -200,7 +200,7 @@ export const StudentAnalytics: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <Trophy className="h-4 w-4 text-amber-500" />
+              <PiTrophy className="text-primary h-4 w-4" />
               Class Rank Trend
             </CardTitle>
             <CardDescription className="text-xs">
@@ -241,7 +241,7 @@ export const StudentAnalytics: React.FC = () => {
       <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-            <CreditCard className="h-4 w-4 text-teal-500" />
+            <PiCreditCard className="text-primary h-4 w-4" />
             Fee Payment History
           </CardTitle>
           <CardDescription className="text-xs">Paid vs. pending amount, by month.</CardDescription>
@@ -270,9 +270,9 @@ export const StudentAnalytics: React.FC = () => {
 
 function EmptyChart() {
   return (
-    <Empty className="h-full rounded-none border-0">
+    <Empty className="h-full rounded-md border-0">
       <EmptyMedia variant="icon">
-        <BarChart3 className="size-5" />
+        <PiChartBar className="size-5" />
       </EmptyMedia>
       <EmptyTitle>No data yet</EmptyTitle>
       <EmptyDescription>Nothing to show here yet.</EmptyDescription>

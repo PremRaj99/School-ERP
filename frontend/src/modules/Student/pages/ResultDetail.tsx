@@ -17,7 +17,7 @@ import { studentService } from '@/lib/services/student.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { isoToDisplayDate } from '@/lib/date';
-import { ArrowLeft, Printer, School } from 'lucide-react';
+import { PiArrowLeft, PiPrinter, PiChalkboardTeacher } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 export const StudentResultDetail: React.FC = () => {
@@ -54,7 +54,7 @@ export const StudentResultDetail: React.FC = () => {
           className="text-xs"
           onClick={() => navigate('/student/exams')}
         >
-          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+          <PiArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           Back to Examinations
         </Button>
         <ErrorState
@@ -84,23 +84,23 @@ export const StudentResultDetail: React.FC = () => {
           className="-ml-2 text-xs"
           onClick={() => navigate('/student/exams')}
         >
-          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+          <PiArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           Back to Examinations
         </Button>
         <Button
           size="sm"
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white"
           onClick={() => window.print()}
         >
-          <Printer className="h-3.5 w-3.5" />
+          <PiPrinter className="h-3.5 w-3.5" />
           <span>Print Marksheet</span>
         </Button>
       </div>
 
-      <Card className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-xs shadow-sm dark:border-zinc-700 dark:bg-zinc-800/60">
+      <Card className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-6 text-xs shadow-sm dark:border-zinc-700 dark:bg-zinc-800/60">
         <div className="space-y-1 border-b pb-4 text-center">
           <div className="inline-flex items-center justify-center gap-1.5 text-base font-bold text-slate-900 dark:text-white">
-            <School className="h-5 w-5 text-indigo-600" />
+            <PiChalkboardTeacher className="text-primary h-5 w-5" />
             <span>GYAN DEEP BAAL VIKAS VIDYA MANDIR</span>
           </div>
           <p className="text-muted-foreground text-[11px]">
@@ -136,7 +136,7 @@ export const StudentResultDetail: React.FC = () => {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-md border">
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-100 dark:bg-zinc-700/50">
@@ -165,7 +165,7 @@ export const StudentResultDetail: React.FC = () => {
           </Table>
         </div>
 
-        <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 text-xs dark:border-indigo-900/40 dark:bg-indigo-950/30">
+        <div className="border-primary/20 bg-primary/10 flex items-center justify-between rounded-md border p-3 text-xs">
           <div>
             <span className="text-muted-foreground text-[10px]">Final Aggregate:</span>
             <p className="text-sm font-bold text-slate-900 dark:text-white">

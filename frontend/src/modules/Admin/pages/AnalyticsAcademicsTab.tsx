@@ -11,7 +11,7 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { CHART_COLORS, chartTooltipStyle, GRADE_COLORS } from '@/lib/charts';
 import { MAX_PAGE_SIZE } from '@schoolerp/contracts';
-import { FileQuestion, Trophy, TrendingDown, PieChartIcon, ClipboardCheck } from 'lucide-react';
+import { PiQuestion, PiTrophy, PiTrendDown, PiChartPie, PiClipboardText } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 import {
   ResponsiveContainer,
@@ -77,9 +77,9 @@ export function AnalyticsAcademicsTab() {
       </Card>
 
       {!examId ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <FileQuestion className="size-5" />
+            <PiQuestion className="size-5" />
           </EmptyMedia>
           <EmptyTitle>Pick an examination</EmptyTitle>
           <EmptyDescription>Select an exam above to see its academic analytics.</EmptyDescription>
@@ -149,7 +149,7 @@ export function AnalyticsAcademicsTab() {
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <PieChartIcon className="h-4 w-4 text-indigo-500" />
+                  <PiChartPie className="text-primary h-4 w-4" />
                   Pass Rate
                 </CardTitle>
               </CardHeader>
@@ -190,7 +190,7 @@ export function AnalyticsAcademicsTab() {
           <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                <ClipboardCheck className="h-4 w-4 text-emerald-500" />
+                <PiClipboardText className="h-4 w-4 text-emerald-500" />
                 Exam Marking Completion
               </CardTitle>
             </CardHeader>
@@ -209,7 +209,7 @@ export function AnalyticsAcademicsTab() {
             <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <Trophy className="h-4 w-4 text-amber-500" />
+                  <PiTrophy className="h-4 w-4 text-amber-500" />
                   Top Performers
                 </CardTitle>
               </CardHeader>
@@ -244,7 +244,7 @@ export function AnalyticsAcademicsTab() {
             <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <TrendingDown className="h-4 w-4 text-rose-500" />
+                  <PiTrendDown className="h-4 w-4 text-rose-500" />
                   Needs Attention
                 </CardTitle>
               </CardHeader>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
-import { XIcon } from 'lucide-react';
+import { PiX } from 'react-icons/pi';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { FieldShell } from './FieldShell';
@@ -58,7 +58,7 @@ export function TagsField<TValues extends FieldValues>({
             description={description}
             error={fieldState.error}
           >
-            <div className="border-input flex min-h-9 flex-wrap items-center gap-1.5 rounded-none border px-2 py-1.5">
+            <div className="border-input flex min-h-9 flex-wrap items-center gap-1.5 rounded-md border px-2 py-1.5">
               {values.map((value) => (
                 <Badge key={value} variant="secondary" className="gap-1 text-[10px] font-medium">
                   {value}
@@ -68,7 +68,7 @@ export function TagsField<TValues extends FieldValues>({
                     disabled={disabled}
                     className="hover:text-destructive"
                   >
-                    <XIcon className="size-3" />
+                    <PiX className="size-3" />
                   </button>
                 </Badge>
               ))}

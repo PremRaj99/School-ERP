@@ -9,7 +9,7 @@ import { teacherService } from '@/lib/services/teacher.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { CHART_COLORS, chartTooltipStyle, GRADE_COLORS } from '@/lib/charts';
-import { BarChart3, TrendingUp, Award, ClipboardCheck } from 'lucide-react';
+import { PiChartBar, PiTrendUp, PiMedal, PiClipboardText } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 import {
   ResponsiveContainer,
@@ -91,8 +91,8 @@ export const TeacherAnalytics: React.FC = () => {
       <div className="border-b border-slate-200/80 pb-2 dark:border-zinc-800">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-extrabold tracking-tight">My Analytics</h1>
-          <Badge variant="outline" className="border-emerald-500/30 text-xs text-emerald-600">
-            <BarChart3 className="mr-1 h-3 w-3" />
+          <Badge variant="outline" className="border-primary/30 text-primary text-xs">
+            <PiChartBar className="mr-1 h-3 w-3" />
             Performance Insights
           </Badge>
         </div>
@@ -106,7 +106,7 @@ export const TeacherAnalytics: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <TrendingUp className="h-4 w-4 text-emerald-500" />
+              <PiTrendUp className="text-primary h-4 w-4" />
               My Attendance Trend
             </CardTitle>
             <CardDescription className="text-xs">Monthly attendance percentage.</CardDescription>
@@ -139,7 +139,7 @@ export const TeacherAnalytics: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <TrendingUp className="h-4 w-4 text-indigo-500" />
+              <PiTrendUp className="text-primary h-4 w-4" />
               Class Attendance Trend
             </CardTitle>
             <CardDescription className="text-xs">
@@ -177,7 +177,7 @@ export const TeacherAnalytics: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <Award className="h-4 w-4 text-amber-500" />
+              <PiMedal className="text-primary h-4 w-4" />
               Subject Averages Across Exams
             </CardTitle>
             <CardDescription className="text-xs">
@@ -213,7 +213,7 @@ export const TeacherAnalytics: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <Award className="h-4 w-4 text-indigo-500" />
+              <PiMedal className="text-primary h-4 w-4" />
               Last Marked Exam — Grade Distribution
             </CardTitle>
           </CardHeader>
@@ -243,7 +243,7 @@ export const TeacherAnalytics: React.FC = () => {
       <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-            <ClipboardCheck className="h-4 w-4 text-emerald-500" />
+            <PiClipboardText className="text-primary h-4 w-4" />
             Marking Backlog
           </CardTitle>
           <CardDescription className="text-xs">
@@ -266,9 +266,9 @@ export const TeacherAnalytics: React.FC = () => {
 
 function EmptyChart() {
   return (
-    <Empty className="h-full rounded-none border-0">
+    <Empty className="h-full rounded-md border-0">
       <EmptyMedia variant="icon">
-        <BarChart3 className="size-5" />
+        <PiChartBar className="size-5" />
       </EmptyMedia>
       <EmptyTitle>No data yet</EmptyTitle>
       <EmptyDescription>Nothing to show here yet.</EmptyDescription>

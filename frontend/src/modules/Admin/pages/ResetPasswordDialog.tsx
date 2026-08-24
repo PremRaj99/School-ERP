@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, KeyRound } from 'lucide-react';
+import { PiCopy, PiCheck, PiKeyhole } from 'react-icons/pi';
 import { toast } from 'sonner';
 
 /**
@@ -40,8 +40,8 @@ export const ResetPasswordDialog: React.FC<{
     <Dialog open={!!result} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-            <KeyRound className="h-4 w-4" />
+          <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+            <PiKeyhole className="h-4 w-4" />
             <span>Password Reset</span>
           </div>
           <DialogTitle className="text-lg font-bold">New Temporary Password</DialogTitle>
@@ -53,7 +53,7 @@ export const ResetPasswordDialog: React.FC<{
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
+        <div className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
           <code className="font-mono text-sm font-bold tracking-wide text-slate-900 dark:text-zinc-100">
             {result?.temporaryPassword}
           </code>
@@ -66,12 +66,12 @@ export const ResetPasswordDialog: React.FC<{
           >
             {copied ? (
               <>
-                <Check className="mr-1 h-3.5 w-3.5 text-emerald-600" />
+                <PiCheck className="mr-1 h-3.5 w-3.5 text-emerald-600" />
                 Copied
               </>
             ) : (
               <>
-                <Copy className="mr-1 h-3.5 w-3.5" />
+                <PiCopy className="mr-1 h-3.5 w-3.5" />
                 Copy
               </>
             )}

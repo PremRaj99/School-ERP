@@ -7,7 +7,7 @@ import { ErrorState } from '@/components/data-table';
 import { studentService } from '@/lib/services/student.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import { User, Clock, BookOpen } from 'lucide-react';
+import { PiUser, PiClock, PiBookOpen } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 export const StudentSubjects: React.FC = () => {
@@ -53,7 +53,7 @@ export const StudentSubjects: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold tracking-tight">Enrolled Subjects</h1>
-            <Badge variant="outline" className="border-indigo-500/30 text-xs text-indigo-600">
+            <Badge variant="outline" className="border-primary/30 text-primary text-xs">
               {(subjects ?? []).length} Subjects
             </Badge>
           </div>
@@ -72,9 +72,9 @@ export const StudentSubjects: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : (subjects ?? []).length === 0 ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <BookOpen className="size-5" />
+            <PiBookOpen className="size-5" />
           </EmptyMedia>
           <EmptyTitle>No subjects yet</EmptyTitle>
           <EmptyDescription>Your class has no subjects on its timetable yet.</EmptyDescription>
@@ -91,7 +91,7 @@ export const StudentSubjects: React.FC = () => {
                 <CardHeader className="pb-3">
                   <Badge
                     variant="secondary"
-                    className="bg-indigo-50 font-mono text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300"
+                    className="bg-primary/10 text-primary font-mono text-[10px] font-bold"
                   >
                     {sub.subjectCode}
                   </Badge>
@@ -99,14 +99,14 @@ export const StudentSubjects: React.FC = () => {
                     {sub.subjectName}
                   </CardTitle>
                   {info?.teacherFullName && (
-                    <CardDescription className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                      <User className="h-3 w-3" />
+                    <CardDescription className="text-primary mt-0.5 flex items-center gap-1.5 text-xs font-medium">
+                      <PiUser className="h-3 w-3" />
                       <span>{info.teacherFullName}</span>
                     </CardDescription>
                   )}
                 </CardHeader>
                 <CardContent className="text-muted-foreground flex items-center gap-1.5 pt-0 text-[11px]">
-                  <Clock className="h-3 w-3" />
+                  <PiClock className="h-3 w-3" />
                   <span>
                     {info?.periodCount ?? 0} period{info?.periodCount === 1 ? '' : 's'} / week
                   </span>

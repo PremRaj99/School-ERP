@@ -20,7 +20,7 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import type { ResultSheet } from '@schoolerp/contracts';
 import { toast } from 'sonner';
-import { Save, Award, FileQuestion } from 'lucide-react';
+import { PiFloppyDisk, PiMedal, PiFileDashed } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 /** Mirrors `backend/src/shared/helpers/getGrade.ts` exactly, for the live preview only — the
@@ -141,27 +141,27 @@ function MarksGrid({
         <Button
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending || rows.length === 0}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
-          <Save className="h-3.5 w-3.5" />
+          <PiFloppyDisk className="h-3.5 w-3.5" />
           <span>{saveMutation.isPending ? 'Submitting...' : 'Save & Submit Marksheet'}</span>
         </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex items-center justify-between rounded-md border border-slate-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
           <span className="text-muted-foreground text-xs">Class Average:</span>
-          <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+          <span className="text-primary text-sm font-bold">
             {classAverage} / {sheet.fullMarks}
           </span>
         </div>
-        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex items-center justify-between rounded-md border border-slate-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
           <span className="text-muted-foreground text-xs">Highest Score:</span>
-          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+          <span className="text-primary text-sm font-bold">
             {highest} / {sheet.fullMarks}
           </span>
         </div>
-        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex items-center justify-between rounded-md border border-slate-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
           <span className="text-muted-foreground text-xs">Passing Rate:</span>
           <span className="text-sm font-bold text-slate-900 dark:text-white">
             {rows.length ? Math.round((passCount / rows.length) * 100) : 0}% ({passCount}/
@@ -213,7 +213,7 @@ function MarksGrid({
                           inputRefs.current[idx + 1]?.focus();
                         }
                       }}
-                      className="h-8 w-24 text-xs font-bold text-indigo-600 dark:text-indigo-400"
+                      className="text-primary h-8 w-24 text-xs font-bold"
                     />
                   </TableCell>
                   <TableCell className="text-xs">
@@ -295,7 +295,7 @@ export const TeacherResults: React.FC = () => {
             <h1 className="text-2xl font-extrabold tracking-tight">
               Exam Grading & Marksheet Entry
             </h1>
-            <Badge variant="outline" className="border-indigo-500/30 text-xs text-indigo-600">
+            <Badge variant="outline" className="border-primary/30 text-primary text-xs">
               Live Grade Calculation
             </Badge>
           </div>
@@ -356,9 +356,9 @@ export const TeacherResults: React.FC = () => {
 
       {/* Grading Grid */}
       {!examId || !subjectId ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <FileQuestion className="size-5" />
+            <PiFileDashed className="size-5" />
           </EmptyMedia>
           <EmptyTitle>Pick an exam and subject</EmptyTitle>
           <EmptyDescription>
@@ -384,7 +384,7 @@ export const TeacherResults: React.FC = () => {
 
       {selectedSubject?.isMarked && (
         <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-          <Award className="h-3.5 w-3.5 text-emerald-500" />
+          <PiMedal className="text-primary h-3.5 w-3.5" />
           This subject already has marks entered — saving will update the existing marksheet.
         </p>
       )}

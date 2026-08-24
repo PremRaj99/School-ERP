@@ -16,7 +16,7 @@ import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { dateToIsoDate, isoToDisplayDate } from '@/lib/date';
-import { ClipboardCheck, Users } from 'lucide-react';
+import { PiClipboardText, PiUsers } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 function monthAgo(): string {
@@ -117,9 +117,9 @@ export const AdminStudentAttendance: React.FC = () => {
       </Card>
 
       {!classId ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <ClipboardCheck className="size-5" />
+            <PiClipboardText className="size-5" />
           </EmptyMedia>
           <EmptyTitle>Pick a class to get started</EmptyTitle>
           <EmptyDescription>
@@ -136,7 +136,7 @@ export const AdminStudentAttendance: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <Users className="h-4 w-4 text-indigo-500" />
+                  <PiUsers className="text-primary h-4 w-4" />
                   Class {report.className}-{report.section}
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -151,9 +151,9 @@ export const AdminStudentAttendance: React.FC = () => {
           </CardHeader>
 
           {report.totalMarkedDays === 0 ? (
-            <Empty className="rounded-none border-0 border-t">
+            <Empty className="rounded-md border-0 border-t">
               <EmptyMedia variant="icon">
-                <ClipboardCheck className="size-5" />
+                <PiClipboardText className="size-5" />
               </EmptyMedia>
               <EmptyTitle>No attendance marked in this range</EmptyTitle>
               <EmptyDescription>

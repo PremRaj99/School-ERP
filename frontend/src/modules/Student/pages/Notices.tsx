@@ -16,7 +16,7 @@ import { studentService } from '@/lib/services/student.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { isoToDisplayDate, dateToIsoDate } from '@/lib/date';
-import { Calendar, Search, Bell, FileText } from 'lucide-react';
+import { PiCalendar, PiMagnifyingGlass, PiBell, PiFileText } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 const isExpired = (expiryDate: string | null) =>
@@ -54,7 +54,7 @@ export const StudentNotices: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold tracking-tight">Student Notice Board</h1>
-            <Badge variant="outline" className="border-indigo-500/30 text-xs text-indigo-600">
+            <Badge variant="outline" className="border-primary/30 text-primary text-xs">
               Campus Announcements
             </Badge>
           </div>
@@ -68,7 +68,7 @@ export const StudentNotices: React.FC = () => {
       <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardContent className="p-4">
           <div className="relative w-full">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+            <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
             <Input
               placeholder="Search student circulars..."
               value={searchTerm}
@@ -89,9 +89,9 @@ export const StudentNotices: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : filteredNotices.length === 0 ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <Bell className="size-5" />
+            <PiBell className="size-5" />
           </EmptyMedia>
           <EmptyTitle>No notices yet</EmptyTitle>
           <EmptyDescription>
@@ -113,7 +113,7 @@ export const StudentNotices: React.FC = () => {
                     <div className="flex items-center gap-1.5">
                       <Badge
                         variant="secondary"
-                        className="bg-sky-50 text-[10px] font-semibold text-sky-700 dark:bg-sky-950/60 dark:text-sky-300"
+                        className="bg-muted text-muted-foreground text-[10px] font-semibold"
                       >
                         Target: {notice.targetRole}
                       </Badge>
@@ -127,7 +127,7 @@ export const StudentNotices: React.FC = () => {
                       )}
                     </div>
                     <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
-                      <Calendar className="h-3 w-3 text-indigo-500" />
+                      <PiCalendar className="text-primary h-3 w-3" />
                       <span>{isoToDisplayDate(notice.date)}</span>
                     </span>
                   </div>
@@ -150,8 +150,8 @@ export const StudentNotices: React.FC = () => {
             ) : noticeDetail ? (
               <>
                 <SheetHeader>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                    <Bell className="h-4 w-4" />
+                  <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+                    <PiBell className="h-4 w-4" />
                     <span>Notice</span>
                   </div>
                   <SheetTitle className="text-lg font-bold">{noticeDetail.title}</SheetTitle>
@@ -170,9 +170,9 @@ export const StudentNotices: React.FC = () => {
                     href={noticeDetail.fileUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+                    className="text-primary flex items-center gap-1.5 text-xs font-semibold hover:underline"
                   >
-                    <FileText className="h-3.5 w-3.5" />
+                    <PiFileText className="h-3.5 w-3.5" />
                     View attached document
                   </a>
                 )}

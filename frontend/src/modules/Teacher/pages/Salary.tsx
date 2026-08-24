@@ -18,7 +18,7 @@ import { teacherService } from '@/lib/services/teacher.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import type { MySalaryRecord } from '@schoolerp/contracts';
-import { Printer, Wallet } from 'lucide-react';
+import { PiPrinter, PiWallet } from 'react-icons/pi';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 
@@ -61,7 +61,7 @@ export const TeacherSalary: React.FC = () => {
             <h1 className="text-2xl font-extrabold tracking-tight">
               Faculty Compensation & Payslips
             </h1>
-            <Badge variant="outline" className="border-teal-500/30 text-xs text-teal-600">
+            <Badge variant="outline" className="border-primary/30 text-primary text-xs">
               Salary History
             </Badge>
           </div>
@@ -106,9 +106,9 @@ export const TeacherSalary: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : list.length === 0 ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <Wallet className="size-5" />
+            <PiWallet className="size-5" />
           </EmptyMedia>
           <EmptyTitle>No salary records yet</EmptyTitle>
           <EmptyDescription>Payments will show up here once processed.</EmptyDescription>
@@ -152,10 +152,10 @@ export const TeacherSalary: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400"
+                        className="text-primary hover:bg-primary/10 h-7 text-xs"
                         onClick={() => setSelectedSlip(slip)}
                       >
-                        <Printer className="mr-1 h-3.5 w-3.5" />
+                        <PiPrinter className="mr-1 h-3.5 w-3.5" />
                         <span>View</span>
                       </Button>
                     </TableCell>
@@ -171,7 +171,7 @@ export const TeacherSalary: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           {selectedSlip && (
             <div className="space-y-4 pt-2">
-              <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-xs dark:border-zinc-700 dark:bg-zinc-800/60">
+              <div className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-5 text-xs dark:border-zinc-700 dark:bg-zinc-800/60">
                 <div className="flex items-center justify-between border-b pb-3">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
@@ -207,10 +207,10 @@ export const TeacherSalary: React.FC = () => {
               </div>
 
               <Button
-                className="w-full bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                className="bg-primary hover:bg-primary/90 w-full text-xs text-white"
                 onClick={() => toast.success('Sending statement to printer...')}
               >
-                <Printer className="mr-1.5 h-3.5 w-3.5" />
+                <PiPrinter className="mr-1.5 h-3.5 w-3.5" />
                 <span>Print Statement</span>
               </Button>
             </div>

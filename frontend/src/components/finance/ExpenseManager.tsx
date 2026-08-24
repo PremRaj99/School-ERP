@@ -25,7 +25,7 @@ import {
   type TxnStatus,
 } from '@schoolerp/contracts';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Receipt } from 'lucide-react';
+import { PiPlus, PiPencil, PiTrash, PiReceipt } from 'react-icons/pi';
 import { useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 
 const STATUS_OPTIONS: { value: TxnStatus; label: string }[] = [
@@ -224,7 +224,7 @@ export const ExpenseManager: React.FC<{ adapter: ExpenseManagerAdapter }> = ({ a
             }}
             title="Edit Expense"
           >
-            <Pencil className="h-3.5 w-3.5" />
+            <PiPencil className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="ghost"
@@ -236,7 +236,7 @@ export const ExpenseManager: React.FC<{ adapter: ExpenseManagerAdapter }> = ({ a
             }}
             title="Delete Expense"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <PiTrash className="h-3.5 w-3.5" />
           </Button>
         </div>
       ),
@@ -252,9 +252,9 @@ export const ExpenseManager: React.FC<{ adapter: ExpenseManagerAdapter }> = ({ a
         </p>
         <Button
           onClick={openCreate}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          className="bg-primary h-9 gap-1.5 text-xs text-white shadow-sm hover:opacity-90"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <PiPlus className="h-3.5 w-3.5" />
           <span>Log Expense</span>
         </Button>
       </div>
@@ -271,7 +271,7 @@ export const ExpenseManager: React.FC<{ adapter: ExpenseManagerAdapter }> = ({ a
             emptyDescription="Log the first expense — books, whiteboards, anything the school buys."
             emptyAction={
               <Button size="sm" className="mt-1 text-xs" onClick={openCreate}>
-                <Plus className="mr-1 h-3.5 w-3.5" />
+                <PiPlus className="mr-1 h-3.5 w-3.5" />
                 Log Expense
               </Button>
             }
@@ -284,8 +284,8 @@ export const ExpenseManager: React.FC<{ adapter: ExpenseManagerAdapter }> = ({ a
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <Receipt className="h-4 w-4" />
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiReceipt className="h-4 w-4" />
               <span>General Expenses</span>
             </div>
             <DialogTitle className="text-lg font-bold">
@@ -375,7 +375,7 @@ export const ExpenseManager: React.FC<{ adapter: ExpenseManagerAdapter }> = ({ a
               <Button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                className="bg-primary h-9 text-xs text-white hover:opacity-90"
               >
                 {createMutation.isPending || updateMutation.isPending
                   ? 'Saving...'
@@ -393,7 +393,7 @@ export const ExpenseManager: React.FC<{ adapter: ExpenseManagerAdapter }> = ({ a
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Delete Expense</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">

@@ -16,7 +16,7 @@ import { financeService } from '@/lib/services/finance.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { CHART_COLORS, chartTooltipStyle } from '@/lib/charts';
-import { AlertCircle, PieChartIcon, TrendingUp, Wallet, Receipt } from 'lucide-react';
+import { PiWarningCircle, PiChartPie, PiTrendUp, PiWallet, PiReceipt } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 import {
   ResponsiveContainer,
@@ -153,7 +153,7 @@ export const FinanceAnalytics: React.FC = () => {
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <PieChartIcon className="h-4 w-4 text-indigo-500" />
+                  <PiChartPie className="text-primary h-4 w-4" />
                   Category Split
                 </CardTitle>
               </CardHeader>
@@ -186,7 +186,7 @@ export const FinanceAnalytics: React.FC = () => {
                       {categoryPieData.map((d) => (
                         <div key={d.name} className="flex items-center gap-1.5">
                           <div
-                            className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                            className="h-2.5 w-2.5 shrink-0 rounded-md"
                             style={{ backgroundColor: d.color }}
                           />
                           <span className="text-muted-foreground">{d.name}</span>
@@ -204,7 +204,7 @@ export const FinanceAnalytics: React.FC = () => {
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  <PiTrendUp className="h-4 w-4 text-emerald-500" />
                   Cumulative Collection
                 </CardTitle>
               </CardHeader>
@@ -234,7 +234,7 @@ export const FinanceAnalytics: React.FC = () => {
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <Wallet className="h-4 w-4 text-teal-500" />
+                  <PiWallet className="text-primary h-4 w-4" />
                   Salary Burn vs. Fee Collection
                 </CardTitle>
               </CardHeader>
@@ -276,7 +276,7 @@ export const FinanceAnalytics: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                      <Receipt className="h-4 w-4 text-amber-500" />
+                      <PiReceipt className="h-4 w-4 text-amber-500" />
                       Expense Breakdown
                     </CardTitle>
                     <CardDescription className="text-xs">
@@ -340,14 +340,14 @@ export const FinanceAnalytics: React.FC = () => {
           <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                <AlertCircle className="h-4 w-4 text-rose-500" />
+                <PiWarningCircle className="h-4 w-4 text-rose-500" />
                 Fee Defaulters
               </CardTitle>
             </CardHeader>
             {data.defaulters.length === 0 ? (
-              <Empty className="rounded-none border-0 border-t">
+              <Empty className="rounded-md border-0 border-t">
                 <EmptyMedia variant="icon">
-                  <AlertCircle className="size-5" />
+                  <PiWarningCircle className="size-5" />
                 </EmptyMedia>
                 <EmptyTitle>No pending fees</EmptyTitle>
                 <EmptyDescription>

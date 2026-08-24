@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckIcon, ChevronDownIcon } from 'lucide-react';
+import { PiCheck, PiCaretDown } from 'react-icons/pi';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -55,7 +55,7 @@ export function MultiSelectFilter({
             {selected.length}
           </Badge>
         )}
-        <ChevronDownIcon className="text-muted-foreground size-3.5 shrink-0" />
+        <PiCaretDown className="text-muted-foreground size-3.5 shrink-0" />
       </PopoverTrigger>
       <PopoverContent className="w-56 p-0" align="start">
         <Command>
@@ -69,11 +69,11 @@ export function MultiSelectFilter({
                   <CommandItem key={opt.value} value={opt.label} onSelect={() => toggle(opt.value)}>
                     <span
                       className={cn(
-                        'border-input mr-1 flex size-3.5 items-center justify-center rounded-none border',
+                        'border-input mr-1 flex size-3.5 items-center justify-center rounded-md border',
                         isSelected && 'bg-primary border-primary text-primary-foreground',
                       )}
                     >
-                      {isSelected && <CheckIcon className="size-3" />}
+                      {isSelected && <PiCheck className="size-3" />}
                     </span>
                     {opt.label}
                   </CommandItem>

@@ -6,7 +6,7 @@ import { ErrorState } from '@/components/data-table';
 import { studentService } from '@/lib/services/student.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import { Flame } from 'lucide-react';
+import { PiFire } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 const currentMonthString = () => new Date().toISOString().slice(0, 7);
@@ -81,7 +81,7 @@ export const StudentAttendance: React.FC = () => {
           type="month"
           value={month}
           onChange={(e) => setMonth(e.target.value)}
-          className="border-input h-9 rounded-none border bg-transparent px-2.5 text-xs font-semibold"
+          className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
         />
       </div>
 
@@ -119,7 +119,7 @@ export const StudentAttendance: React.FC = () => {
                 {currentStreak} Days
               </p>
             </div>
-            <Flame className="h-5 w-5 text-amber-500" />
+            <PiFire className="text-primary h-5 w-5" />
           </CardContent>
         </Card>
       </div>

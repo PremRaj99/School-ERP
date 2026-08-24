@@ -23,7 +23,16 @@ import { dateToIsoDate } from '@/lib/date';
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { Plus, Trash2, Pencil, Calendar, Sparkles, Search, Filter, Megaphone } from 'lucide-react';
+import {
+  PiPlus,
+  PiTrash,
+  PiPencilSimple,
+  PiCalendar,
+  PiSparkle,
+  PiMagnifyingGlass,
+  PiFunnel,
+  PiMegaphone,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const TARGET_ROLE_OPTIONS = [
@@ -173,9 +182,9 @@ export const AdminNotices: React.FC = () => {
             reset(emptyDefaults);
             setIsCreateOpen(true);
           }}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <PiPlus className="h-3.5 w-3.5" />
           <span>Broadcast Notice</span>
         </Button>
       </div>
@@ -184,7 +193,7 @@ export const AdminNotices: React.FC = () => {
       <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardContent className="flex flex-col items-center justify-between gap-3 p-4 sm:flex-row">
           <div className="relative w-full flex-1">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+            <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
             <Input
               placeholder="Search circulars by headline or keyword..."
               value={searchTerm}
@@ -194,7 +203,7 @@ export const AdminNotices: React.FC = () => {
           </div>
 
           <div className="flex w-full items-center gap-2 sm:w-auto">
-            <Filter className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+            <PiFunnel className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
             <div className="flex items-center gap-1.5">
               {(['All', 'Active', 'Expired'] as const).map((status) => (
                 <button
@@ -218,7 +227,7 @@ export const AdminNotices: React.FC = () => {
                   onClick={() => setTargetFilter(role)}
                   className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
                     targetFilter === role
-                      ? 'bg-indigo-600 text-white shadow-xs'
+                      ? 'bg-primary text-white shadow-xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-400'
                   }`}
                 >
@@ -240,9 +249,9 @@ export const AdminNotices: React.FC = () => {
       ) : isError ? (
         <ErrorState description={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : filteredNotices.length === 0 ? (
-        <Empty className="rounded-none border">
+        <Empty className="rounded-md border">
           <EmptyMedia variant="icon">
-            <Megaphone className="size-5" />
+            <PiMegaphone className="size-5" />
           </EmptyMedia>
           <EmptyTitle>No notices published yet</EmptyTitle>
           <EmptyDescription>
@@ -252,7 +261,7 @@ export const AdminNotices: React.FC = () => {
           </EmptyDescription>
           {!searchTerm && targetFilter === 'All' && statusFilter === 'All' && (
             <Button size="sm" className="mt-1 text-xs" onClick={() => setIsCreateOpen(true)}>
-              <Plus className="mr-1 h-3.5 w-3.5" />
+              <PiPlus className="mr-1 h-3.5 w-3.5" />
               Broadcast Notice
             </Button>
           )}
@@ -271,13 +280,7 @@ export const AdminNotices: React.FC = () => {
                     <div className="flex items-center gap-1.5">
                       <Badge
                         variant="secondary"
-                        className={`text-[10px] font-semibold ${
-                          notice.targetRole === 'All'
-                            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
-                            : notice.targetRole === 'Teacher'
-                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                              : 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300'
-                        }`}
+                        className="bg-muted text-muted-foreground text-[10px] font-semibold"
                       >
                         Audience: {notice.targetRole}
                       </Badge>
@@ -295,7 +298,7 @@ export const AdminNotices: React.FC = () => {
                       )}
                     </div>
                     <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
-                      <Calendar className="h-3 w-3 text-indigo-500" />
+                      <PiCalendar className="text-primary h-3 w-3" />
                       <span>{notice.date}</span>
                     </span>
                   </div>
@@ -319,7 +322,7 @@ export const AdminNotices: React.FC = () => {
                       className="h-7 text-xs"
                       onClick={() => setEditingNoticeId(noticeId)}
                     >
-                      <Pencil className="mr-1 h-3.5 w-3.5" />
+                      <PiPencilSimple className="mr-1 h-3.5 w-3.5" />
                       <span>Edit</span>
                     </Button>
                     <Button
@@ -328,7 +331,7 @@ export const AdminNotices: React.FC = () => {
                       className="h-7 text-xs text-rose-600 hover:bg-rose-50 dark:text-rose-400"
                       onClick={() => setDeleteConfirmId(noticeId)}
                     >
-                      <Trash2 className="mr-1 h-3.5 w-3.5" />
+                      <PiTrash className="mr-1 h-3.5 w-3.5" />
                       <span>Delete</span>
                     </Button>
                   </div>
@@ -343,8 +346,8 @@ export const AdminNotices: React.FC = () => {
       <Dialog open={isEditDialogOpen} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="h-4 w-4" />
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiSparkle className="h-4 w-4" />
               <span>Institutional Broadcast</span>
             </div>
             <DialogTitle className="text-lg font-bold">
@@ -393,7 +396,7 @@ export const AdminNotices: React.FC = () => {
               <Button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="h-9 bg-indigo-600 text-xs text-white hover:bg-indigo-700"
+                className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
               >
                 {editingNoticeId
                   ? updateMutation.isPending
@@ -413,7 +416,7 @@ export const AdminNotices: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Confirm Circular Removal</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">

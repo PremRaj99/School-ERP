@@ -15,7 +15,7 @@ import { ErrorState } from '@/components/data-table';
 import { financeService } from '@/lib/services/finance.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import { Wallet, AlertTriangle, TrendingUp, Receipt } from 'lucide-react';
+import { PiWallet, PiWarning, PiTrendUp, PiReceipt } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -54,7 +54,7 @@ export const FinanceDashboard: React.FC = () => {
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardContent className="space-y-1.5 p-4">
                 <div className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold">
-                  <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                  <PiWarning className="h-3.5 w-3.5 text-amber-500" />
                   Pending Student Fees
                 </div>
                 <div className="text-2xl font-extrabold">
@@ -69,7 +69,7 @@ export const FinanceDashboard: React.FC = () => {
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardContent className="space-y-1.5 p-4">
                 <div className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold">
-                  <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />
+                  <PiWarning className="h-3.5 w-3.5 text-rose-500" />
                   Pending Salaries
                 </div>
                 <div className="text-2xl font-extrabold">
@@ -84,7 +84,7 @@ export const FinanceDashboard: React.FC = () => {
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardContent className="space-y-1.5 p-4">
                 <div className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold">
-                  <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                  <PiTrendUp className="h-3.5 w-3.5 text-emerald-500" />
                   Collected This Month
                 </div>
                 <div className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-400">
@@ -95,7 +95,7 @@ export const FinanceDashboard: React.FC = () => {
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardContent className="space-y-1.5 p-4">
                 <div className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold">
-                  <Wallet className="h-3.5 w-3.5 text-amber-600" />
+                  <PiWallet className="h-3.5 w-3.5 text-amber-600" />
                   Expenses This Month
                 </div>
                 <div className="text-2xl font-extrabold text-amber-700 dark:text-amber-400">
@@ -108,7 +108,7 @@ export const FinanceDashboard: React.FC = () => {
           <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                <Receipt className="h-4 w-4 text-indigo-500" />
+                <PiReceipt className="text-primary h-4 w-4" />
                 Recent Activity
               </CardTitle>
               <CardDescription className="text-xs">
@@ -116,9 +116,9 @@ export const FinanceDashboard: React.FC = () => {
               </CardDescription>
             </CardHeader>
             {data.recentTransactions.length === 0 ? (
-              <Empty className="rounded-none border-0 border-t">
+              <Empty className="rounded-md border-0 border-t">
                 <EmptyMedia variant="icon">
-                  <Receipt className="size-5" />
+                  <PiReceipt className="size-5" />
                 </EmptyMedia>
                 <EmptyTitle>No activity yet</EmptyTitle>
                 <EmptyDescription>Nothing has been logged to the ledger yet.</EmptyDescription>

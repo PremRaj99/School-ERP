@@ -15,7 +15,7 @@ import { authService } from '@/lib/services/auth.service';
 import { getErrorMessage } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { toast } from 'sonner';
-import { KeyRound, Eye, EyeOff, Check, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { PiKey, PiEye, PiEyeSlash, PiCheck, PiArrowLeft, PiShieldCheck } from 'react-icons/pi';
 
 export const ChangePasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -78,14 +78,14 @@ export const ChangePasswordPage: React.FC = () => {
       <Card className="w-full max-w-md border border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-              <KeyRound className="h-5 w-5" />
+            <div className="bg-primary/10 text-primary flex h-9 w-9 items-center justify-center rounded-md">
+              <PiKey className="h-5 w-5" />
             </div>
             <NavLink
               to="/auth/login"
-              className="text-muted-foreground flex items-center gap-1 text-xs hover:text-indigo-600"
+              className="text-muted-foreground hover:text-primary flex items-center gap-1 text-xs"
             >
-              <ArrowLeft className="h-3 w-3" />
+              <PiArrowLeft className="h-3 w-3" />
               <span>Back to Login</span>
             </NavLink>
           </div>
@@ -118,7 +118,7 @@ export const ChangePasswordPage: React.FC = () => {
                   onClick={() => setShowOld(!showOld)}
                   className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
                 >
-                  {showOld ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showOld ? <PiEyeSlash className="h-4 w-4" /> : <PiEye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
@@ -144,7 +144,7 @@ export const ChangePasswordPage: React.FC = () => {
                   onClick={() => setShowNew(!showNew)}
                   className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
                 >
-                  {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showNew ? <PiEyeSlash className="h-4 w-4" /> : <PiEye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
@@ -167,7 +167,7 @@ export const ChangePasswordPage: React.FC = () => {
             </div>
 
             {/* Password Requirement Checklist */}
-            <div className="space-y-1.5 rounded-xl bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
+            <div className="space-y-1.5 rounded-md bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
               <div className="flex items-center gap-2">
                 <div
                   className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${
@@ -176,7 +176,7 @@ export const ChangePasswordPage: React.FC = () => {
                       : 'bg-slate-200 text-slate-500 dark:bg-zinc-700'
                   }`}
                 >
-                  <Check className="h-2.5 w-2.5" />
+                  <PiCheck className="h-2.5 w-2.5" />
                 </div>
                 <span
                   className={
@@ -197,7 +197,7 @@ export const ChangePasswordPage: React.FC = () => {
                       : 'bg-slate-200 text-slate-500 dark:bg-zinc-700'
                   }`}
                 >
-                  <Check className="h-2.5 w-2.5" />
+                  <PiCheck className="h-2.5 w-2.5" />
                 </div>
                 <span
                   className={
@@ -216,7 +216,7 @@ export const ChangePasswordPage: React.FC = () => {
                       : 'bg-slate-200 text-slate-500 dark:bg-zinc-700'
                   }`}
                 >
-                  <Check className="h-2.5 w-2.5" />
+                  <PiCheck className="h-2.5 w-2.5" />
                 </div>
                 <span
                   className={
@@ -234,14 +234,14 @@ export const ChangePasswordPage: React.FC = () => {
           <CardFooter className="pt-2">
             <Button
               type="submit"
-              className="h-10 w-full bg-indigo-600 text-xs font-semibold text-white shadow-md shadow-indigo-500/20 hover:bg-indigo-700"
+              className="bg-primary h-10 w-full text-xs font-semibold text-white shadow-md hover:opacity-90"
               disabled={loading || !isLengthValid || !passwordsMatch}
             >
               {loading ? (
                 'Updating Password...'
               ) : (
                 <>
-                  <ShieldCheck className="mr-1.5 h-4 w-4" />
+                  <PiShieldCheck className="mr-1.5 h-4 w-4" />
                   <span>Update Password</span>
                 </>
               )}

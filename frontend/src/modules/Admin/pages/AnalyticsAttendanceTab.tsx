@@ -19,7 +19,7 @@ import { getErrorMessage } from '@/lib/api';
 import { dateToIsoDate, isoToDisplayDate } from '@/lib/date';
 import { ATTENDANCE_STATUS_COLORS, CHART_COLORS, chartTooltipStyle } from '@/lib/charts';
 import { useClassNameOptions } from '@/hooks/options/useAdminOptions';
-import { AlertTriangle, Grid3x3, PieChartIcon } from 'lucide-react';
+import { PiWarning, PiSquaresFour, PiChartPie } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 import {
   ResponsiveContainer,
@@ -182,7 +182,7 @@ export function AnalyticsAttendanceTab() {
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <PieChartIcon className="h-4 w-4 text-indigo-500" />
+                  <PiChartPie className="text-primary h-4 w-4" />
                   Status Split
                 </CardTitle>
               </CardHeader>
@@ -215,7 +215,7 @@ export function AnalyticsAttendanceTab() {
                       {statusPieData.map((d) => (
                         <div key={d.name} className="flex items-center gap-1.5">
                           <div
-                            className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                            className="h-2.5 w-2.5 shrink-0 rounded-md"
                             style={{ backgroundColor: d.color }}
                           />
                           <span className="text-muted-foreground">{d.name}</span>
@@ -233,7 +233,7 @@ export function AnalyticsAttendanceTab() {
           <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                <Grid3x3 className="h-4 w-4 text-indigo-500" />
+                <PiSquaresFour className="text-primary h-4 w-4" />
                 Class × Weekday Attendance Heatmap
               </CardTitle>
             </CardHeader>
@@ -287,14 +287,14 @@ export function AnalyticsAttendanceTab() {
           <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                <AlertTriangle className="h-4 w-4 text-rose-500" />
+                <PiWarning className="h-4 w-4 text-rose-500" />
                 Chronic Absentees (&lt;75%)
               </CardTitle>
             </CardHeader>
             {data.chronicAbsentees.length === 0 ? (
-              <Empty className="rounded-none border-0 border-t">
+              <Empty className="rounded-md border-0 border-t">
                 <EmptyMedia variant="icon">
-                  <AlertTriangle className="size-5" />
+                  <PiWarning className="size-5" />
                 </EmptyMedia>
                 <EmptyTitle>No chronic absentees</EmptyTitle>
                 <EmptyDescription>

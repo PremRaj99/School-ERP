@@ -2,7 +2,7 @@ import * as React from 'react';
 import { OTPInput, OTPInputContext } from 'input-otp';
 
 import { cn } from '@/lib/utils';
-import { MinusIcon } from 'lucide-react';
+import { PiMinus } from 'react-icons/pi';
 
 function InputOTP({
   className,
@@ -30,7 +30,7 @@ function InputOTPGroup({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="input-otp-group"
       className={cn(
-        'has-aria-invalid:border-destructive has-aria-invalid:ring-destructive/20 dark:has-aria-invalid:ring-destructive/40 flex items-center rounded-none has-aria-invalid:ring-1',
+        'has-aria-invalid:border-destructive has-aria-invalid:ring-destructive/20 dark:has-aria-invalid:ring-destructive/40 flex items-center rounded-md has-aria-invalid:ring-1',
         className,
       )}
       {...props}
@@ -53,7 +53,7 @@ function InputOTPSlot({
       data-slot="input-otp-slot"
       data-active={isActive}
       className={cn(
-        'border-input aria-invalid:border-destructive data-[active=true]:border-ring data-[active=true]:ring-ring/50 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 dark:bg-input/30 dark:data-[active=true]:aria-invalid:ring-destructive/40 relative flex size-8 items-center justify-center border-y border-r text-xs transition-all outline-none first:rounded-none first:border-l last:rounded-none data-[active=true]:z-10 data-[active=true]:ring-1',
+        'border-input aria-invalid:border-destructive data-[active=true]:border-ring data-[active=true]:ring-ring/50 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 dark:bg-input/30 dark:data-[active=true]:aria-invalid:ring-destructive/40 relative flex size-8 items-center justify-center border-y border-r text-xs transition-all outline-none first:rounded-md first:border-l last:rounded-md data-[active=true]:z-10 data-[active=true]:ring-1',
         className,
       )}
       {...props}
@@ -76,7 +76,7 @@ function InputOTPSeparator({ ...props }: React.ComponentProps<'div'>) {
       role="separator"
       {...props}
     >
-      <MinusIcon />
+      <PiMinus />
     </div>
   );
 }

@@ -10,18 +10,18 @@ import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import {
-  Users,
-  GraduationCap,
-  BookOpen,
-  Layers,
-  CreditCard,
-  UserPlus,
-  Bell,
-  ArrowRight,
-  RefreshCw,
-  Calendar,
-  UserCheck,
-} from 'lucide-react';
+  PiUsers,
+  PiGraduationCap,
+  PiBookOpen,
+  PiStack,
+  PiCreditCard,
+  PiUserPlus,
+  PiBell,
+  PiArrowRight,
+  PiArrowClockwise,
+  PiCalendar,
+  PiUserCheck,
+} from 'react-icons/pi';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
 const ATTENDANCE_COLORS = {
@@ -31,28 +31,10 @@ const ATTENDANCE_COLORS = {
   unmarked: '#94a3b8',
 };
 
-/**
- * Tailwind's JIT compiler can't see class names built via string interpolation
- * (`` `bg-${color}-500/10` ``) — they'd never make it into the generated CSS. Each KPI card's
- * palette is a static, fully-spelled-out class string instead.
- */
-const KPI_STYLES = {
-  blue: {
-    icon: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-    cta: 'text-blue-600 dark:text-blue-400',
-  },
-  emerald: {
-    icon: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-    cta: 'text-emerald-600 dark:text-emerald-400',
-  },
-  violet: {
-    icon: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
-    cta: 'text-violet-600 dark:text-violet-400',
-  },
-  amber: {
-    icon: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    cta: 'text-amber-600 dark:text-amber-400',
-  },
+/** Every KPI card shares the same brand-tinted icon chip and CTA color. */
+const KPI_STYLE = {
+  icon: 'bg-primary/10 text-primary',
+  cta: 'text-primary',
 } as const;
 
 export const AdminDashboard: React.FC = () => {
@@ -117,16 +99,16 @@ export const AdminDashboard: React.FC = () => {
             disabled={isLoading || isRefetching}
             className="h-9 gap-1.5 text-xs"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
+            <PiArrowClockwise className={`h-3.5 w-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
             <span>{isRefetching ? 'Syncing...' : 'Sync Data'}</span>
           </Button>
 
           <Button
             size="sm"
             onClick={() => navigate('/admin/students')}
-            className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+            className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
           >
-            <UserPlus className="h-3.5 w-3.5" />
+            <PiUserPlus className="h-3.5 w-3.5" />
             <span>Admit Student</span>
           </Button>
         </div>
@@ -150,32 +132,28 @@ export const AdminDashboard: React.FC = () => {
                   {
                     label: 'Enrolled Students',
                     value: dashboardData.counts.students,
-                    icon: GraduationCap,
-                    color: 'blue',
+                    icon: PiGraduationCap,
                     path: '/admin/students',
                     cta: 'Directory',
                   },
                   {
                     label: 'Teaching Faculty',
                     value: dashboardData.counts.teachers,
-                    icon: Users,
-                    color: 'emerald',
+                    icon: PiUsers,
                     path: '/admin/teachers',
                     cta: 'Faculty',
                   },
                   {
                     label: 'Class Sections',
                     value: dashboardData.counts.classes,
-                    icon: BookOpen,
-                    color: 'violet',
+                    icon: PiBookOpen,
                     path: '/admin/classes',
                     cta: 'Classes',
                   },
                   {
                     label: 'Subjects',
                     value: dashboardData.counts.subjects,
-                    icon: Layers,
-                    color: 'amber',
+                    icon: PiStack,
                     path: '/admin/subjects',
                     cta: 'Curriculum',
                   },
@@ -191,7 +169,7 @@ export const AdminDashboard: React.FC = () => {
                         {kpi.label}
                       </span>
                       <div
-                        className={`flex h-9 w-9 items-center justify-center rounded-xl ${KPI_STYLES[kpi.color].icon}`}
+                        className={`flex h-9 w-9 items-center justify-center rounded-md ${KPI_STYLE.icon}`}
                       >
                         <kpi.icon className="h-5 w-5" />
                       </div>
@@ -204,10 +182,10 @@ export const AdminDashboard: React.FC = () => {
                     <div className="mt-3 flex items-center justify-end border-t border-slate-100 pt-3 text-xs dark:border-zinc-800/80">
                       <button
                         onClick={() => navigate(kpi.path)}
-                        className={`flex items-center gap-0.5 font-semibold hover:underline ${KPI_STYLES[kpi.color].cta}`}
+                        className={`flex items-center gap-0.5 font-semibold hover:underline ${KPI_STYLE.cta}`}
                       >
                         <span>{kpi.cta}</span>
-                        <ArrowRight className="h-3 w-3" />
+                        <PiArrowRight className="h-3 w-3" />
                       </button>
                     </div>
                   </CardContent>
@@ -223,7 +201,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                        <UserCheck className="h-4 w-4 text-emerald-500" />
+                        <PiUserCheck className="text-primary h-4 w-4" />
                         Today's Faculty Attendance
                       </CardTitle>
                       <CardDescription className="text-xs">
@@ -233,7 +211,7 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                     <button
                       onClick={() => navigate('/admin/attendance')}
-                      className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="text-primary text-xs font-semibold hover:underline"
                     >
                       Mark
                     </button>
@@ -278,7 +256,7 @@ export const AdminDashboard: React.FC = () => {
                         {attendancePieData.map((item) => (
                           <div key={item.name} className="flex items-center gap-1.5">
                             <div
-                              className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                              className="h-2.5 w-2.5 shrink-0 rounded-md"
                               style={{ backgroundColor: item.color }}
                             />
                             <span className="text-muted-foreground">{item.name}</span>
@@ -296,19 +274,19 @@ export const AdminDashboard: React.FC = () => {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                      <CreditCard className="h-4 w-4 text-amber-500" />
+                      <PiCreditCard className="text-primary h-4 w-4" />
                       Finance Snapshot
                     </CardTitle>
                     <button
                       onClick={() => navigate('/admin/finance')}
-                      className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="text-primary text-xs font-semibold hover:underline"
                     >
                       Full Ledger
                     </button>
                   </div>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg border border-amber-200/60 bg-amber-50 p-4 dark:border-amber-900/40 dark:bg-amber-950/30">
+                  <div className="rounded-md border border-amber-200/60 bg-amber-50 p-4 dark:border-amber-900/40 dark:bg-amber-950/30">
                     <span className="text-muted-foreground text-xs font-semibold">
                       Pending Student Fees
                     </span>
@@ -320,11 +298,11 @@ export const AdminDashboard: React.FC = () => {
                       {dashboardData.finance.pendingStudentFees.count === 1 ? '' : 's'}
                     </span>
                   </div>
-                  <div className="rounded-lg border border-indigo-200/60 bg-indigo-50 p-4 dark:border-indigo-900/40 dark:bg-indigo-950/30">
+                  <div className="border-primary/20 bg-primary/5 dark:bg-primary/10 rounded-md border p-4">
                     <span className="text-muted-foreground text-xs font-semibold">
                       Pending Salaries
                     </span>
-                    <p className="mt-1 text-xl font-black text-indigo-700 dark:text-indigo-300">
+                    <p className="text-primary mt-1 text-xl font-black">
                       ₹{dashboardData.finance.pendingTeacherSalaries.totalAmount.toLocaleString()}
                     </p>
                     <span className="text-muted-foreground text-[11px]">
@@ -343,12 +321,12 @@ export const AdminDashboard: React.FC = () => {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                      <Calendar className="h-4 w-4 text-violet-500" />
+                      <PiCalendar className="text-primary h-4 w-4" />
                       Upcoming Exams
                     </CardTitle>
                     <button
                       onClick={() => navigate('/admin/exams')}
-                      className="text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="text-primary text-xs hover:underline"
                     >
                       View all
                     </button>
@@ -363,7 +341,7 @@ export const AdminDashboard: React.FC = () => {
                     dashboardData.upcomingExams.map((exam) => (
                       <div
                         key={exam.id}
-                        className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-xs dark:border-zinc-800 dark:bg-zinc-800/50"
+                        className="flex items-center justify-between rounded-md border border-slate-100 bg-slate-50 p-2.5 text-xs dark:border-zinc-800 dark:bg-zinc-800/50"
                       >
                         <div>
                           <p className="font-semibold text-slate-800 dark:text-zinc-200">
@@ -385,12 +363,12 @@ export const AdminDashboard: React.FC = () => {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                      <Bell className="h-4 w-4 text-orange-500" />
+                      <PiBell className="text-primary h-4 w-4" />
                       <span>Notice Bulletin</span>
                     </CardTitle>
                     <button
                       onClick={() => navigate('/admin/notices')}
-                      className="text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="text-primary text-xs hover:underline"
                     >
                       View all
                     </button>
@@ -405,7 +383,7 @@ export const AdminDashboard: React.FC = () => {
                     dashboardData.recentNotices.map((notice) => (
                       <div
                         key={notice.id}
-                        className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 dark:border-zinc-800 dark:bg-zinc-800/50"
+                        className="rounded-md border border-slate-100 bg-slate-50 p-2.5 dark:border-zinc-800 dark:bg-zinc-800/50"
                       >
                         <div className="flex items-center justify-between font-semibold text-slate-800 dark:text-zinc-200">
                           <span className="truncate">{notice.title}</span>
@@ -425,7 +403,7 @@ export const AdminDashboard: React.FC = () => {
                     className="w-full text-xs"
                     onClick={() => navigate('/admin/notices')}
                   >
-                    <Bell className="mr-1.5 h-3.5 w-3.5 text-indigo-500" />
+                    <PiBell className="text-primary mr-1.5 h-3.5 w-3.5" />
                     <span>Broadcast New Circular</span>
                   </Button>
                 </div>

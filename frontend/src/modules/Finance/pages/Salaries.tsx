@@ -26,7 +26,7 @@ import {
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { Plus, Sparkles, Trash2 } from 'lucide-react';
+import { PiPlus, PiSparkle, PiTrash } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const STATUS_OPTIONS: { value: TxnStatus; label: string }[] = [
@@ -168,7 +168,7 @@ export const FinanceSalaries: React.FC = () => {
           }}
           title="Delete"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <PiTrash className="h-3.5 w-3.5" />
         </Button>
       ),
     },
@@ -193,9 +193,9 @@ export const FinanceSalaries: React.FC = () => {
             reset(emptyDefaults);
             setIsProcessOpen(true);
           }}
-          className="h-9 gap-1.5 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700"
+          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <PiPlus className="h-3.5 w-3.5" />
           <span>Process Salary</span>
         </Button>
       </div>
@@ -218,8 +218,8 @@ export const FinanceSalaries: React.FC = () => {
       <Dialog open={isProcessOpen} onOpenChange={setIsProcessOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <Sparkles className="h-4 w-4" />
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiSparkle className="h-4 w-4" />
               <span>Payroll Desk</span>
             </div>
             <DialogTitle className="text-lg font-bold">Process Teacher Salary</DialogTitle>
@@ -271,7 +271,7 @@ export const FinanceSalaries: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <Trash2 className="h-4 w-4" />
+              <PiTrash className="h-4 w-4" />
               <span>Delete Salary Record</span>
             </DialogTitle>
           </DialogHeader>

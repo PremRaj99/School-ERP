@@ -9,7 +9,7 @@ import { studentService } from '@/lib/services/student.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { isoToDisplayDate, dateToIsoDate } from '@/lib/date';
-import { Award, Calendar, ArrowRight, Check } from 'lucide-react';
+import { PiMedal, PiCalendar, PiArrowRight, PiCheck } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 export const StudentExams: React.FC = () => {
@@ -64,7 +64,7 @@ export const StudentExams: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold tracking-tight">Examinations & Marksheets</h1>
-            <Badge variant="outline" className="border-amber-500/30 text-xs text-amber-600">
+            <Badge variant="outline" className="border-primary/30 text-primary text-xs">
               {(exams ?? []).length} Total
             </Badge>
           </div>
@@ -77,7 +77,7 @@ export const StudentExams: React.FC = () => {
       {/* Upcoming */}
       <div>
         <h2 className="mb-3 flex items-center gap-1.5 text-base font-bold">
-          <Calendar className="h-4 w-4 text-indigo-500" />
+          <PiCalendar className="text-primary h-4 w-4" />
           Upcoming Examinations
         </h2>
         {upcoming.length === 0 ? (
@@ -107,13 +107,13 @@ export const StudentExams: React.FC = () => {
       {/* Past / Results */}
       <div>
         <h2 className="mb-3 flex items-center gap-1.5 text-base font-bold">
-          <Award className="h-4 w-4 text-indigo-500" />
+          <PiMedal className="text-primary h-4 w-4" />
           Past Examinations
         </h2>
         {past.length === 0 ? (
-          <Empty className="rounded-none border">
+          <Empty className="rounded-md border">
             <EmptyMedia variant="icon">
-              <Award className="size-5" />
+              <PiMedal className="size-5" />
             </EmptyMedia>
             <EmptyTitle>No past examinations</EmptyTitle>
             <EmptyDescription>Your examination history will show up here.</EmptyDescription>
@@ -151,10 +151,10 @@ export const StudentExams: React.FC = () => {
                 </CardHeader>
                 {exam.isResultDecleared && (
                   <CardContent className="pt-0">
-                    <span className="flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                      <Check className="h-3.5 w-3.5" />
+                    <span className="text-primary flex items-center gap-1 text-xs font-semibold">
+                      <PiCheck className="h-3.5 w-3.5" />
                       View Marksheet
-                      <ArrowRight className="h-3.5 w-3.5" />
+                      <PiArrowRight className="h-3.5 w-3.5" />
                     </span>
                   </CardContent>
                 )}
