@@ -21,9 +21,7 @@ import {
   Menu,
   X,
   ChevronDown,
-  Sparkles,
   School,
-  ArrowRightLeft,
   CheckCircle2,
   AlertCircle,
   Info,
@@ -286,7 +284,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
       <aside className="fixed inset-y-0 z-30 hidden w-64 flex-col border-r border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-xl lg:flex dark:border-zinc-800/80 dark:bg-zinc-900/95">
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-slate-200/70 px-5 dark:border-zinc-800/80">
-          <NavLink to="/" className="group flex items-center gap-2.5">
+          <NavLink to={`/${role}/dashboard`} className="group flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white shadow-md shadow-indigo-500/20 transition-transform duration-200 group-hover:scale-105">
               <School className="h-5 w-5" />
             </div>
@@ -356,50 +354,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
           ))}
         </div>
 
-        {/* Portal Switcher & User Footer */}
-        <div className="space-y-2 border-t border-slate-200/70 bg-slate-50/50 p-3 dark:border-zinc-800/80 dark:bg-zinc-900/40">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 text-xs font-medium dark:border-zinc-700 dark:bg-zinc-800/80">
-              <div className="flex items-center gap-1.5">
-                <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-500" />
-                <span>Switch Role Portal</span>
-              </div>
-              <ChevronDown className="text-muted-foreground h-3 w-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="text-xs">Quick Role Switch</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/admin/dashboard')}>
-                <div className="mr-2 h-2 w-2 rounded-full bg-indigo-500" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium">Admin Portal</span>
-                  <span className="text-muted-foreground text-[10px]">Full ERP access</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/teacher/dashboard')}>
-                <div className="mr-2 h-2 w-2 rounded-full bg-emerald-500" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium">Teacher Portal</span>
-                  <span className="text-muted-foreground text-[10px]">Classes, marks, salary</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/student/dashboard')}>
-                <div className="mr-2 h-2 w-2 rounded-full bg-sky-500" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium">Student Portal</span>
-                  <span className="text-muted-foreground text-[10px]">Exams, fees, schedule</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/')}>
-                <Sparkles className="mr-2 h-3.5 w-3.5 text-amber-500" />
-                <span className="text-xs">Public Landing Page</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-2">
+        {/* User Footer */}
+        <div className="border-t border-slate-200/70 bg-slate-50/50 p-3 dark:border-zinc-800/80 dark:bg-zinc-900/40">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
               <div
                 className={`h-8 w-8 rounded-full bg-linear-to-tr ${currentRoleConfig.avatarBg} flex items-center justify-center text-xs font-bold text-white shadow-xs`}
               >
@@ -434,12 +392,16 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
           />
           <div className="animate-in slide-in-from-left relative z-10 flex w-full max-w-xs flex-1 flex-col border-r border-slate-200 bg-white shadow-2xl duration-200 dark:border-zinc-800 dark:bg-zinc-900">
             <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white">
+              <NavLink
+                to={`/${role}/dashboard`}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="group flex items-center gap-2"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white shadow-xs transition-transform group-hover:scale-105">
                   <School className="h-4 w-4" />
                 </div>
                 <span className="text-sm font-bold">Aura ERP</span>
-              </div>
+              </NavLink>
               <Button
                 variant="ghost"
                 size="icon"
