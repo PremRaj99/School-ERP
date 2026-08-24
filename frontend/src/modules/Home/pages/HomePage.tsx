@@ -12,6 +12,7 @@ import {
   Lock,
   CheckCircle,
   TrendingUp,
+  Mail,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,16 +48,26 @@ export const HomePage: React.FC = () => {
           timetables.
         </p>
 
-        {/* Single Primary CTA Button */}
-        <div className="mt-8 flex items-center justify-center">
+        {/* Main CTA Buttons: Login & Contact Us */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
           <Button
             size="lg"
             onClick={() => navigate('/auth/login')}
-            className="h-11 bg-indigo-600 px-7 font-semibold text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-700"
+            className="h-11 bg-indigo-600 px-6 font-semibold text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-700"
           >
             <ShieldCheck className="mr-2 h-4 w-4" />
-            <span>Sign In to School ERP</span>
+            <span>Login to Portal</span>
             <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => navigate('/contact')}
+            className="h-11 border-slate-300 bg-white/80 px-6 font-semibold hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900/80 dark:hover:bg-zinc-800"
+          >
+            <Mail className="mr-2 h-4 w-4 text-indigo-500" />
+            <span>Contact Us</span>
           </Button>
         </div>
 
@@ -480,15 +491,23 @@ export const HomePage: React.FC = () => {
             Test any module instantly with our pre-populated sample database and interactive
             portals.
           </p>
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
             <Button
               size="lg"
               onClick={() => navigate('/auth/login')}
-              className="bg-white font-bold text-indigo-950 shadow-lg hover:bg-slate-100"
+              className="h-11 bg-white px-6 font-bold text-indigo-950 shadow-lg hover:bg-slate-100"
             >
               <ShieldCheck className="mr-2 h-4 w-4 text-indigo-600" />
-              <span>Sign In to School ERP</span>
+              <span>Login to Portal</span>
               <ArrowRight className="ml-2 h-4 w-4 text-indigo-600" />
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => navigate('/contact')}
+              className="h-11 border border-white/30 bg-white/10 px-6 font-semibold text-white shadow-sm backdrop-blur-xs hover:bg-white/20 hover:text-white"
+            >
+              <Mail className="mr-2 h-4 w-4 text-indigo-200" />
+              <span>Contact Us</span>
             </Button>
           </div>
         </div>
