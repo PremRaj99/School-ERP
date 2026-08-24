@@ -162,6 +162,12 @@ export const TeacherProfile: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2.5 dark:bg-zinc-800/50">
+                <span>Gender</span>
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {teacher.gender ?? 'N/A'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2.5 dark:bg-zinc-800/50">
                 <span>Address</span>
                 <span className="font-bold text-slate-900 dark:text-white">
                   {teacher.address || 'N/A'}

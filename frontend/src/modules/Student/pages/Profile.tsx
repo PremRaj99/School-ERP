@@ -150,6 +150,10 @@ export const StudentProfile: React.FC = () => {
                   <span className="text-muted-foreground text-[10px]">Aadhar Identifier</span>
                   <p className="mt-0.5 font-mono font-semibold">{student.studentAadhar || '—'}</p>
                 </div>
+                <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-zinc-800/50">
+                  <span className="text-muted-foreground text-[10px]">Gender</span>
+                  <p className="mt-0.5 font-semibold">{student.gender ?? 'N/A'}</p>
+                </div>
               </div>
 
               <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-zinc-800/50">

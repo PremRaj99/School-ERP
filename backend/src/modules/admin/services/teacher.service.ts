@@ -25,6 +25,7 @@ const teacherSelect = {
   firstName: true,
   lastName: true,
   dob: true,
+  gender: true,
   address: true,
   phone: true,
   teacherAadhar: true,
@@ -42,6 +43,7 @@ type RawTeacher = {
   firstName: string;
   lastName: string | null;
   dob: Date;
+  gender: 'Male' | 'Female' | 'Other' | null;
   address: string | null;
   phone: string;
   teacherAadhar: string | null;
@@ -59,6 +61,7 @@ const toTeacherRecord = (teacher: RawTeacher): TeacherRecord => ({
   firstName: teacher.firstName,
   lastName: teacher.lastName,
   dob: toISODate(teacher.dob),
+  gender: teacher.gender ?? null,
   address: teacher.address,
   phone: teacher.phone,
   teacherAadhar: teacher.teacherAadhar,
@@ -151,6 +154,7 @@ export class AdminTeacherService {
             firstName: data.firstName,
             lastName: data.lastName,
             dob: fromISODate(data.dob),
+            gender: data.gender,
             address: data.address,
             phone: data.phone,
             teacherAadhar: data.teacherAadhar,
@@ -186,6 +190,7 @@ export class AdminTeacherService {
           firstName: data.firstName,
           lastName: data.lastName,
           dob: data.dob ? fromISODate(data.dob) : undefined,
+          gender: data.gender,
           address: data.address,
           phone: data.phone,
           teacherAadhar: data.teacherAadhar,

@@ -50,10 +50,17 @@ const SORT_FIELD_BY_COLUMN_ID: Record<
   rollNo: 'rollNo',
 };
 
+const GENDER_OPTIONS = [
+  { value: 'Male', label: 'Male' },
+  { value: 'Female', label: 'Female' },
+  { value: 'Other', label: 'Other' },
+];
+
 const emptyDefaults: CreateStudentBody = {
   firstName: '',
   lastName: '',
   dob: '2010-01-01',
+  gender: undefined,
   address: '',
   phone: '',
   fatherName: '',
@@ -99,6 +106,7 @@ function toFormValues(s: StudentRecord): CreateStudentBody {
     firstName: s.firstName,
     lastName: s.lastName ?? '',
     dob: s.dob,
+    gender: s.gender ?? undefined,
     address: s.address ?? '',
     phone: s.phone,
     fatherName: s.fatherName ?? '',
@@ -593,8 +601,14 @@ export const AdminStudents: React.FC = () => {
                 <NumberField control={control} name="rollNo" label="Roll No" required min={1} />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <DateField control={control} name="dob" label="Date of Birth" required />
+                <SelectField
+                  control={control}
+                  name="gender"
+                  label="Gender"
+                  options={GENDER_OPTIONS}
+                />
                 <TextField control={control} name="phone" label="Primary Mobile" required />
               </div>
 

@@ -84,7 +84,7 @@ List + Create/Delete/View-detail student records (auto-creates linked login `Use
 wired in the UI yet** even though `PUT /admin/student/:studentId` exists and is contract-backed.
 
 **List/Detail fields** (`StudentRecord`, identical shape for both — `contracts/src/admin/student.ts`):
-`studentId`, `firstName`, `lastName`, `dob`, `address`, `phone`, `fatherName`, `motherName`,
+`studentId`, `firstName`, `lastName`, `dob`, `gender`, `address`, `phone`, `fatherName`, `motherName`,
 `fatherOccupation`, `motherOccupation`, `studentAadhar`, `fatherAadhar`, `motherAadhar`, `className`,
 `section`, `session`, `dateOfAdmission`, `rollNo`, `appId`, `profilePhoto`, `username`.
 
@@ -94,6 +94,7 @@ wired in the UI yet** even though `PUT /admin/student/:studentId` exists and is 
 | `firstName` | text | min 2 chars |
 | `lastName` | text (opt) | min 2 chars |
 | `dob` | date picker | `YYYY-MM-DD` |
+| `gender` | select (opt) | `Male` \| `Female` \| `Other`; nullable in the schema — no backfill for a document predating this field |
 | `address` | textarea (opt) | min 10 chars |
 | `phone` | text | 10-digit Indian mobile (`^[6-9]\d{9}$`) |
 | `fatherName` | text (opt) | min 2 |
@@ -122,8 +123,8 @@ wired in the UI yet** even though `PUT /admin/student/:studentId` exists and is 
 List + Create/Delete/View-detail teacher records (auto-creates linked login `User`). Same edit-form gap
 as Students.
 
-**List/Detail fields** (`TeacherRecord`): `teacherId`, `firstName`, `lastName`, `dob`, `address`,
-`phone`, `teacherAadhar`, `dateOfJoining`, `about`, `salaryPerMonth`, `qualifications`,
+**List/Detail fields** (`TeacherRecord`): `teacherId`, `firstName`, `lastName`, `dob`, `gender`,
+`address`, `phone`, `teacherAadhar`, `dateOfJoining`, `about`, `salaryPerMonth`, `qualifications`,
 `subjectHandled`, `profilePhoto`, `username`.
 
 **Create / Edit form fields** (`CreateTeacherBody` / `UpdateTeacherBody`):
@@ -132,6 +133,7 @@ as Students.
 | `firstName` | text | min 2 |
 | `lastName` | text (opt) | min 2 |
 | `dob` | date picker | `YYYY-MM-DD` |
+| `gender` | select (opt) | `Male` \| `Female` \| `Other`; nullable in the schema — no backfill for a document predating this field |
 | `address` | textarea (opt) | min 10 |
 | `phone` | text | 10-digit Indian mobile |
 | `teacherAadhar` | text (opt) | 12 digits |

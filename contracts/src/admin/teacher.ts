@@ -9,12 +9,15 @@ import {
   TeacherId,
   paginatedResponse,
 } from '../primitives';
+import { GenderEnum } from '../enums';
 
 export const TeacherRecord = z.object({
   teacherId: TeacherId,
   firstName: z.string(),
   lastName: z.string().nullable(),
   dob: ISODate,
+  // Nullable — no backfill for a document that predates this field (schema.prisma `Teacher.gender`).
+  gender: GenderEnum.nullable(),
   address: z.string().nullable(),
   phone: Phone,
   teacherAadhar: z.string().nullable(),
@@ -37,6 +40,7 @@ export const CreateTeacherBody = z.object({
     .min(2, 'First name must be at least 2 characters long.'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters long.').optional(),
   dob: ISODate,
+  gender: GenderEnum.optional(),
   address: z.string().min(10, 'Address must be at least 10 characters long.').optional(),
   phone: Phone,
   teacherAadhar: Aadhar.optional(),

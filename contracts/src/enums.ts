@@ -32,3 +32,6 @@ export type TxnCategory = z.infer<typeof TxnCategoryEnum>;
 
 export const AcademicCalendarCategoryEnum = z.enum(['HOLIDAY', 'EVENT', 'EXAM', 'OTHER']);
 export type AcademicCalendarCategory = z.infer<typeof AcademicCalendarCategoryEnum>;
+
+export const GenderEnum = z.enum(['Male', 'Female', 'Other']);
+export type Gender = z.infer<typeof GenderEnum>;

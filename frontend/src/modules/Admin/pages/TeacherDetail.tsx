@@ -259,6 +259,10 @@ export const AdminTeacherDetail: React.FC = () => {
               <span className="text-muted-foreground text-[10px]">Monthly Salary</span>
               <p className="font-semibold">₹{teacher.salaryPerMonth.toLocaleString()}</p>
             </div>
+            <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+              <span className="text-muted-foreground text-[10px]">Gender</span>
+              <p className="font-semibold">{teacher.gender ?? 'N/A'}</p>
+            </div>
             <div className="text-muted-foreground flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
               <div className="flex items-center gap-1">
                 <Phone className="h-3 w-3 text-emerald-500" />

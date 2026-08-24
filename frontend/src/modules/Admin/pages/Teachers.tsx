@@ -22,7 +22,7 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { DataTable, ErrorState, downloadCsv } from '@/components/data-table';
-import { TextField, NumberField, DateField, TagsField } from '@/components/form';
+import { TextField, NumberField, DateField, SelectField, TagsField } from '@/components/form';
 import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { CreateTeacherBody, type TeacherRecord } from '@schoolerp/contracts';
@@ -42,10 +42,17 @@ const SORT_FIELD_BY_COLUMN_ID: Record<
   salaryPerMonth: 'salaryPerMonth',
 };
 
+const GENDER_OPTIONS = [
+  { value: 'Male', label: 'Male' },
+  { value: 'Female', label: 'Female' },
+  { value: 'Other', label: 'Other' },
+];
+
 const emptyDefaults: CreateTeacherBody = {
   firstName: '',
   lastName: '',
   dob: '1990-01-01',
+  gender: undefined,
   address: '',
   phone: '',
   teacherAadhar: '',
@@ -71,6 +78,7 @@ function toFormValues(t: TeacherRecord): CreateTeacherBody {
     firstName: t.firstName,
     lastName: t.lastName ?? '',
     dob: t.dob,
+    gender: t.gender ?? undefined,
     address: t.address ?? '',
     phone: t.phone,
     teacherAadhar: t.teacherAadhar ?? '',
@@ -482,8 +490,14 @@ export const AdminTeachers: React.FC = () => {
                 <TextField control={control} name="lastName" label="Last Name" />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <DateField control={control} name="dob" label="Date of Birth" required />
+                <SelectField
+                  control={control}
+                  name="gender"
+                  label="Gender"
+                  options={GENDER_OPTIONS}
+                />
                 <TextField control={control} name="phone" label="Mobile Number" required />
               </div>
 

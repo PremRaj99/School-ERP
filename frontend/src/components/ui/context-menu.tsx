@@ -59,7 +59,7 @@ function ContextMenuGroup({ ...props }: ContextMenuPrimitive.Group.Props) {
   return <ContextMenuPrimitive.Group data-slot="context-menu-group" {...props} />;
 }
 
-function ContextMenuLabel({
+function ContextMenuGroupLabel({
   className,
   inset,
   ...props
@@ -68,9 +68,29 @@ function ContextMenuLabel({
 }) {
   return (
     <ContextMenuPrimitive.GroupLabel
-      data-slot="context-menu-label"
+      data-slot="context-menu-group-label"
       data-inset={inset}
       className={cn('text-muted-foreground px-2 py-2 text-xs data-inset:pl-7', className)}
+      {...props}
+    />
+  );
+}
+
+function ContextMenuLabel({
+  className,
+  inset,
+  ...props
+}: React.ComponentProps<'div'> & {
+  inset?: boolean;
+}) {
+  return (
+    <div
+      data-slot="context-menu-label"
+      data-inset={inset}
+      className={cn(
+        'text-muted-foreground px-2 py-2 text-xs font-medium data-inset:pl-7',
+        className,
+      )}
       {...props}
     />
   );
@@ -230,6 +250,7 @@ export {
   ContextMenuItem,
   ContextMenuCheckboxItem,
   ContextMenuRadioItem,
+  ContextMenuGroupLabel,
   ContextMenuLabel,
   ContextMenuSeparator,
   ContextMenuShortcut,

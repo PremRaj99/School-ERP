@@ -31,6 +31,7 @@ const studentSelect = {
   firstName: true,
   lastName: true,
   dob: true,
+  gender: true,
   address: true,
   phone: true,
   fatherName: true,
@@ -54,6 +55,7 @@ type RawStudent = {
   firstName: string;
   lastName: string | null;
   dob: Date;
+  gender: 'Male' | 'Female' | 'Other' | null;
   address: string | null;
   phone: string;
   fatherName: string | null;
@@ -78,6 +80,7 @@ const toStudentRecord = (student: RawStudent): StudentRecord => ({
   firstName: student.firstName,
   lastName: student.lastName,
   dob: toISODate(student.dob),
+  gender: student.gender ?? null,
   address: student.address,
   phone: student.phone,
   fatherName: student.fatherName,
@@ -214,6 +217,7 @@ export class AdminStudentService {
             firstName: data.firstName,
             lastName: data.lastName,
             dob: fromISODate(data.dob),
+            gender: data.gender,
             address: data.address,
             phone: data.phone,
             fatherName: data.fatherName,
@@ -276,6 +280,7 @@ export class AdminStudentService {
           firstName: data.firstName,
           lastName: data.lastName,
           dob: data.dob ? fromISODate(data.dob) : undefined,
+          gender: data.gender,
           address: data.address,
           phone: data.phone,
           fatherName: data.fatherName,

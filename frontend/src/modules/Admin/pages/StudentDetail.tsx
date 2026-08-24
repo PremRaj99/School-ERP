@@ -253,6 +253,10 @@ export const AdminStudentDetail: React.FC = () => {
           <CardContent className="space-y-3 text-xs">
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
+                <span className="text-muted-foreground text-[10px]">Gender</span>
+                <p className="font-semibold">{student.gender ?? 'N/A'}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-2 dark:bg-zinc-800/50">
                 <span className="text-muted-foreground text-[10px]">Father's Name</span>
                 <p className="font-semibold">{student.fatherName || 'N/A'}</p>
               </div>
