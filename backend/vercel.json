@@ -9,7 +9,5 @@
       "includeFiles": "dist/**"
     }
   },
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index.js" }
-  ]
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index.js" }]
 }
