@@ -9,18 +9,22 @@ import type { Express } from 'express';
 const logFilePath = path.join(process.cwd(), 'logs', 'combined.log');
 
 export const getLogs = () => {
-  if (!fs.existsSync(logFilePath)) return [];
-  const file = fs.readFileSync(logFilePath, 'utf-8');
-  return file
-    .split('\n')
-    .filter(Boolean)
-    .map((line) => {
-      try {
-        return JSON.parse(line);
-      } catch {
-        return { message: line };
-      }
-    });
+  try {
+    if (!fs.existsSync(logFilePath)) return [];
+    const file = fs.readFileSync(logFilePath, 'utf-8');
+    return file
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => {
+        try {
+          return JSON.parse(line);
+        } catch {
+          return { message: line };
+        }
+      });
+  } catch {
+    return [];
+  }
 };
 
 export const setupLogWebSocket = (app: Express) => {

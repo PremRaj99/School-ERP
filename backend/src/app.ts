@@ -17,6 +17,8 @@ import { logRouter } from './modules/log/log.route';
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 app.use(
   cors({
     origin: allowedDomains,
@@ -29,8 +31,6 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '16kb' }));
 app.use(morgan('dev'));
 app.use(cookieParser());
-
-app.set('trust-proxy', 1);
 
 // Apply rate limiting to all requests
 app.use(limiter);

@@ -18,13 +18,25 @@ export const logger = winston.createLogger({
   ),
 
   transports: [
-    new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.printf(({ level, message, timestamp, ...meta }) => {
+          const metaString = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+          return `[${timestamp || new Date().toISOString()}] ${level}: ${message}${metaString}`;
+        }),
+      ),
     }),
-
-    new winston.transports.File({
-      filename: 'logs/combined.log',
-    }),
+    ...(!process.env.VERCEL
+      ? [
+          new winston.transports.File({
+            filename: 'logs/error.log',
+            level: 'error',
+          }),
+          new winston.transports.File({
+            filename: 'logs/combined.log',
+          }),
+        ]
+      : []),
   ],
 });
