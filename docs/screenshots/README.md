@@ -8,6 +8,8 @@ The following PNGs are used by the root `README.md` screenshot table:
 | `exam-wizard.png` | The multi-step exam creation wizard, mid-flow |
 | `timetable-builder.png` | The timetable grid with periods filled in |
 | `finance-analytics.png` | Finance analytics with the expense/fee charts |
+| `teacher-attendance.png` | Faculty attendance roll call with Present/Absent toggles |
+| `student-results.png` | Exam detail view with subject-wise marking status |
 
 **Capture tips:** use a 1440px-wide window, log in with seeded data so no screen is empty, and crop out
 the browser chrome. Keep them under ~500 KB each so the README stays quick to load.
