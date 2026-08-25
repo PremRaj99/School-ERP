@@ -672,7 +672,7 @@ export const AdminFinance: React.FC = () => {
                 <div className="flex items-center justify-between border-b pb-3">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                      Gyandeep BAAL VIKAS VIDYA MANDIR
+                      Gyandeep BAAL VIKAS vidyamandir
                     </h3>
                     <p className="text-muted-foreground text-[10px]">Official Fee Receipt</p>
                   </div>

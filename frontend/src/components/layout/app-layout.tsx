@@ -288,7 +288,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                 </Badge>
               </div>
               <p className="text-muted-foreground -mt-0.5 truncate text-[10px]">
-                Baal Vikas Vidya Mandir
+                Baal Vikas vidyamandir
               </p>
             </div>
           </NavLink>
@@ -392,7 +392,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs leading-tight font-bold">Gyandeep</span>
-                  <span className="text-muted-foreground text-[9px]">Baal Vikas Vidya Mandir</span>
+                  <span className="text-muted-foreground text-[9px]">Baal Vikas vidyamandir</span>
                 </div>
               </NavLink>
               <Button

@@ -66,7 +66,7 @@ export const AdminContactMessages: React.FC = () => {
   const openDetail = (msg: ContactRecord) => {
     setSelectedMessage(msg);
     setReplyText(
-      `Dear ${msg.name},\n\nThank you for reaching out to Gyandeep Baal Vikas Vidya Mandir regarding your inquiry. `,
+      `Dear ${msg.name},\n\nThank you for reaching out to Gyandeep Baal Vikas vidyamandir regarding your inquiry. `,
     );
     setIsDetailOpen(true);
   };
