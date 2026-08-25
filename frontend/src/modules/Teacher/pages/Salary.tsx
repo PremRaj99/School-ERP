@@ -168,7 +168,7 @@ export const TeacherSalary: React.FC = () => {
 
       {/* Payslip View Modal */}
       <Dialog open={!!selectedSlip} onOpenChange={() => setSelectedSlip(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg lg:max-w-xl">
           {selectedSlip && (
             <div className="space-y-4 pt-2">
               <div className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-5 text-xs dark:border-zinc-700 dark:bg-zinc-800/60">

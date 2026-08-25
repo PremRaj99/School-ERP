@@ -98,19 +98,15 @@ export const AdminContactMessages: React.FC = () => {
       </div>
 
       {/* Search Bar */}
-      <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardContent className="p-4">
-          <div className="relative w-full">
-            <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-            <Input
-              placeholder="Search inquiries by sender name, email, or keywords..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9 pl-9 text-xs"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="relative w-full">
+        <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+        <Input
+          placeholder="Search inquiries by sender name, email, or keywords..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="h-9 pl-9 text-xs"
+        />
+      </div>
 
       {/* Inbox Grid */}
       {isLoading ? (
@@ -178,9 +174,9 @@ export const AdminContactMessages: React.FC = () => {
 
       {/* Message Detail Sheet */}
       <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <SheetContent className="overflow-y-auto sm:max-w-lg">
+        <SheetContent className="overflow-y-auto sm:max-w-lg lg:max-w-xl">
           {selectedMessage && (
-            <div className="space-y-4 px-4 pt-4">
+            <div className="space-y-4 p-6">
               <SheetHeader>
                 <div className="text-primary flex items-center gap-2 text-xs font-semibold">
                   <PiEnvelope className="h-4 w-4" />

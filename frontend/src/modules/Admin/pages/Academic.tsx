@@ -388,7 +388,7 @@ export const AdminAcademic: React.FC = () => {
 
       {/* Add Calendar Event Modal */}
       <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiSparkle className="h-4 w-4" />
@@ -479,7 +479,7 @@ export const AdminAcademic: React.FC = () => {
 
       {/* Timetable Cell Editor */}
       <Dialog open={!!editingCell} onOpenChange={() => setEditingCell(null)}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiClock className="h-4 w-4" />

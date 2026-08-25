@@ -565,7 +565,7 @@ export const AdminFinance: React.FC = () => {
           if (!next) reset(emptyFeeDefaults);
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl lg:max-w-2xl">
           <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiSparkle className="h-4 w-4" />
@@ -665,7 +665,7 @@ export const AdminFinance: React.FC = () => {
 
       {/* Official Payment Receipt Modal */}
       <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg lg:max-w-xl">
           {selectedReceipt && (
             <div className="space-y-4 pt-2">
               <div className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-5 text-xs dark:border-zinc-700 dark:bg-zinc-800/60">

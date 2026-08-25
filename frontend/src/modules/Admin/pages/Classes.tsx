@@ -184,19 +184,16 @@ export const AdminClasses: React.FC = () => {
       </div>
 
       {/* Search Bar */}
-      <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardContent className="p-4">
-          <div className="relative w-full">
-            <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-            <Input
-              placeholder="Search class sections (e.g. Class 10-A, 2025-2026)..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9 pl-9 text-xs"
-            />
-          </div>
-        </CardContent>
-      </Card>
+
+      <div className="relative w-full">
+        <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+        <Input
+          placeholder="Search class sections (e.g. Class 10-A, 2025-2026)..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="h-9 pl-9 text-xs"
+        />
+      </div>
 
       {/* Class Cards Grid */}
       {isLoading ? (
@@ -315,7 +312,7 @@ export const AdminClasses: React.FC = () => {
 
       {/* Add Class Modal */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiSparkle className="h-4 w-4" />
@@ -328,20 +325,22 @@ export const AdminClasses: React.FC = () => {
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
-            <SelectField
-              control={control}
-              name="className"
-              label="Class Grade"
-              required
-              options={GRADE_OPTIONS}
-            />
-            <SelectField
-              control={control}
-              name="section"
-              label="Section"
-              required
-              options={SECTION_OPTIONS}
-            />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <SelectField
+                control={control}
+                name="className"
+                label="Class Grade"
+                required
+                options={GRADE_OPTIONS}
+              />
+              <SelectField
+                control={control}
+                name="section"
+                label="Section"
+                required
+                options={SECTION_OPTIONS}
+              />
+            </div>
             <SessionField control={control} name="session" label="Academic Session" required />
 
             <DialogFooter className="pt-3">
@@ -367,7 +366,7 @@ export const AdminClasses: React.FC = () => {
 
       {/* Edit Class Modal */}
       <Dialog open={!!editingClass} onOpenChange={(open) => !open && setEditingClass(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">Edit Class Section</DialogTitle>
             <DialogDescription className="text-xs">
@@ -376,20 +375,22 @@ export const AdminClasses: React.FC = () => {
           </DialogHeader>
 
           <form onSubmit={handleEditSubmit(onEditSubmit)} className="space-y-4 pt-2">
-            <SelectField
-              control={editControl}
-              name="className"
-              label="Class Grade"
-              required
-              options={GRADE_OPTIONS}
-            />
-            <SelectField
-              control={editControl}
-              name="section"
-              label="Section"
-              required
-              options={SECTION_OPTIONS}
-            />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <SelectField
+                control={editControl}
+                name="className"
+                label="Class Grade"
+                required
+                options={GRADE_OPTIONS}
+              />
+              <SelectField
+                control={editControl}
+                name="section"
+                label="Section"
+                required
+                options={SECTION_OPTIONS}
+              />
+            </div>
             <SessionField control={editControl} name="session" label="Academic Session" required />
 
             <DialogFooter className="pt-3">

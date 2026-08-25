@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
@@ -75,46 +75,42 @@ export const AdminStudentAttendance: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardContent className="flex flex-wrap items-end gap-3 p-4">
-          <div>
-            <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">
-              Class
-            </span>
-            <select
-              value={classId}
-              onChange={(e) => setClassId(e.target.value)}
-              disabled={classesLoading}
-              className="h-9 min-w-48 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
-            >
-              <option value="">Select a class…</option>
-              {(classesList ?? []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  Class {c.className}-{c.section} ({c.session})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">From</span>
-            <input
-              type="date"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
-            />
-          </div>
-          <div>
-            <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">To</span>
-            <input
-              type="date"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">Class</span>
+          <select
+            value={classId}
+            onChange={(e) => setClassId(e.target.value)}
+            disabled={classesLoading}
+            className="h-9 min-w-48 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
+          >
+            <option value="">Select a class…</option>
+            {(classesList ?? []).map((c) => (
+              <option key={c.id} value={c.id}>
+                Class {c.className}-{c.section} ({c.session})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">From</span>
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
+          />
+        </div>
+        <div>
+          <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">To</span>
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
+          />
+        </div>
+      </div>
 
       {!classId ? (
         <Empty className="rounded-md border p-8">

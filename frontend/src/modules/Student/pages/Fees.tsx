@@ -217,8 +217,8 @@ export const StudentFees: React.FC = () => {
 
       {/* Receipt Detail Sheet */}
       <Sheet open={!!selectedFeeId} onOpenChange={() => setSelectedFeeId(null)}>
-        <SheetContent className="overflow-y-auto sm:max-w-md">
-          <div className="space-y-4 px-4 pt-4">
+        <SheetContent className="overflow-y-auto sm:max-w-lg lg:max-w-xl">
+          <div className="space-y-4 p-6">
             {detailLoading ? (
               <Skeleton className="h-64 w-full" />
             ) : feeDetail ? (

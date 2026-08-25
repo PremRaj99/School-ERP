@@ -437,7 +437,7 @@ export const AdminClassDetail: React.FC = () => {
 
       {/* Promote Class */}
       <Dialog open={isPromoteOpen} onOpenChange={setIsPromoteOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl lg:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
               Promote Class {cls.className}-{cls.section}

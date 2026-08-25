@@ -168,7 +168,7 @@ export const BulkImportStudentsDialog: React.FC<{
         onOpenChange(next);
       }}
     >
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl lg:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">Bulk Import Students</DialogTitle>
           <DialogDescription className="text-xs">

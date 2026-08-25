@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -67,19 +67,15 @@ export const TeacherNotices: React.FC = () => {
       </div>
 
       {/* Search Bar */}
-      <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardContent className="p-4">
-          <div className="relative w-full">
-            <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-            <Input
-              placeholder="Search faculty circulars..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9 pl-9 text-xs"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="relative w-full">
+        <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+        <Input
+          placeholder="Search faculty circulars..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="h-9 pl-9 text-xs"
+        />
+      </div>
 
       {/* Notices Grid */}
       {isLoading ? (
@@ -141,10 +137,9 @@ export const TeacherNotices: React.FC = () => {
         </div>
       )}
 
-      {/* Notice Detail Sheet */}
       <Sheet open={!!selectedNoticeId} onOpenChange={() => setSelectedNoticeId(null)}>
-        <SheetContent className="overflow-y-auto sm:max-w-lg">
-          <div className="space-y-4 px-4 pt-4">
+        <SheetContent className="overflow-y-auto sm:max-w-lg lg:max-w-xl">
+          <div className="space-y-4 p-6">
             {detailLoading ? (
               <Skeleton className="h-48 w-full" />
             ) : noticeDetail ? (

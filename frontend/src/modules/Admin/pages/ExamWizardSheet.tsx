@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useForm, useFieldArray, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -121,19 +121,19 @@ export function ExamWizardSheet({
   const onSubmit = (values: CreateExamBody) => createMutation.mutate(values);
 
   return (
-    <Sheet open={open} onOpenChange={(next) => (next ? onOpenChange(true) : close())}>
-      <SheetContent className="overflow-y-auto sm:max-w-2xl">
-        <div className="space-y-5 px-4 pt-4 pb-8">
-          <SheetHeader>
+    <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : close())}>
+      <DialogContent className="sm:max-w-3xl lg:max-w-4xl">
+        <div className="space-y-5 p-2">
+          <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiSparkle className="h-4 w-4" />
               <span>Exam Controller Office</span>
             </div>
-            <SheetTitle className="text-lg font-bold">Schedule Term Examination</SheetTitle>
-            <SheetDescription className="text-xs">
+            <DialogTitle className="text-lg font-bold">Schedule Term Examination</DialogTitle>
+            <DialogDescription className="text-xs">
               Step {step + 1} of {STEPS.length}: {STEPS[step]}
-            </SheetDescription>
-          </SheetHeader>
+            </DialogDescription>
+          </DialogHeader>
 
           {/* Step indicator */}
           <div className="flex items-center gap-1.5">
@@ -349,8 +349,8 @@ export function ExamWizardSheet({
             )}
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -217,7 +217,7 @@ export const FinanceSalaries: React.FC = () => {
       )}
 
       <Dialog open={isProcessOpen} onOpenChange={setIsProcessOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl lg:max-w-2xl">
           <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiSparkle className="h-4 w-4" />

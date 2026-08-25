@@ -14,13 +14,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
 import { DataTable, ErrorState, downloadCsv } from '@/components/data-table';
 import { TextField, NumberField, DateField, SelectField, SessionField } from '@/components/form';
 import { adminService } from '@/lib/services/admin.service';
@@ -567,129 +560,127 @@ export const AdminStudents: React.FC = () => {
         </Card>
       )}
 
-      {/* Admit / Edit Student Sheet */}
-      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <SheetContent className="overflow-y-auto sm:max-w-lg">
-          <div className="space-y-4 px-4 pt-4">
-            <SheetHeader>
-              <div className="text-primary flex items-center gap-2 text-xs font-semibold">
-                <PiSparkle className="h-4 w-4" />
-                <span>Admissions Office</span>
-              </div>
-              <SheetTitle className="text-lg font-bold">
-                {formTarget ? `Edit ${formTarget.studentId}` : 'New Student Admission Form'}
-              </SheetTitle>
-              <SheetDescription className="text-xs">
-                {formTarget
-                  ? 'Update this student’s registered profile.'
-                  : 'Complete the admission profile. Auto-creates student credentials for portal login.'}
-              </SheetDescription>
-            </SheetHeader>
+      {/* Admit / Edit Student Dialog */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="sm:max-w-3xl lg:max-w-4xl">
+          <DialogHeader>
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiSparkle className="h-4 w-4" />
+              <span>Admissions Office</span>
+            </div>
+            <DialogTitle className="text-lg font-bold">
+              {formTarget ? `Edit ${formTarget.studentId}` : 'New Student Admission Form'}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {formTarget
+                ? 'Update this student’s registered profile.'
+                : 'Complete the admission profile. Auto-creates student credentials for portal login.'}
+            </DialogDescription>
+          </DialogHeader>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pb-4">
-              <div className="grid grid-cols-2 gap-3">
-                <TextField control={control} name="firstName" label="First Name" required />
-                <TextField control={control} name="lastName" label="Last Name" />
-              </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <TextField control={control} name="firstName" label="First Name" required />
+              <TextField control={control} name="lastName" label="Last Name" />
+            </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <SelectField
-                  control={control}
-                  name="className"
-                  label="Class"
-                  required
-                  options={classNameOptions}
-                />
-                <SelectField
-                  control={control}
-                  name="section"
-                  label="Section"
-                  required
-                  options={sectionOptions}
-                  placeholder={watchedClassName ? 'Select…' : 'Pick a class first'}
-                />
-                <NumberField control={control} name="rollNo" label="Roll No" required min={1} />
-              </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <SelectField
+                control={control}
+                name="className"
+                label="Class"
+                required
+                options={classNameOptions}
+              />
+              <SelectField
+                control={control}
+                name="section"
+                label="Section"
+                required
+                options={sectionOptions}
+                placeholder={watchedClassName ? 'Select…' : 'Pick a class first'}
+              />
+              <NumberField control={control} name="rollNo" label="Roll No" required min={1} />
+            </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <DateField control={control} name="dob" label="Date of Birth" required />
-                <SelectField
-                  control={control}
-                  name="gender"
-                  label="Gender"
-                  options={GENDER_OPTIONS}
-                />
-                <TextField control={control} name="phone" label="Primary Mobile" required />
-              </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <DateField control={control} name="dob" label="Date of Birth" required />
+              <SelectField
+                control={control}
+                name="gender"
+                label="Gender"
+                options={GENDER_OPTIONS}
+              />
+              <TextField control={control} name="phone" label="Primary Mobile" required />
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <SessionField control={control} name="session" label="Academic Session" required />
-                <DateField
-                  control={control}
-                  name="dateOfAdmission"
-                  label="Date of Admission"
-                  required
-                />
-              </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <SessionField control={control} name="session" label="Academic Session" required />
+              <DateField
+                control={control}
+                name="dateOfAdmission"
+                label="Date of Admission"
+                required
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <TextField control={control} name="fatherName" label="Father's Name" />
-                <TextField control={control} name="motherName" label="Mother's Name" />
-              </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <TextField control={control} name="fatherName" label="Father's Name" />
+              <TextField control={control} name="motherName" label="Mother's Name" />
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <TextField control={control} name="fatherOccupation" label="Father's Occupation" />
-                <TextField control={control} name="motherOccupation" label="Mother's Occupation" />
-              </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <TextField control={control} name="fatherOccupation" label="Father's Occupation" />
+              <TextField control={control} name="motherOccupation" label="Mother's Occupation" />
+            </div>
 
-              <TextField control={control} name="address" label="Residential Address" multiline />
+            <TextField control={control} name="address" label="Residential Address" multiline />
 
-              <div className="grid grid-cols-3 gap-3">
-                <TextField
-                  control={control}
-                  name="studentAadhar"
-                  label="Student Aadhar"
-                  placeholder="12 digits"
-                />
-                <TextField
-                  control={control}
-                  name="fatherAadhar"
-                  label="Father Aadhar"
-                  placeholder="12 digits"
-                />
-                <TextField
-                  control={control}
-                  name="motherAadhar"
-                  label="Mother Aadhar"
-                  placeholder="12 digits"
-                />
-              </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <TextField
+                control={control}
+                name="studentAadhar"
+                label="Student Aadhar"
+                placeholder="12-digit Aadhar number"
+              />
+              <TextField
+                control={control}
+                name="fatherAadhar"
+                label="Father Aadhar"
+                placeholder="12-digit Aadhar number"
+              />
+              <TextField
+                control={control}
+                name="motherAadhar"
+                label="Mother Aadhar"
+                placeholder="12-digit Aadhar number"
+              />
+            </div>
 
-              <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-zinc-800">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsFormOpen(false)}
-                  className="h-9 text-xs"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
-                >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? 'Saving...'
-                    : formTarget
-                      ? 'Save Changes'
-                      : 'Confirm Admission'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </SheetContent>
-      </Sheet>
+            <DialogFooter className="pt-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsFormOpen(false)}
+                className="h-9 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
+              >
+                {createMutation.isPending || updateMutation.isPending
+                  ? 'Saving...'
+                  : formTarget
+                    ? 'Save Changes'
+                    : 'Confirm Admission'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>

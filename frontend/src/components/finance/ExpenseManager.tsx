@@ -282,7 +282,7 @@ export const ExpenseManager: React.FC<{ adapter: ExpenseManagerAdapter }> = ({ a
 
       {/* Log / Edit Expense */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiReceipt className="h-4 w-4" />

@@ -189,54 +189,52 @@ export const AdminNotices: React.FC = () => {
       </div>
 
       {/* Search & Filter Bar */}
-      <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardContent className="flex flex-col items-center justify-between gap-3 p-4 sm:flex-row">
-          <div className="relative w-full flex-1">
-            <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-            <Input
-              placeholder="Search circulars by headline or keyword..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9 pl-9 text-xs"
-            />
-          </div>
+      <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+        <div className="relative w-full flex-1">
+          <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+          <Input
+            placeholder="Search circulars by headline or keyword..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="h-9 pl-9 text-xs"
+          />
+        </div>
 
-          <div className="flex w-full items-center gap-2 sm:w-auto">
-            <PiFunnel className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-            <div className="flex items-center gap-1.5">
-              {(['All', 'Active', 'Expired'] as const).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
-                    statusFilter === status
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-400'
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
-            <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-zinc-700" />
-            <div className="flex items-center gap-1.5">
-              {(['All', 'Student', 'Teacher'] as const).map((role) => (
-                <button
-                  key={role}
-                  onClick={() => setTargetFilter(role)}
-                  className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
-                    targetFilter === role
-                      ? 'bg-primary text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-400'
-                  }`}
-                >
-                  {role === 'All' ? 'All Roles' : `${role}s Only`}
-                </button>
-              ))}
-            </div>
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <PiFunnel className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+          <div className="flex items-center gap-1.5">
+            {(['All', 'Active', 'Expired'] as const).map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                  statusFilter === status
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-400'
+                }`}
+              >
+                {status}
+              </button>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+          <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-zinc-700" />
+          <div className="flex items-center gap-1.5">
+            {(['All', 'Student', 'Teacher'] as const).map((role) => (
+              <button
+                key={role}
+                onClick={() => setTargetFilter(role)}
+                className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                  targetFilter === role
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-400'
+                }`}
+              >
+                {role === 'All' ? 'All Roles' : `${role}s Only`}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Notices Grid */}
       {isLoading ? (
@@ -339,9 +337,8 @@ export const AdminNotices: React.FC = () => {
         </div>
       )}
 
-      {/* Broadcast / Edit Notice Modal */}
       <Dialog open={isEditDialogOpen} onOpenChange={(open) => !open && closeDialog()}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl lg:max-w-2xl">
           <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiSparkle className="h-4 w-4" />
