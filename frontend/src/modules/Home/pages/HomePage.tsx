@@ -7,7 +7,6 @@ import {
   PiCertificate,
   PiCreditCard,
   PiArrowRight,
-  PiSparkle,
   PiBuildings,
   PiLock,
   PiCheckCircle,
@@ -18,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { HeroSection } from '../components/HeroSection';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,62 +25,12 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="space-y-16 overflow-hidden pb-20">
-      {/* Hero Section */}
-      <section className="relative mx-auto max-w-7xl px-4 pt-12 text-center sm:px-6 md:pt-20 lg:px-8">
-        {/* Background Ambient Glow */}
-        <div className="bg-primary/10 pointer-events-none absolute top-1/2 left-1/2 -z-10 h-137.5 w-137.5 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" />
+      {/* High-Impact Hero Section */}
+      <HeroSection />
 
-        <div className="animate-pulse-subtle border-primary/20 bg-primary/10 text-primary mb-6 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-xs">
-          <PiSparkle className="h-3.5 w-3.5" />
-          <span>Next-Generation Unified School ERP 2.0</span>
-        </div>
-
-        <h1 className="text-foreground mx-auto max-w-4xl text-4xl leading-tight font-extrabold tracking-tight sm:text-5xl md:text-6xl">
-          Empowering Modern Education with{' '}
-          <span className="text-primary">Intelligent School Management</span>
-        </h1>
-
-        <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-base leading-relaxed sm:text-lg">
-          A unified, state-of-the-art enterprise portal connecting administrators, faculty members,
-          and students in real time with automated attendance, exam grading, fee invoicing, and
-          timetables.
-        </p>
-
-        {/* Main CTA Buttons: Login & Contact Us */}
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-          <Button
-            size="lg"
-            onClick={() => navigate('/auth/login')}
-            className="bg-primary h-11 w-full px-7 font-semibold text-white shadow-lg hover:opacity-90 sm:w-auto"
-          >
-            <PiShieldCheck className="mr-2 h-4 w-4" />
-            <span>Login to Portal</span>
-            <PiArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-
-          <Button
-            size="lg"
-            onClick={() => navigate('/contact')}
-            className="h-11 w-full border border-slate-200 bg-white/90 px-7 font-semibold text-slate-800 shadow-sm hover:bg-slate-100 sm:w-auto dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-200 dark:hover:bg-zinc-800"
-          >
-            <PiEnvelopeSimple className="text-primary mr-2 h-4 w-4" />
-            <span>Contact Us</span>
-          </Button>
-        </div>
-
-        {/* Hero Illustration Showcase */}
-        <div className="mx-auto mt-10 max-w-3xl p-4 sm:p-8">
-          <div className="relative mx-auto flex items-center justify-center">
-            <img
-              src="/hero-illustration.jpg"
-              alt="School Campus & Real-Time Dashboard Connectivity"
-              className="h-auto w-full max-w-xl object-contain dark:hue-rotate-180 dark:invert"
-            />
-          </div>
-        </div>
-
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Quick Demo Credentials Bar */}
-        <div className="mx-auto mt-8 max-w-3xl rounded-md border border-slate-200/80 bg-white/90 p-4 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90">
+        <div className="mx-auto -mt-6 max-w-3xl rounded-xl border border-slate-200/80 bg-white/95 p-4 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 dark:border-zinc-800">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300">
               <PiLock className="text-primary h-3.5 w-3.5" />
@@ -134,299 +84,97 @@ export const HomePage: React.FC = () => {
             </button>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Live Interactive Portal Showcase Tabs */}
+      {/* Core ERP Modules & Capabilities */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto mb-8 max-w-2xl space-y-2 text-center">
-          <Badge variant="outline" className="text-primary text-xs">
-            Tailored Experiences
-          </Badge>
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Designed for Every Role in the Campus
+        <div className="mx-auto mb-10 max-w-2xl space-y-2 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-300">
+            <span>Academic & Administrative Suite</span>
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl text-slate-900 dark:text-white">
+            Comprehensive School Management Modules
           </h2>
           <p className="text-muted-foreground text-sm">
-            Explore how Gyan Deep simplifies workflows for administrators, instructors, and
-            learners.
+            Everything your school needs to run daily academic operations smoothly and transparently.
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="mb-8 flex justify-center">
-            <TabsList className="h-11 rounded-md border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
-              <TabsTrigger
-                value="admin"
-                className="data-[state=active]:text-primary rounded-md px-4 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-xs dark:data-[state=active]:bg-zinc-900"
-              >
-                <PiShieldCheck className="mr-1.5 h-3.5 w-3.5" />
-                <span>Administration Suite</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="teacher"
-                className="data-[state=active]:text-primary rounded-md px-4 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-xs dark:data-[state=active]:bg-zinc-900"
-              >
-                <PiUsers className="mr-1.5 h-3.5 w-3.5" />
-                <span>Faculty Workspace</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="student"
-                className="data-[state=active]:text-primary rounded-md px-4 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-xs dark:data-[state=active]:bg-zinc-900"
-              >
-                <PiGraduationCap className="mr-1.5 h-3.5 w-3.5" />
-                <span>Student Hub</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* Admin Tab Content */}
-          <TabsContent value="admin" className="focus:outline-hidden">
-            <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90">
-              <div className="grid grid-cols-1 items-center gap-8 p-6 sm:p-10 lg:grid-cols-2">
-                <div className="space-y-5">
-                  <div className="bg-primary/10 text-primary inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold">
-                    <PiBuildings className="h-3.5 w-3.5" /> Full Operational Governance
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            {
+              icon: <PiUsers className="h-5 w-5" />,
+              title: 'Student Admissions & Roster',
+              desc: 'Enroll students with complete demographic records, father and mother contact details, roll number assignment, and bulk Excel roster uploads.',
+              link: '/admin/students',
+              role: 'Admin & Office',
+            },
+            {
+              icon: <PiCheckCircle className="h-5 w-5" />,
+              title: 'Daily Attendance & Roll Call',
+              desc: 'Class teachers take daily roll call in seconds with 1-click "Mark All Present", real-time absentee tracking, and monthly attendance percentages.',
+              link: '/teacher/attendance',
+              role: 'Faculty',
+            },
+            {
+              icon: <PiCreditCard className="h-5 w-5" />,
+              title: 'Fee Ledgers & Receipts',
+              desc: 'Manage term tuition fees, track pending balances, print automated fee receipts, and monitor session-wise collection totals.',
+              link: '/admin/finance',
+              role: 'Accounts',
+            },
+            {
+              icon: <PiCertificate className="h-5 w-5" />,
+              title: 'Exam Marks & Report Cards',
+              desc: 'Configure exam schedules, enter subject marks with validation, calculate letter grades automatically, and generate printable student report cards.',
+              link: '/admin/exams',
+              role: 'Examination Cell',
+            },
+            {
+              icon: <PiBuildings className="h-5 w-5" />,
+              title: 'Timetables & Class Schedules',
+              desc: 'Organize period timelines across Class 1 to 12, assign subject teachers without scheduling clashes, and distribute daily timetables.',
+              link: '/admin/timetable',
+              role: 'Academic Head',
+            },
+            {
+              icon: <PiShieldCheck className="h-5 w-5" />,
+              title: 'Faculty & Staff Directory',
+              desc: 'Maintain teacher profiles, designated subject allocations, monthly salary ledgers, and publish emergency campus notices.',
+              link: '/admin/teachers',
+              role: 'Administration',
+            },
+          ].map((mod, idx) => (
+            <div
+              key={idx}
+              className="group flex flex-col justify-between rounded-xl border border-slate-200/80 bg-white p-6 shadow-xs transition-all hover:border-slate-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
+                    {mod.icon}
                   </div>
-                  <h3 className="text-2xl font-bold tracking-tight">
-                    Centralized Academic & Financial Control
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Gain instant oversight into enrolled student counts, staff deployment, fee
-                    collection ledgers, timetable generation, and formal result publications with
-                    complete audit trails.
-                  </p>
-                  <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
-                    {[
-                      'Student & Staff Roster Directory',
-                      'Automated Fee Ledger & Receipts',
-                      'Exam Master & Result Publishing',
-                      'Academic Timetables & Event Calendar',
-                      'Emergency Circulars & Notices',
-                      'Interactive Analytics Dashboards',
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-zinc-300"
-                      >
-                        <PiCheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-4">
-                    <Button
-                      onClick={() => navigate('/admin/dashboard')}
-                      className="bg-primary text-white hover:opacity-90"
-                    >
-                      <span>Explore Admin Portal</span>
-                      <PiArrowRight className="ml-1.5 h-4 w-4" />
-                    </Button>
-                  </div>
+                  <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
+                    {mod.role}
+                  </span>
                 </div>
-
-                {/* Mock UI Card Preview */}
-                <div className="space-y-4 rounded-md border border-white/10 bg-slate-900 p-6 text-white shadow-2xl">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-rose-500" />
-                      <div className="h-3 w-3 rounded-full bg-amber-500" />
-                      <div className="h-3 w-3 rounded-full bg-emerald-500" />
-                    </div>
-                    <span className="font-mono text-xs text-slate-400">web.premraj@gmail.com</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-md bg-white/10 p-3 backdrop-blur-xs">
-                      <span className="text-[11px] text-slate-300">Active Students</span>
-                      <p className="mt-1 text-xl font-bold">1,248</p>
-                      <span className="text-[10px] text-emerald-400">↑ 12% this session</span>
-                    </div>
-                    <div className="rounded-md bg-white/10 p-3 backdrop-blur-xs">
-                      <span className="text-[11px] text-slate-300">Faculty Staff</span>
-                      <p className="mt-1 text-xl font-bold">84</p>
-                      <span className="text-[10px] text-slate-300">98% Present Today</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2 rounded-md border border-white/10 bg-white/5 p-3">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-300">Fee Realization</span>
-                      <span className="font-bold text-emerald-400">₹18.4L / ₹22.0L</span>
-                    </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
-                      <div className="h-full w-[84%] rounded-full bg-emerald-400" />
-                    </div>
-                  </div>
-                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">{mod.title}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">{mod.desc}</p>
               </div>
-            </Card>
-          </TabsContent>
 
-          {/* Teacher Tab Content */}
-          <TabsContent value="teacher" className="focus:outline-hidden">
-            <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90">
-              <div className="grid grid-cols-1 items-center gap-8 p-6 sm:p-10 lg:grid-cols-2">
-                <div className="space-y-5">
-                  <div className="bg-primary/10 text-primary inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold">
-                    <PiUsers className="h-3.5 w-3.5" /> High-Efficiency Faculty Tools
-                  </div>
-                  <h3 className="text-2xl font-bold tracking-tight">
-                    Smart Attendance & Frictionless Grading
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Designed for fast daily classroom administration. Mark student roll calls in
-                    seconds, input exam marks with instant auto-grading (A/B/C/F), view monthly
-                    payslips, and check assigned timetables.
-                  </p>
-                  <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
-                    {[
-                      '1-Click "Mark All Present" attendance',
-                      'Direct marksheet input with live grade calculation',
-                      'Classroom schedule & period timeline',
-                      'Monthly salary breakdown & payslip download',
-                      'Official notice board access',
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-zinc-300"
-                      >
-                        <PiCheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-4">
-                    <Button
-                      onClick={() => navigate('/teacher/dashboard')}
-                      className="bg-primary text-white hover:opacity-90"
-                    >
-                      <span>Explore Faculty Workspace</span>
-                      <PiArrowRight className="ml-1.5 h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-4 rounded-md border border-white/10 bg-slate-900 p-6 text-white shadow-2xl">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                    <span className="text-xs font-semibold text-slate-300">
-                      Class 10-A • Mathematics
-                    </span>
-                    <Badge variant="outline" className="border-white/20 text-[10px] text-slate-300">
-                      Period 3
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between rounded-md bg-white/10 p-2 text-xs">
-                      <span>Roll 101 • Aryan Sharma</span>
-                      <span className="rounded-full bg-emerald-500/30 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-                        Present
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-md bg-white/10 p-2 text-xs">
-                      <span>Roll 102 • Diya Verma</span>
-                      <span className="rounded-full bg-emerald-500/30 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-                        Present
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-md bg-white/10 p-2 text-xs">
-                      <span>Roll 103 • Kabir Patel</span>
-                      <span className="rounded-full bg-rose-500/30 px-2 py-0.5 text-[10px] font-semibold text-rose-300">
-                        Absent
-                      </span>
-                    </div>
-                  </div>
-                  <div className="pt-1 text-center">
-                    <span className="text-[11px] text-slate-300">
-                      Attendance Recorded • 42/44 Students Present (95.4%)
-                    </span>
-                  </div>
-                </div>
+              <div className="mt-5 pt-3 border-t border-slate-100 dark:border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => navigate('/auth/login')}
+                  className="text-primary group-hover:text-primary/80 inline-flex items-center text-xs font-semibold"
+                >
+                  <span>Access Module</span>
+                  <PiArrowRight className="ml-1 h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                </button>
               </div>
-            </Card>
-          </TabsContent>
-
-          {/* Student Tab Content */}
-          <TabsContent value="student" className="focus:outline-hidden">
-            <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90">
-              <div className="grid grid-cols-1 items-center gap-8 p-6 sm:p-10 lg:grid-cols-2">
-                <div className="space-y-5">
-                  <div className="bg-primary/10 text-primary inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold">
-                    <PiGraduationCap className="h-3.5 w-3.5" /> Modern Student Experience
-                  </div>
-                  <h3 className="text-2xl font-bold tracking-tight">
-                    Academic Growth & Performance Transparency
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Students and parents can track daily attendance percentages, download official
-                    term-end marksheets, review fee breakdown and pay online, and access digital
-                    student ID cards anytime.
-                  </p>
-                  <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
-                    {[
-                      'Interactive Monthly Attendance Calendar',
-                      'Downloadable Official Report Cards',
-                      'Subject Syllabus & Credit Breakdown',
-                      'Online Fee Invoicing & Payment History',
-                      'Digital Printable Student ID Card',
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-zinc-300"
-                      >
-                        <PiCheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-4">
-                    <Button
-                      onClick={() => navigate('/student/dashboard')}
-                      className="bg-primary text-white hover:opacity-90"
-                    >
-                      <span>Explore Student Hub</span>
-                      <PiArrowRight className="ml-1.5 h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-4 rounded-md border border-white/10 bg-slate-900 p-6 text-white shadow-2xl">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white">
-                        AS
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold">Aryan Sharma</p>
-                        <p className="text-[10px] text-slate-300">Class 10-A • Roll 101</p>
-                      </div>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className="border-emerald-400/30 text-[10px] text-emerald-400"
-                    >
-                      Attendance 94.2%
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="rounded-md bg-white/10 p-2.5">
-                      <span className="text-[10px] text-slate-300">Term GPA</span>
-                      <p className="mt-0.5 text-base font-bold text-white">3.92</p>
-                    </div>
-                    <div className="rounded-md bg-white/10 p-2.5">
-                      <span className="text-[10px] text-slate-300">Exams</span>
-                      <p className="mt-0.5 text-base font-bold text-white">Passed</p>
-                    </div>
-                    <div className="rounded-md bg-white/10 p-2.5">
-                      <span className="text-[10px] text-slate-300">Fee Status</span>
-                      <p className="mt-0.5 text-base font-bold text-emerald-400">Paid</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between rounded-md border border-white/10 bg-white/5 p-2.5 text-xs">
-                    <span className="text-slate-300">Upcoming: Science Mid-Term</span>
-                    <span className="text-[10px] font-semibold text-amber-300">In 3 Days</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* Feature Highlights Grid */}
