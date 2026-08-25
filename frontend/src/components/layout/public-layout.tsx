@@ -24,7 +24,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-                  Gyan Deep
+                  Gyandeep
                 </span>
               </div>
               <p className="text-muted-foreground -mt-0.5 text-[10px]">Baal Vikas Vidya Mandir</p>
@@ -57,11 +57,10 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
               <div className="bg-primary flex h-7 w-7 items-center justify-center rounded-md font-bold text-white">
                 <PiBuildings className="h-4 w-4" />
               </div>
-              <span className="text-base font-bold tracking-tight">Gyan Deep</span>
+              <span className="text-base font-bold tracking-tight">Gyandeep</span>
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Gyan Deep Baal Vikas Vidya Mandir — Unified educational enterprise management
-              platform.
+              Gyandeep Baal Vikas Vidya Mandir — Unified educational enterprise management platform.
             </p>
           </div>
 
@@ -100,9 +99,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         </div>
 
         <div className="text-muted-foreground mx-auto mt-8 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 text-xs sm:flex-row dark:border-zinc-800">
-          <p>
-            © {new Date().getFullYear()} Gyan Deep Baal Vikas Vidya Mandir. All rights reserved.
-          </p>
+          <p>© {new Date().getFullYear()} Gyandeep Baal Vikas Vidya Mandir. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <span className="cursor-pointer hover:text-slate-900 dark:hover:text-white">
               Privacy Policy

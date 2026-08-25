@@ -200,7 +200,7 @@ export const AdminStudentDetail: React.FC = () => {
           <div className="flex items-center justify-between border-b border-white/15 pb-2">
             <div className="flex items-center gap-1.5">
               <PiBuildings className="h-4 w-4 text-white/70" />
-              <span className="text-xs font-bold tracking-tight">GYAN DEEP</span>
+              <span className="text-xs font-bold tracking-tight">Gyandeep</span>
             </div>
             <Badge variant="outline" className="border-white/40 text-[9px] text-white/80">
               STUDENT PASS

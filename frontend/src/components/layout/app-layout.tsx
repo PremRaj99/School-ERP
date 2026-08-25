@@ -281,7 +281,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="truncate text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-                  Gyan Deep
+                  Gyandeep
                 </span>
                 <Badge variant="outline" className="h-4 px-1 py-0 text-[9px] font-medium">
                   ERP
@@ -391,7 +391,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                   <PiBuildings className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs leading-tight font-bold">Gyan Deep</span>
+                  <span className="text-xs leading-tight font-bold">Gyandeep</span>
                   <span className="text-muted-foreground text-[9px]">Baal Vikas Vidya Mandir</span>
                 </div>
               </NavLink>

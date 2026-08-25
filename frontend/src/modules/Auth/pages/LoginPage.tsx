@@ -71,7 +71,7 @@ export const LoginPage: React.FC = () => {
                 </div>
                 <div>
                   <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-                    Gyan Deep
+                    Gyandeep
                   </h1>
                   <p className="text-muted-foreground text-[11px]">Baal Vikas Vidya Mandir</p>
                 </div>
@@ -124,7 +124,7 @@ export const LoginPage: React.FC = () => {
                   <PiBuildings className="h-4 w-4" />
                 </div>
                 <div>
-                  <h1 className="text-sm font-bold text-slate-900 dark:text-white">Gyan Deep</h1>
+                  <h1 className="text-sm font-bold text-slate-900 dark:text-white">Gyandeep</h1>
                   <p className="text-muted-foreground text-[10px]">Baal Vikas Vidya Mandir</p>
                 </div>
               </NavLink>
@@ -149,7 +149,7 @@ export const LoginPage: React.FC = () => {
                   </Badge>
                 </div>
                 <h3 className="mt-2 text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  Welcome to Gyan Deep
+                  Welcome to Gyandeep
                 </h3>
                 <p className="text-muted-foreground text-xs">
                   Enter your portal credentials to proceed.
