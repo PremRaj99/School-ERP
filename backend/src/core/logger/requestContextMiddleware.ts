@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from './logger';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { NODE_ENV } from '../constants';
 
 export const requestContextMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
     const incomingId = req.headers['X-Request-Id'] as string;
-    const requestId = incomingId || uuidv4();
+    const requestId = incomingId || randomUUID();
 
     req.requestId = requestId;
     res.setHeader('X-Request-Id', requestId);
