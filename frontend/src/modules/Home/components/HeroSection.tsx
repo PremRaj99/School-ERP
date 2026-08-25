@@ -185,7 +185,7 @@ export const HeroSection: React.FC = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-slate-50/70 py-12 text-slate-900 sm:py-16 lg:py-20 dark:bg-zinc-950 dark:text-white">
+    <section className="relative overflow-hidden bg-slate-50/70 py-12 text-slate-900 sm:py-12 dark:bg-zinc-950 dark:text-white">
       {/* Soft atmospheric ambient glow */}
       <div className="bg-primary/5 pointer-events-none absolute top-0 left-1/4 -z-10 h-96 w-96 rounded-full blur-3xl" />
       <div className="pointer-events-none absolute top-1/2 right-10 -z-10 h-96 w-96 rounded-full bg-blue-500/5 blur-3xl" />
