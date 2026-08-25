@@ -1,4 +1,4 @@
-import { errorHandlerMiddleware } from '@/core/errors';
+import { errorHandlerMiddleware } from './core/errors';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Router } from 'express';
