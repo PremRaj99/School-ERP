@@ -1,3 +1,4 @@
+import 'tsconfig-paths/register';
 import { app } from './app';
 import { NODE_ENV, PORT } from '@/core/config/constants';
 import { setupLogWebSocket } from './modules/log/log.service';
