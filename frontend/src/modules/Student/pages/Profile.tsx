@@ -77,12 +77,12 @@ export const StudentProfile: React.FC = () => {
               <div className="flex items-center gap-2">
                 <img
                   src="/logo.png"
-                  alt="Gyandip Logo"
+                  alt="Gyandeep Logo"
                   className="h-7 w-7 rounded object-contain"
                 />
                 <div>
                   <h3 className="text-xs font-bold tracking-tight">
-                    Gyandip baal vikas vidyamandir
+                    Gyandeep baal vikas vidyamandir
                   </h3>
                   <p className="text-[9px] text-white/80">Identity Pass {student.session}</p>
                 </div>

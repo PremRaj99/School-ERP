@@ -20,13 +20,13 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
           <NavLink to="/" className="group flex items-center gap-2.5">
             <img
               src="/logo.png"
-              alt="Gyandip Logo"
+              alt="Gyandeep Logo"
               className="h-9 w-9 shrink-0 rounded-md object-contain transition-transform duration-200 group-hover:scale-105"
             />
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-                  Gyandip
+                  Gyandeep
                 </span>
               </div>
               <p className="text-muted-foreground -mt-0.5 text-[10px]">baal vikas vidyamandir</p>
@@ -58,13 +58,13 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
             <div className="flex items-center gap-2">
               <img
                 src="/logo.png"
-                alt="Gyandip Logo"
+                alt="Gyandeep Logo"
                 className="h-7 w-7 rounded-md object-contain"
               />
-              <span className="text-base font-bold tracking-tight">Gyandip</span>
+              <span className="text-base font-bold tracking-tight">Gyandeep</span>
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Gyandip baal vikas vidyamandir — Unified educational enterprise management platform.
+              Gyandeep baal vikas vidyamandir — Unified educational enterprise management platform.
             </p>
           </div>
 
@@ -103,7 +103,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         </div>
 
         <div className="text-muted-foreground mx-auto mt-8 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 text-xs sm:flex-row dark:border-zinc-800">
-          <p>© {new Date().getFullYear()} Gyandip baal vikas vidyamandir. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Gyandeep baal vikas vidyamandir. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <span className="cursor-pointer hover:text-slate-900 dark:hover:text-white">
               Privacy Policy

@@ -198,8 +198,8 @@ export const AdminStudentDetail: React.FC = () => {
         <div className="bg-primary space-y-4 rounded-md border border-white/20 p-5 text-white shadow-xl">
           <div className="flex items-center justify-between border-b border-white/15 pb-2">
             <div className="flex items-center gap-1.5">
-              <img src="/logo.png" alt="Gyandip Logo" className="h-5 w-5 rounded object-contain" />
-              <span className="text-xs font-bold tracking-tight">Gyandip</span>
+              <img src="/logo.png" alt="Gyandeep Logo" className="h-5 w-5 rounded object-contain" />
+              <span className="text-xs font-bold tracking-tight">Gyandeep</span>
             </div>
             <Badge variant="outline" className="border-white/40 text-[9px] text-white/80">
               STUDENT PASS

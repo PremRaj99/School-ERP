@@ -67,12 +67,12 @@ export const LoginPage: React.FC = () => {
               <NavLink to="/" className="group mb-6 inline-flex items-center gap-2.5">
                 <img
                   src="/logo.png"
-                  alt="Gyandip Logo"
+                  alt="Gyandeep Logo"
                   className="h-10 w-10 shrink-0 rounded-lg object-contain shadow-xs transition-transform duration-200 group-hover:scale-105"
                 />
                 <div>
                   <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-                    Gyandip
+                    Gyandeep
                   </h1>
                   <p className="text-muted-foreground text-[11px]">baal vikas vidyamandir</p>
                 </div>
@@ -123,11 +123,11 @@ export const LoginPage: React.FC = () => {
               <NavLink to="/" className="inline-flex items-center gap-2.5">
                 <img
                   src="/logo.png"
-                  alt="Gyandip Logo"
+                  alt="Gyandeep Logo"
                   className="h-9 w-9 shrink-0 rounded-lg object-contain shadow-xs"
                 />
                 <div>
-                  <h1 className="text-sm font-bold text-slate-900 dark:text-white">Gyandip</h1>
+                  <h1 className="text-sm font-bold text-slate-900 dark:text-white">Gyandeep</h1>
                   <p className="text-muted-foreground text-[10px]">baal vikas vidyamandir</p>
                 </div>
               </NavLink>
@@ -152,7 +152,7 @@ export const LoginPage: React.FC = () => {
                   </Badge>
                 </div>
                 <h3 className="mt-2 text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  Welcome to Gyandip
+                  Welcome to Gyandeep
                 </h3>
                 <p className="text-muted-foreground text-xs">
                   Enter your portal credentials to proceed.

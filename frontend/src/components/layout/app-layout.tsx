@@ -277,13 +277,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
           <NavLink to={`/${role}/dashboard`} className="group flex items-center gap-2.5">
             <img
               src="/logo.png"
-              alt="Gyandip Logo"
+              alt="Gyandeep Logo"
               className="h-9 w-9 shrink-0 rounded-md object-contain transition-transform duration-200 group-hover:scale-105"
             />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="truncate text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-                  Gyandip
+                  Gyandeep
                 </span>
                 <Badge variant="outline" className="h-4 px-1 py-0 text-[9px] font-medium">
                   ERP
@@ -391,11 +391,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
               >
                 <img
                   src="/logo.png"
-                  alt="Gyandip Logo"
+                  alt="Gyandeep Logo"
                   className="h-8 w-8 shrink-0 rounded-md object-contain transition-transform group-hover:scale-105"
                 />
                 <div className="flex flex-col">
-                  <span className="text-xs leading-tight font-bold">Gyandip</span>
+                  <span className="text-xs leading-tight font-bold">Gyandeep</span>
                   <span className="text-muted-foreground text-[9px]">baal vikas vidyamandir</span>
                 </div>
               </NavLink>

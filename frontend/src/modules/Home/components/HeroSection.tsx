@@ -197,10 +197,10 @@ export const HeroSection: React.FC = () => {
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
               <img
                 src="/logo.png"
-                alt="Gyandip Logo"
+                alt="Gyandeep Logo"
                 className="h-4 w-4 rounded-full object-contain"
               />
-              <span>Gyandip baal vikas vidyamandir</span>
+              <span>Gyandeep baal vikas vidyamandir</span>
             </div>
 
             <div className="space-y-3">
@@ -269,7 +269,7 @@ export const HeroSection: React.FC = () => {
                     <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
                   </div>
                   <span className="ml-2 text-xs font-bold text-slate-800 dark:text-zinc-200">
-                    Gyandip Portal · Live Interactive Workspace
+                    Gyandeep Portal · Live Interactive Workspace
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
