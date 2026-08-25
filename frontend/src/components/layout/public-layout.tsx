@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { PiBuildings, PiArrowRight, PiPhone, PiEnvelopeSimple, PiMapPin } from 'react-icons/pi';
+import { PiArrowRight, PiPhone, PiEnvelopeSimple, PiMapPin } from 'react-icons/pi';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './theme-toggle';
 
@@ -18,9 +18,11 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <NavLink to="/" className="group flex items-center gap-2.5">
-            <div className="bg-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white shadow-md transition-transform duration-200 group-hover:scale-105">
-              <PiBuildings className="h-5 w-5" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Gyandip Logo"
+              className="h-9 w-9 shrink-0 rounded-md object-contain transition-transform duration-200 group-hover:scale-105"
+            />
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
@@ -54,9 +56,11 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 md:grid-cols-3">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="bg-primary flex h-7 w-7 items-center justify-center rounded-md font-bold text-white">
-                <PiBuildings className="h-4 w-4" />
-              </div>
+              <img
+                src="/logo.png"
+                alt="Gyandip Logo"
+                className="h-7 w-7 rounded-md object-contain"
+              />
               <span className="text-base font-bold tracking-tight">Gyandip</span>
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">

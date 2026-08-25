@@ -275,9 +275,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-slate-200/70 px-4 dark:border-zinc-800/80">
           <NavLink to={`/${role}/dashboard`} className="group flex items-center gap-2.5">
-            <div className="bg-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white shadow-md transition-transform duration-200 group-hover:scale-105">
-              <PiBuildings className="h-5 w-5" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Gyandip Logo"
+              className="h-9 w-9 shrink-0 rounded-md object-contain transition-transform duration-200 group-hover:scale-105"
+            />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="truncate text-sm font-bold tracking-tight text-slate-900 dark:text-white">
@@ -387,9 +389,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="group flex items-center gap-2"
               >
-                <div className="bg-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-md font-bold text-white shadow-xs transition-transform group-hover:scale-105">
-                  <PiBuildings className="h-4 w-4" />
-                </div>
+                <img
+                  src="/logo.png"
+                  alt="Gyandip Logo"
+                  className="h-8 w-8 shrink-0 rounded-md object-contain transition-transform group-hover:scale-105"
+                />
                 <div className="flex flex-col">
                   <span className="text-xs leading-tight font-bold">Gyandip</span>
                   <span className="text-muted-foreground text-[9px]">baal vikas vidyamandir</span>

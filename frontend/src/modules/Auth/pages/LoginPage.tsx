@@ -10,7 +10,6 @@ import {
   PiArrowRight,
   PiEye,
   PiEyeSlash,
-  PiBuildings,
   PiShieldCheck,
   PiCheckCircle,
   PiSparkle,
@@ -66,9 +65,11 @@ export const LoginPage: React.FC = () => {
             <div>
               {/* Brand Header */}
               <NavLink to="/" className="group mb-6 inline-flex items-center gap-2.5">
-                <div className="bg-primary flex h-10 w-10 items-center justify-center rounded-lg text-white shadow-md transition-transform duration-200 group-hover:scale-105">
-                  <PiBuildings className="h-5 w-5" />
-                </div>
+                <img
+                  src="/logo.png"
+                  alt="Gyandip Logo"
+                  className="h-10 w-10 shrink-0 rounded-lg object-contain shadow-xs transition-transform duration-200 group-hover:scale-105"
+                />
                 <div>
                   <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
                     Gyandip
@@ -120,9 +121,11 @@ export const LoginPage: React.FC = () => {
             {/* Mobile Brand Header */}
             <div className="mb-6 flex items-center justify-between md:hidden">
               <NavLink to="/" className="inline-flex items-center gap-2.5">
-                <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-lg text-white shadow-sm">
-                  <PiBuildings className="h-4 w-4" />
-                </div>
+                <img
+                  src="/logo.png"
+                  alt="Gyandip Logo"
+                  className="h-9 w-9 shrink-0 rounded-lg object-contain shadow-xs"
+                />
                 <div>
                   <h1 className="text-sm font-bold text-slate-900 dark:text-white">Gyandip</h1>
                   <p className="text-muted-foreground text-[10px]">baal vikas vidyamandir</p>

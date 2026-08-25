@@ -9,7 +9,7 @@ import { studentService } from '@/lib/services/student.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { isoToDisplayDate } from '@/lib/date';
-import { PiChalkboardTeacher, PiQrCode, PiKey } from 'react-icons/pi';
+import { PiQrCode, PiKey } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
 export const StudentProfile: React.FC = () => {
@@ -75,9 +75,11 @@ export const StudentProfile: React.FC = () => {
           <div className="border-primary/30 bg-primary relative space-y-5 overflow-hidden rounded-md border p-6 text-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/15 pb-3">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white/10">
-                  <PiChalkboardTeacher className="h-4 w-4 text-white/80" />
-                </div>
+                <img
+                  src="/logo.png"
+                  alt="Gyandip Logo"
+                  className="h-7 w-7 rounded object-contain"
+                />
                 <div>
                   <h3 className="text-xs font-bold tracking-tight">
                     Gyandip baal vikas vidyamandir
