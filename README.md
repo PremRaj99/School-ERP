@@ -25,6 +25,8 @@ Admin, Teacher, Student and Finance each get their own application — their own
 | **Admin dashboard** | **Exam creation wizard** |
 | ![Timetable builder](docs/screenshots/timetable-builder.png) | ![Finance analytics](docs/screenshots/finance-analytics.png) |
 | **Timetable builder** | **Finance analytics** |
+| ![Teacher attendance](docs/screenshots/teacher-attendance.png) | ![Student results](docs/screenshots/student-results.png) |
+| **Teacher attendance** | **Student results** |
 
 ---
 
