@@ -19,19 +19,12 @@ Admin, Teacher, Student and Finance each get their own application — their own
 
 ## Screenshots
 
-> **TODO — drop four PNGs into `docs/screenshots/`, then delete this note and uncomment the table
-> immediately below it.** Named `admin-dashboard.png`, `exam-wizard.png`, `timetable-builder.png`
-> and `finance-analytics.png`, they will slot straight in. The table is commented out so the README
-> never renders broken images.
-
-<!-- SCREENSHOTS — uncomment once the four files exist in docs/screenshots/
 |  |  |
 |:--:|:--:|
 | ![Admin dashboard](docs/screenshots/admin-dashboard.png) | ![Exam wizard](docs/screenshots/exam-wizard.png) |
 | **Admin dashboard** | **Exam creation wizard** |
 | ![Timetable builder](docs/screenshots/timetable-builder.png) | ![Finance analytics](docs/screenshots/finance-analytics.png) |
 | **Timetable builder** | **Finance analytics** |
--->
 
 ---
 
