@@ -10,11 +10,8 @@ import {
   PiArrowRight,
   PiEye,
   PiEyeSlash,
-  PiGraduationCap,
   PiBuildings,
   PiShieldCheck,
-  PiUsers,
-  PiWallet,
   PiCheckCircle,
   PiSparkle,
 } from 'react-icons/pi';
@@ -28,9 +25,6 @@ export const LoginPage: React.FC = () => {
   const setUser = useAuthStore((state) => state.setUser);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<'Admin' | 'Teacher' | 'Student' | 'Finance'>(
-    'Admin',
-  );
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -38,10 +32,6 @@ export const LoginPage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleRoleSelect = (role: 'Admin' | 'Teacher' | 'Student' | 'Finance') => {
-    setSelectedRole(role);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,10 +59,10 @@ export const LoginPage: React.FC = () => {
       {/* Background Ambient Glow */}
       <div className="bg-primary/10 pointer-events-none fixed top-1/4 left-1/3 -z-10 h-96 w-96 rounded-full blur-3xl" />
 
-      <div className="w-full max-w-4xl overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="w-full max-w-md overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-2xl md:max-w-4xl dark:border-zinc-800 dark:bg-zinc-900">
         <div className="grid grid-cols-1 md:grid-cols-12">
-          {/* Left Visual Illustration Column */}
-          <div className="border-primary/10 bg-primary/5 flex flex-col justify-between border-b p-6 sm:p-8 md:col-span-5 md:border-r md:border-b-0 dark:border-zinc-800 dark:bg-zinc-950/60">
+          {/* Left Visual Illustration Column (Desktop only) */}
+          <div className="border-primary/10 bg-primary/5 hidden flex-col justify-between p-6 sm:p-8 md:col-span-5 md:flex md:border-r dark:border-zinc-800 dark:bg-zinc-950/60">
             <div>
               {/* Brand Header */}
               <NavLink to="/" className="group mb-6 inline-flex items-center gap-2.5">
@@ -125,12 +115,28 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Form Column */}
-          <div className="flex flex-col justify-between p-6 sm:p-8 md:col-span-7">
-            <div>
+          {/* Right Form Column - Vertically Centered */}
+          <div className="flex flex-col justify-center p-6 sm:p-8 md:col-span-7 md:p-10">
+            {/* Mobile Brand Header */}
+            <div className="mb-6 flex items-center justify-between md:hidden">
+              <NavLink to="/" className="inline-flex items-center gap-2.5">
+                <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-lg text-white shadow-sm">
+                  <PiBuildings className="h-4 w-4" />
+                </div>
+                <div>
+                  <h1 className="text-sm font-bold text-slate-900 dark:text-white">Gyan Deep</h1>
+                  <p className="text-muted-foreground text-[10px]">Baal Vikas Vidya Mandir</p>
+                </div>
+              </NavLink>
+              <Badge variant="outline" className="text-[10px]">
+                ERP v2.0
+              </Badge>
+            </div>
+
+            <div className="my-auto py-2">
               {/* Form Title */}
-              <div className="mb-5">
-                <div className="flex items-center justify-between">
+              <div className="mb-6">
+                <div className="hidden items-center justify-between md:flex">
                   <div className="bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium">
                     <PiShieldCheck className="h-3.5 w-3.5" />
                     <span>Portal Sign In</span>
@@ -142,77 +148,25 @@ export const LoginPage: React.FC = () => {
                     ERP v2.0
                   </Badge>
                 </div>
-                <h3 className="mt-2 text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                  Welcome to Gyan Deep ERP
+                <h3 className="mt-2 text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  Welcome to Gyan Deep
                 </h3>
                 <p className="text-muted-foreground text-xs">
-                  Choose your role and enter your credentials to proceed.
+                  Enter your portal credentials to proceed.
                 </p>
-              </div>
-
-              {/* Role Switcher Tabs */}
-              <div className="mb-5 grid grid-cols-2 gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 sm:grid-cols-4 dark:border-zinc-700 dark:bg-zinc-800/80">
-                <button
-                  type="button"
-                  onClick={() => handleRoleSelect('Admin')}
-                  className={`flex min-h-10 items-center justify-center gap-1 rounded-md py-1.5 text-xs font-semibold transition-all ${
-                    selectedRole === 'Admin'
-                      ? 'text-primary bg-white shadow-xs dark:bg-zinc-900'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
-                  }`}
-                >
-                  <PiShieldCheck className="h-3.5 w-3.5" />
-                  <span>Admin</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRoleSelect('Teacher')}
-                  className={`flex min-h-10 items-center justify-center gap-1 rounded-md py-1.5 text-xs font-semibold transition-all ${
-                    selectedRole === 'Teacher'
-                      ? 'text-primary bg-white shadow-xs dark:bg-zinc-900'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
-                  }`}
-                >
-                  <PiUsers className="h-3.5 w-3.5" />
-                  <span>Teacher</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRoleSelect('Student')}
-                  className={`flex min-h-10 items-center justify-center gap-1 rounded-md py-1.5 text-xs font-semibold transition-all ${
-                    selectedRole === 'Student'
-                      ? 'text-primary bg-white shadow-xs dark:bg-zinc-900'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
-                  }`}
-                >
-                  <PiGraduationCap className="h-3.5 w-3.5" />
-                  <span>Student</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRoleSelect('Finance')}
-                  className={`flex min-h-10 items-center justify-center gap-1 rounded-md py-1.5 text-xs font-semibold transition-all ${
-                    selectedRole === 'Finance'
-                      ? 'text-primary bg-white shadow-xs dark:bg-zinc-900'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
-                  }`}
-                >
-                  <PiWallet className="h-3.5 w-3.5" />
-                  <span>Finance</span>
-                </button>
               </div>
 
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="username" className="text-xs font-semibold">
-                    Username / Identifier
+                    Username / ID
                   </Label>
                   <Input
                     id="username"
                     name="username"
                     type="text"
-                    placeholder="Enter username"
+                    placeholder="e.g. admin, TCH00000001, STU00000001"
                     value={formData.username}
                     onChange={handleChange}
                     required
@@ -268,7 +222,7 @@ export const LoginPage: React.FC = () => {
                     'Verifying Credentials...'
                   ) : (
                     <>
-                      <span>Sign In as {selectedRole}</span>
+                      <span>Sign In to Portal</span>
                       <PiArrowRight className="ml-1.5 h-4 w-4" />
                     </>
                   )}
