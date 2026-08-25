@@ -279,7 +279,18 @@ export const AdminStudentDetail: React.FC = () => {
                 {student.address || 'Address provided during admission'}
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
+                <span className="text-muted-foreground text-[10px]">APAAR Number (APAAR ID)</span>
+                <p className="font-mono font-semibold">{student.appId || '—'}</p>
+              </div>
+              <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
+                <span className="text-muted-foreground text-[10px]">PEN Number (UDISE+ PEN)</span>
+                <p className="font-mono font-semibold">{student.penNumber || '—'}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
                 <span className="text-muted-foreground text-[10px]">Student Aadhar</span>
                 <p className="font-mono font-semibold">{student.studentAadhar || '—'}</p>

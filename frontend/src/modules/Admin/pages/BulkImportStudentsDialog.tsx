@@ -51,6 +51,7 @@ const ALL_COLUMNS = [
   'dateOfAdmission',
   'rollNo',
   'appId',
+  'penNumber',
 ] as const;
 
 function rowsToPayload(rows: string[][]): {
@@ -154,6 +155,7 @@ export const BulkImportStudentsDialog: React.FC<{
           '2025-2026',
           '2026-04-01',
           '1',
+          '',
           '',
         ],
       ],

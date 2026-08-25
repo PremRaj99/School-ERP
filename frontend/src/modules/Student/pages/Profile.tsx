@@ -147,12 +147,20 @@ export const StudentProfile: React.FC = () => {
                   </p>
                 </div>
                 <div className="rounded-md bg-slate-50 p-2.5 dark:bg-zinc-800/50">
-                  <span className="text-muted-foreground text-[10px]">Aadhar Identifier</span>
-                  <p className="mt-0.5 font-mono font-semibold">{student.studentAadhar || '—'}</p>
-                </div>
-                <div className="rounded-md bg-slate-50 p-2.5 dark:bg-zinc-800/50">
                   <span className="text-muted-foreground text-[10px]">Gender</span>
                   <p className="mt-0.5 font-semibold">{student.gender ?? 'N/A'}</p>
+                </div>
+                <div className="rounded-md bg-slate-50 p-2.5 dark:bg-zinc-800/50">
+                  <span className="text-muted-foreground text-[10px]">APAAR Number (APAAR ID)</span>
+                  <p className="mt-0.5 font-mono font-semibold">{student.appId || '—'}</p>
+                </div>
+                <div className="rounded-md bg-slate-50 p-2.5 dark:bg-zinc-800/50">
+                  <span className="text-muted-foreground text-[10px]">PEN Number (UDISE+ PEN)</span>
+                  <p className="mt-0.5 font-mono font-semibold">{student.penNumber || '—'}</p>
+                </div>
+                <div className="rounded-md bg-slate-50 p-2.5 dark:bg-zinc-800/50">
+                  <span className="text-muted-foreground text-[10px]">Student Aadhar</span>
+                  <p className="mt-0.5 font-mono font-semibold">{student.studentAadhar || '—'}</p>
                 </div>
               </div>
 

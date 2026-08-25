@@ -78,6 +78,7 @@ const emptyDefaults: CreateStudentBody = {
   dateOfAdmission: new Date().toISOString().slice(0, 10),
   rollNo: 1,
   appId: '',
+  penNumber: '',
 };
 
 /** Optional fields on `CreateStudentBody` that must become `undefined`, not `''`, on the wire —
@@ -93,6 +94,7 @@ const OPTIONAL_STRING_FIELDS = [
   'fatherAadhar',
   'motherAadhar',
   'appId',
+  'penNumber',
 ] as const;
 
 function sanitize(values: CreateStudentBody): CreateStudentBody {
@@ -124,6 +126,7 @@ function toFormValues(s: StudentRecord): CreateStudentBody {
     dateOfAdmission: s.dateOfAdmission,
     rollNo: s.rollNo,
     appId: s.appId ?? '',
+    penNumber: s.penNumber ?? '',
   };
 }
 
@@ -527,7 +530,17 @@ export const AdminStudents: React.FC = () => {
                   onClick={() =>
                     downloadCsv(
                       'students-selected',
-                      ['Student ID', 'Name', 'Class', 'Section', 'Roll No', 'Phone', 'Session'],
+                      [
+                        'Student ID',
+                        'Name',
+                        'Class',
+                        'Section',
+                        'Roll No',
+                        'Phone',
+                        'APAAR ID',
+                        'PEN Number',
+                        'Session',
+                      ],
                       selected.map((s) => [
                         s.studentId,
                         `${s.firstName} ${s.lastName ?? ''}`.trim(),
@@ -535,6 +548,8 @@ export const AdminStudents: React.FC = () => {
                         s.section,
                         s.rollNo,
                         s.phone,
+                        s.appId ?? '',
+                        s.penNumber ?? '',
                         s.session,
                       ]),
                     )
@@ -654,6 +669,21 @@ export const AdminStudents: React.FC = () => {
                 name="motherAadhar"
                 label="Mother Aadhar"
                 placeholder="12-digit Aadhar number"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <TextField
+                control={control}
+                name="appId"
+                label="APAAR Number (APAAR ID)"
+                placeholder="e.g. 12-digit APAAR ID"
+              />
+              <TextField
+                control={control}
+                name="penNumber"
+                label="PEN Number (UDISE+ PEN)"
+                placeholder="e.g. 11-digit PEN Number"
               />
             </div>
 

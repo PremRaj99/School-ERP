@@ -59,6 +59,7 @@ model Student {
   classId           String              @db.ObjectId
   rollNo            Int
   appId             String?             @unique
+  penNumber         String?             @unique
   profilePhoto      String              @default("https://cdn-icons-png.flaticon.com/512/2886/2886011.png")
   studentAttendance StudentAttendance[]
   studentFees       StudentFee[]

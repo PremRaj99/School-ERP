@@ -39,6 +39,7 @@ export class StudentService {
         dateOfAdmission: true,
         rollNo: true,
         appId: true,
+        penNumber: true,
         profilePhoto: true,
         status: true,
         user: { select: { username: true } },
@@ -70,6 +71,7 @@ export class StudentService {
       dateOfAdmission: toISODate(student.dateOfAdmission),
       rollNo: student.rollNo,
       appId: student.appId,
+      penNumber: student.penNumber,
       profilePhoto: student.profilePhoto,
       username: student.user?.username ?? '',
       // Pre-D5 documents have no `status` key at all — see the admin student service's

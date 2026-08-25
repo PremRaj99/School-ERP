@@ -39,6 +39,7 @@ export const StudentRecord = z.object({
   dateOfAdmission: ISODate,
   rollNo: z.number().int().positive(),
   appId: z.string().nullable(),
+  penNumber: z.string().nullable(),
   profilePhoto: z.string(),
   username: z.string(),
 });
@@ -68,7 +69,8 @@ export const CreateStudentBody = z.object({
     .number({ message: 'Roll No is required.' })
     .int()
     .positive('Roll No must be a positive number.'),
-  appId: z.string().min(5, 'appId must be at least 5 characters long.').optional(),
+  appId: z.string().min(5, 'APAAR ID must be at least 5 characters long.').optional(),
+  penNumber: z.string().min(5, 'PEN Number must be at least 5 characters long.').optional(),
   profilePhoto: ProfilePhotoUrl.optional(),
 });
 export type CreateStudentBody = z.infer<typeof CreateStudentBody>;

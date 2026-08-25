@@ -44,6 +44,7 @@ const studentSelect = {
   dateOfAdmission: true,
   rollNo: true,
   appId: true,
+  penNumber: true,
   profilePhoto: true,
   status: true,
   class: { select: { className: true, section: true, session: true } },
@@ -68,6 +69,7 @@ type RawStudent = {
   dateOfAdmission: Date;
   rollNo: number;
   appId: string | null;
+  penNumber: string | null;
   profilePhoto: string;
   // Genuinely `| undefined` at runtime for a pre-D5 document — see `toStudentRecord`'s fallback.
   status: 'Active' | 'TransferredOut' | 'Graduated' | undefined;
@@ -96,6 +98,7 @@ const toStudentRecord = (student: RawStudent): StudentRecord => ({
   dateOfAdmission: toISODate(student.dateOfAdmission),
   rollNo: student.rollNo,
   appId: student.appId,
+  penNumber: student.penNumber,
   profilePhoto: student.profilePhoto,
   username: student.user?.username ?? '',
   // `?? 'Active'` for the same legacy-document reason as the `notIn` filter above — Prisma
@@ -126,6 +129,8 @@ export class AdminStudentService {
             { firstName: { contains: query.q, mode: 'insensitive' as const } },
             { lastName: { contains: query.q, mode: 'insensitive' as const } },
             { studentId: { contains: query.q, mode: 'insensitive' as const } },
+            { appId: { contains: query.q, mode: 'insensitive' as const } },
+            { penNumber: { contains: query.q, mode: 'insensitive' as const } },
           ],
         }
       : {};
@@ -230,6 +235,7 @@ export class AdminStudentService {
             dateOfAdmission: fromISODate(data.dateOfAdmission),
             rollNo: data.rollNo,
             appId: data.appId,
+            penNumber: data.penNumber,
             profilePhoto: data.profilePhoto,
             classId: classRecord.id,
             userId: user.id,
@@ -293,6 +299,7 @@ export class AdminStudentService {
           dateOfAdmission: data.dateOfAdmission ? fromISODate(data.dateOfAdmission) : undefined,
           rollNo: data.rollNo,
           appId: data.appId,
+          penNumber: data.penNumber,
           profilePhoto: data.profilePhoto,
           classId,
         },

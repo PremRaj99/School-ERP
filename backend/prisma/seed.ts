@@ -424,6 +424,7 @@ async function main() {
           classId: group.cls.id,
           rollNo,
           appId: `APP${pad(studentSerial, 5)}`,
+          penNumber: `PEN${pad(studentSerial, 5)}`,
           status: 'Active',
         },
       });
@@ -461,6 +462,7 @@ async function main() {
       classId: archived9A.id,
       rollNo: 1,
       appId: `APP${pad(studentSerial, 5)}`,
+      penNumber: `PEN${pad(studentSerial, 5)}`,
       status: 'Graduated',
     },
   });
@@ -489,6 +491,7 @@ async function main() {
       classId: archived9A.id,
       rollNo: 2,
       appId: `APP${pad(studentSerial, 5)}`,
+      penNumber: `PEN${pad(studentSerial, 5)}`,
       status: 'TransferredOut',
     },
   });
