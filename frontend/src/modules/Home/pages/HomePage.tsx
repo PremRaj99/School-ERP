@@ -1,90 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   PiShieldCheck,
-  PiGraduationCap,
   PiUsers,
   PiCertificate,
   PiCreditCard,
   PiArrowRight,
   PiBuildings,
-  PiLock,
   PiCheckCircle,
-  PiTrendUp,
   PiEnvelopeSimple,
 } from 'react-icons/pi';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { HeroSection } from '../components/HeroSection';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('admin');
 
   return (
     <div className="space-y-16 overflow-hidden pb-20">
       {/* High-Impact Hero Section */}
       <HeroSection />
-
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Quick Demo Credentials Bar */}
-        <div className="mx-auto -mt-6 max-w-3xl rounded-xl border border-slate-200/80 bg-white/95 p-4 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 dark:border-zinc-800">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300">
-              <PiLock className="text-primary h-3.5 w-3.5" />
-              <span>Instant Test & Demo Credentials (Click to Sign In directly)</span>
-            </div>
-            <Badge variant="secondary" className="text-[10px]">
-              Friction-Free Testing
-            </Badge>
-          </div>
-          <div className="grid grid-cols-1 gap-3 text-left sm:grid-cols-3">
-            <button
-              onClick={() => navigate('/admin/dashboard')}
-              className="group border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-md border p-3 text-left transition-all"
-            >
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900 dark:text-zinc-100">
-                  Admin Demo
-                </span>
-                <PiArrowRight className="text-primary h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-              </div>
-              <p className="text-muted-foreground text-[11px]">User: admin</p>
-              <p className="text-muted-foreground text-[10px]">Full school ERP control</p>
-            </button>
-
-            <button
-              onClick={() => navigate('/teacher/dashboard')}
-              className="group border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-md border p-3 text-left transition-all"
-            >
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900 dark:text-zinc-100">
-                  Faculty Demo
-                </span>
-                <PiArrowRight className="text-primary h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-              </div>
-              <p className="text-muted-foreground text-[11px]">User: teacher</p>
-              <p className="text-muted-foreground text-[10px]">Attendance & grade sheets</p>
-            </button>
-
-            <button
-              onClick={() => navigate('/student/dashboard')}
-              className="group border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-md border p-3 text-left transition-all"
-            >
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900 dark:text-zinc-100">
-                  Student Demo
-                </span>
-                <PiArrowRight className="text-primary h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-              </div>
-              <p className="text-muted-foreground text-[11px]">User: student</p>
-              <p className="text-muted-foreground text-[10px]">Report cards & fee dues</p>
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Core ERP Modules & Capabilities */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -92,11 +27,12 @@ export const HomePage: React.FC = () => {
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-300">
             <span>Academic & Administrative Suite</span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl text-slate-900 dark:text-white">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
             Comprehensive School Management Modules
           </h2>
           <p className="text-muted-foreground text-sm">
-            Everything your school needs to run daily academic operations smoothly and transparently.
+            Everything your school needs to run daily academic operations smoothly and
+            transparently.
           </p>
         </div>
 
@@ -162,7 +98,7 @@ export const HomePage: React.FC = () => {
                 <p className="text-muted-foreground text-xs leading-relaxed">{mod.desc}</p>
               </div>
 
-              <div className="mt-5 pt-3 border-t border-slate-100 dark:border-zinc-800">
+              <div className="mt-5 border-t border-slate-100 pt-3 dark:border-zinc-800">
                 <button
                   type="button"
                   onClick={() => navigate('/auth/login')}
@@ -174,62 +110,6 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* Feature Highlights Grid */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto mb-10 max-w-2xl space-y-2 text-center">
-          <Badge variant="outline" className="text-primary text-xs">
-            Enterprise Capabilities
-          </Badge>
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Built for Scale, Reliability & Aesthetics
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Everything your educational institution needs under a single responsive dashboard.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <Card className="border border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/80">
-            <CardContent className="space-y-3 p-6">
-              <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-md font-bold">
-                <PiTrendUp className="h-5 w-5" />
-              </div>
-              <h4 className="text-base font-bold">Real-Time Analytics</h4>
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                Dynamic visual dashboards with Recharts for attendance trends, revenue collection vs
-                expenses, and student demographic distributions.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/80">
-            <CardContent className="space-y-3 p-6">
-              <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-md font-bold">
-                <PiCreditCard className="h-5 w-5" />
-              </div>
-              <h4 className="text-base font-bold">Automated Billing & Payroll</h4>
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                Generate monthly fee invoices, track online payments, print receipts, and manage
-                faculty salary disbursements seamlessly.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-xs transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/80">
-            <CardContent className="space-y-3 p-6">
-              <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-md font-bold">
-                <PiCertificate className="h-5 w-5" />
-              </div>
-              <h4 className="text-base font-bold">Exam & Grade Management</h4>
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                Build exam timetables, input subject-wise marks with validation, calculate letter
-                grades, and publish digital report cards.
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </section>
 
