@@ -27,7 +27,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
                   Gyandip
                 </span>
               </div>
-              <p className="text-muted-foreground -mt-0.5 text-[10px]">Baal Vikas vidyamandir</p>
+              <p className="text-muted-foreground -mt-0.5 text-[10px]">baal vikas vidyamandir</p>
             </div>
           </NavLink>
 
@@ -60,7 +60,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
               <span className="text-base font-bold tracking-tight">Gyandip</span>
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Gyandip Baal Vikas vidyamandir — Unified educational enterprise management platform.
+              Gyandip baal vikas vidyamandir — Unified educational enterprise management platform.
             </p>
           </div>
 
@@ -99,7 +99,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         </div>
 
         <div className="text-muted-foreground mx-auto mt-8 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 text-xs sm:flex-row dark:border-zinc-800">
-          <p>© {new Date().getFullYear()} Gyandip Baal Vikas vidyamandir. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Gyandip baal vikas vidyamandir. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <span className="cursor-pointer hover:text-slate-900 dark:hover:text-white">
               Privacy Policy

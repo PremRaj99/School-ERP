@@ -71,7 +71,7 @@ const INITIAL_STUDENTS: DemoStudent[] = [
   {
     id: 'STU00000004',
     name: 'Ananya Gupta',
-    father: 'Vikas Gupta',
+    father: 'vikas Gupta',
     class: '10-B',
     roll: '04',
     phone: '98765 43213',
@@ -196,7 +196,7 @@ export const HeroSection: React.FC = () => {
           <div className="space-y-6 text-center lg:col-span-5 lg:text-left">
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span>Gyandip Baal Vikas vidyamandir</span>
+              <span>Gyandip baal vikas vidyamandir</span>
             </div>
 
             <div className="space-y-3">
