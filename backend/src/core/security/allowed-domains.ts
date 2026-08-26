@@ -1,8 +1,8 @@
 const configuredDomains = [
   process.env.FRONTEND_URL,
   process.env.CORS_ORIGIN,
-  'https://physiobuddies.in',
-  'https://physiobuddies.com',
+  'https://erp.premraj.online',
+  'https://school-erp-frontend-phi-lemon.vercel.app',
   'http://localhost:5173',
   'http://localhost:4173',
   'http://localhost:3000',
