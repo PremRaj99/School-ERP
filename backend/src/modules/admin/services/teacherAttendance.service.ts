@@ -62,20 +62,37 @@ export class AdminTeacherAttendanceService {
   ): Promise<TeacherAttendanceByDate> {
     const isoDate = fromISODate(date);
 
-    await prisma.$transaction(async (tx) => {
-      for (const item of attendance) {
-        const teacher = await tx.teacher.findUnique({ where: { teacherId: item.teacherId } });
-        if (!teacher) {
-          throw new NotFoundError();
-        }
-
-        await tx.teacherAttendance.upsert({
-          where: { teacherId_date: { teacherId: teacher.id, date: isoDate } },
-          update: { status: item.status },
-          create: { teacherId: teacher.id, date: isoDate, status: item.status },
-        });
-      }
+    // Pre-fetch all referenced teachers in a single query so the transaction
+    // only has to run the upserts — halves the round-trips and avoids the
+    // interactive-transaction timeout on serverless cold starts.
+    const teacherIds = attendance.map((a) => a.teacherId);
+    const teachers = await prisma.teacher.findMany({
+      where: { teacherId: { in: teacherIds } },
+      select: { id: true, teacherId: true },
     });
+
+    const teacherMap = new Map(teachers.map((t) => [t.teacherId, t.id]));
+
+    for (const item of attendance) {
+      if (!teacherMap.has(item.teacherId)) {
+        throw new NotFoundError(`Teacher ${item.teacherId} not found`);
+      }
+    }
+
+    await prisma.$transaction(
+      async (tx) => {
+        for (const item of attendance) {
+          const internalId = teacherMap.get(item.teacherId)!;
+
+          await tx.teacherAttendance.upsert({
+            where: { teacherId_date: { teacherId: internalId, date: isoDate } },
+            update: { status: item.status },
+            create: { teacherId: internalId, date: isoDate, status: item.status },
+          });
+        }
+      },
+      { timeout: 10000 },
+    );
 
     return this.getTeacherAttendanceByDate(date);
   }
