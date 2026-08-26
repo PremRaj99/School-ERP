@@ -29,7 +29,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
                   Gyandeep
                 </span>
               </div>
-              <p className="text-muted-foreground -mt-0.5 text-[10px]">baal vikas vidyamandir</p>
+              <p className="text-muted-foreground -mt-0.5 text-[10px]">bal vikas vidyamandir</p>
             </div>
           </NavLink>
 
@@ -64,7 +64,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
               <span className="text-base font-bold tracking-tight">Gyandeep</span>
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Gyandeep baal vikas vidyamandir — Unified educational enterprise management platform.
+              Gyandeep bal vikas vidyamandir — Unified educational enterprise management platform.
             </p>
           </div>
 
@@ -103,7 +103,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         </div>
 
         <div className="text-muted-foreground mx-auto mt-8 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 text-xs sm:flex-row dark:border-zinc-800">
-          <p>© {new Date().getFullYear()} Gyandeep baal vikas vidyamandir. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Gyandeep bal vikas vidyamandir. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <span className="cursor-pointer hover:text-slate-900 dark:hover:text-white">
               Privacy Policy

@@ -74,7 +74,7 @@ export const LoginPage: React.FC = () => {
                   <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
                     Gyandeep
                   </h1>
-                  <p className="text-muted-foreground text-[11px]">baal vikas vidyamandir</p>
+                  <p className="text-muted-foreground text-[11px]">bal vikas vidyamandir</p>
                 </div>
               </NavLink>
 
@@ -128,7 +128,7 @@ export const LoginPage: React.FC = () => {
                 />
                 <div>
                   <h1 className="text-sm font-bold text-slate-900 dark:text-white">Gyandeep</h1>
-                  <p className="text-muted-foreground text-[10px]">baal vikas vidyamandir</p>
+                  <p className="text-muted-foreground text-[10px]">bal vikas vidyamandir</p>
                 </div>
               </NavLink>
               <Badge variant="outline" className="text-[10px]">

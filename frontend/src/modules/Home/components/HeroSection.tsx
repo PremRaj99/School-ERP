@@ -200,7 +200,7 @@ export const HeroSection: React.FC = () => {
                 alt="Gyandeep Logo"
                 className="h-4 w-4 rounded-full object-contain"
               />
-              <span>Gyandeep baal vikas vidyamandir</span>
+              <span>Gyandeep bal vikas vidyamandir</span>
             </div>
 
             <div className="space-y-3">
