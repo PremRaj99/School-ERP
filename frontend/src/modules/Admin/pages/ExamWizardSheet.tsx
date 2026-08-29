@@ -403,7 +403,7 @@ function ExamGroupSubjects({
           <div className="space-y-2">
             {fields.map((field, subjectIndex) => (
               <div key={field.id} className="flex items-end gap-2">
-                <div className="flex-[2]">
+                <div className="flex-2">
                   <SelectField
                     control={control}
                     name={`exams.${groupIndex}.subjects.${subjectIndex}.subjectCode`}

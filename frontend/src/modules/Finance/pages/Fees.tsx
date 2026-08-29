@@ -271,7 +271,7 @@ export const FinanceFees: React.FC = () => {
               </div>
               {feeRows.map((row, index) => (
                 <div key={row.id} className="flex items-end gap-2">
-                  <div className="flex-[2]">
+                  <div className="flex-2">
                     <TextField
                       control={control}
                       name={`feeBreakdown.${index}.feeType`}
