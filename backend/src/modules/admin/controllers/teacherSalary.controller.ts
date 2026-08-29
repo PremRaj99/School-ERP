@@ -2,6 +2,9 @@ import { adminTeacherSalaryContract } from '@schoolerp/contracts';
 import { defineRoute } from '@/core/http/defineRoute';
 import { AdminTeacherSalaryService } from '../services/teacherSalary.service';
 
+const toActor = (user: { id: string; role: string } | undefined) =>
+  user ? { id: user.id, username: `${user.role}:${user.id}` } : undefined;
+
 export const getTeacherSalaries = defineRoute(
   adminTeacherSalaryContract.list,
   async ({ query }) => {
@@ -18,21 +21,32 @@ export const getTeacherSalaryDetail = defineRoute(
 
 export const createTeacherSalary = defineRoute(
   adminTeacherSalaryContract.create,
-  async ({ body }) => {
-    return AdminTeacherSalaryService.createTeacherSalary(body);
+  async ({ body, user }) => {
+    return AdminTeacherSalaryService.createTeacherSalary(body, toActor(user));
+  },
+);
+
+export const updateTeacherSalary = defineRoute(
+  adminTeacherSalaryContract.update,
+  async ({ params, body, user }) => {
+    return AdminTeacherSalaryService.updateTeacherSalary(params.salaryId, body, toActor(user));
   },
 );
 
 export const updateTeacherSalaryStatus = defineRoute(
   adminTeacherSalaryContract.updateStatus,
-  async ({ params, body }) => {
-    return AdminTeacherSalaryService.updateTeacherSalaryStatus(params.salaryId, body.status);
+  async ({ params, body, user }) => {
+    return AdminTeacherSalaryService.updateTeacherSalaryStatus(
+      params.salaryId,
+      body.status,
+      toActor(user),
+    );
   },
 );
 
 export const deleteTeacherSalary = defineRoute(
   adminTeacherSalaryContract.remove,
-  async ({ params }) => {
-    return AdminTeacherSalaryService.deleteTeacherSalary(params.salaryId);
+  async ({ params, user }) => {
+    return AdminTeacherSalaryService.deleteTeacherSalary(params.salaryId, toActor(user));
   },
 );

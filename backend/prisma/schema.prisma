@@ -198,6 +198,23 @@ model Transaction {
   teacherSalary TeacherSalary?
 }
 
+model FinanceAuditLog {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  action        String   // "CREATE" | "UPDATE" | "UPDATE_STATUS" | "DELETE"
+  entityType    String   // "StudentFee" | "TeacherSalary" | "Transaction"
+  entityId      String   // The ID of the record being modified
+  actorId       String   @db.ObjectId
+  actorUsername String
+  before        Json?    // Snapshot before the change (null for CREATE)
+  after         Json?    // Snapshot after the change (null for DELETE)
+  note          String?
+  createdAt     DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+}
+
 model Exam {
   id                String        @id @default(auto()) @map("_id") @db.ObjectId
   class             Class         @relation(fields: [classId], references: [id], onDelete: Cascade)

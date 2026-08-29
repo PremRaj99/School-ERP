@@ -5,9 +5,16 @@ import type {
   StudentFeeDetail,
   StudentFeeListQuery,
   StudentFeeRecord,
+  UpdateStudentFeeBody,
 } from '@schoolerp/contracts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@schoolerp/contracts';
 import { fromISOMonth, toISODate, toISOMonth } from '@/shared/helpers/isoDate';
+import { FinanceAuditLogService } from './financeAuditLog.service';
+
+interface Actor {
+  id: string;
+  username: string;
+}
 
 interface PaginatedStudentFees {
   data: StudentFeeRecord[];
@@ -140,7 +147,10 @@ export class AdminStudentFeeService {
     };
   }
 
-  static async createStudentFee(data: CreateStudentFeeBody): Promise<StudentFeeDetail> {
+  static async createStudentFee(
+    data: CreateStudentFeeBody,
+    actor?: Actor,
+  ): Promise<StudentFeeDetail> {
     const student = await prisma.student.findUnique({ where: { studentId: data.studentId } });
     if (!student) {
       throw new NotFoundError('Student not found.');
@@ -186,17 +196,97 @@ export class AdminStudentFeeService {
       throw new DatabaseError();
     }
 
-    return this.getStudentFeeById(studentFeeId);
+    const result = await this.getStudentFeeById(studentFeeId);
+
+    if (actor) {
+      await FinanceAuditLogService.log({
+        action: 'CREATE',
+        entityType: 'StudentFee',
+        entityId: studentFeeId,
+        actorId: actor.id,
+        actorUsername: actor.username,
+        after: result,
+      });
+    }
+
+    return result;
+  }
+
+  static async updateStudentFee(
+    feeId: string,
+    data: UpdateStudentFeeBody,
+    actor?: Actor,
+  ): Promise<StudentFeeDetail> {
+    const before = await this.getStudentFeeById(feeId);
+
+    const fee = await prisma.studentFee.findUnique({ where: { id: feeId } });
+    if (!fee) {
+      throw new NotFoundError();
+    }
+
+    try {
+      await prisma.$transaction(async (txn) => {
+        // Update month if provided
+        if (data.month) {
+          const newMonth = fromISOMonth(data.month);
+          await txn.studentFee.update({ where: { id: feeId }, data: { month: newMonth } });
+        }
+
+        // Update title and/or recalculate amount
+        const txnUpdate: { title?: string; finalAmount?: number } = {};
+        if (data.title) {
+          txnUpdate.title = data.title;
+        }
+        if (data.feeBreakdown) {
+          txnUpdate.finalAmount = data.feeBreakdown.reduce((sum, item) => sum + item.amount, 0);
+          // Replace fee breakdown: delete old, create new
+          await txn.feeBreakdown.deleteMany({ where: { studentFeeId: feeId } });
+          await txn.feeBreakdown.createMany({
+            data: data.feeBreakdown.map((item) => ({
+              studentFeeId: feeId,
+              feeType: item.feeType,
+              amount: item.amount,
+            })),
+          });
+        }
+        if (Object.keys(txnUpdate).length > 0) {
+          await txn.transaction.update({ where: { id: fee.transactionId }, data: txnUpdate });
+        }
+      });
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      throw new DatabaseError();
+    }
+
+    const after = await this.getStudentFeeById(feeId);
+
+    if (actor) {
+      await FinanceAuditLogService.log({
+        action: 'UPDATE',
+        entityType: 'StudentFee',
+        entityId: feeId,
+        actorId: actor.id,
+        actorUsername: actor.username,
+        before,
+        after,
+      });
+    }
+
+    return after;
   }
 
   static async updateStudentFeeStatus(
     feeId: string,
     status: 'Paid' | 'Pending' | 'Failed',
+    actor?: Actor,
   ): Promise<StudentFeeRecord> {
     const fee = await prisma.studentFee.findUnique({ where: { id: feeId } });
     if (!fee) {
       throw new NotFoundError();
     }
+
+    const beforeDetail = await this.getStudentFeeById(feeId);
+    const beforeStatus = beforeDetail.status;
 
     await prisma.transaction.update({ where: { id: fee.transactionId }, data: { status } });
 
@@ -205,13 +295,31 @@ export class AdminStudentFeeService {
       session: _session,
       ...record
     } = await this.getStudentFeeById(feeId);
+
+    if (actor) {
+      await FinanceAuditLogService.log({
+        action: 'UPDATE_STATUS',
+        entityType: 'StudentFee',
+        entityId: feeId,
+        actorId: actor.id,
+        actorUsername: actor.username,
+        before: { status: beforeStatus },
+        after: { status },
+      });
+    }
+
     return record;
   }
 
-  static async deleteStudentFee(feeId: string): Promise<{ id: string }> {
+  static async deleteStudentFee(feeId: string, actor?: Actor): Promise<{ id: string }> {
     const fee = await prisma.studentFee.findUnique({ where: { id: feeId } });
     if (!fee) {
       throw new NotFoundError();
+    }
+
+    let beforeSnapshot: StudentFeeDetail | undefined;
+    if (actor) {
+      beforeSnapshot = await this.getStudentFeeById(feeId);
     }
 
     try {
@@ -221,6 +329,17 @@ export class AdminStudentFeeService {
       });
     } catch (_e) {
       throw new DatabaseError();
+    }
+
+    if (actor && beforeSnapshot) {
+      await FinanceAuditLogService.log({
+        action: 'DELETE',
+        entityType: 'StudentFee',
+        entityId: feeId,
+        actorId: actor.id,
+        actorUsername: actor.username,
+        before: beforeSnapshot,
+      });
     }
 
     return { id: feeId };

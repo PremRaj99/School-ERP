@@ -4,6 +4,7 @@ import {
   deleteStudentFee,
   getStudentFeeDetail,
   getStudentFees,
+  updateStudentFee,
   updateStudentFeeStatus,
 } from '../controllers/studentFee.controller';
 import {
@@ -11,6 +12,7 @@ import {
   deleteTeacherSalary,
   getTeacherSalaries,
   getTeacherSalaryDetail,
+  updateTeacherSalary,
   updateTeacherSalaryStatus,
 } from '../controllers/teacherSalary.controller';
 import {
@@ -21,21 +23,29 @@ import {
   getTransactions,
   updateTransaction,
 } from '../controllers/transaction.controller';
+import { getFinanceAuditLogs } from '../controllers/financeAuditLog.controller';
 
 export const financeRouter = Router();
+
+// Audit log (admin-only, read-only)
+financeRouter.get('/audit-log', getFinanceAuditLogs);
 
 // Student fees
 financeRouter.get('/student-fee', getStudentFees);
 financeRouter.get('/student-fee/:feeId', getStudentFeeDetail);
 financeRouter.post('/student-fee', createStudentFee);
+// Full edit (month, title, fee breakdown) — distinct from the status-only update below
 financeRouter.put('/student-fee/:feeId/status', updateStudentFeeStatus);
+financeRouter.put('/student-fee/:feeId', updateStudentFee);
 financeRouter.delete('/student-fee/:feeId', deleteStudentFee);
 
 // Teacher salaries
 financeRouter.get('/teacher-salary', getTeacherSalaries);
 financeRouter.get('/teacher-salary/:salaryId', getTeacherSalaryDetail);
 financeRouter.post('/teacher-salary', createTeacherSalary);
+// Full edit (month, amount) — distinct from the status-only update below
 financeRouter.put('/teacher-salary/:salaryId/status', updateTeacherSalaryStatus);
+financeRouter.put('/teacher-salary/:salaryId', updateTeacherSalary);
 financeRouter.delete('/teacher-salary/:salaryId', deleteTeacherSalary);
 
 // General ledger transactions (Utility / Infrastructure / Other)

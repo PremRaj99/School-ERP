@@ -22,14 +22,27 @@ import { useStudentOptions } from '@/hooks/options/useAdminOptions';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import {
   CreateStudentFeeBody,
+  UpdateStudentFeeBody,
+  UpdateTeacherSalaryBody,
   type StudentFeeRecord,
+  type StudentFeeDetail,
   type TeacherSalaryRecord,
+  type FinanceAuditLogRecord,
   type TxnStatus,
 } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { PiCreditCard, PiPlus, PiPrinter, PiSparkle, PiReceipt, PiTrash } from 'react-icons/pi';
+import {
+  PiCreditCard,
+  PiPlus,
+  PiPrinter,
+  PiSparkle,
+  PiReceipt,
+  PiTrash,
+  PiPencilSimple,
+  PiClockCounterClockwise,
+} from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const STATUS_OPTIONS: { value: TxnStatus; label: string }[] = [
@@ -57,6 +70,14 @@ export const AdminFinance: React.FC = () => {
   const [isCollectFeeOpen, setIsCollectFeeOpen] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<StudentFeeRecord | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+
+  // Edit fee dialog state
+  const [editingFee, setEditingFee] = useState<StudentFeeDetail | null>(null);
+  const [isEditFeeOpen, setIsEditFeeOpen] = useState(false);
+
+  // Edit salary dialog state
+  const [editingSalary, setEditingSalary] = useState<TeacherSalaryRecord | null>(null);
+  const [isEditSalaryOpen, setIsEditSalaryOpen] = useState(false);
 
   // Student fee ledger — search/sort/page/status all server-side now.
   const [feeSearch, setFeeSearch] = useState('');
@@ -95,6 +116,40 @@ export const AdminFinance: React.FC = () => {
   });
   const watchedFeeBreakdown = watch('feeBreakdown');
   const feeTotal = watchedFeeBreakdown.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+
+  // Edit fee form
+  const {
+    control: editFeeControl,
+    handleSubmit: handleEditFeeSubmit,
+    watch: watchEditFee,
+    reset: resetEditFee,
+  } = useForm<UpdateStudentFeeBody>({
+    resolver: zodResolver(UpdateStudentFeeBody),
+    defaultValues: { month: '', title: '', feeBreakdown: [{ feeType: '', amount: 0 }] },
+  });
+  const {
+    fields: editFeeRows,
+    append: appendEditFeeRow,
+    remove: removeEditFeeRow,
+  } = useFieldArray({
+    control: editFeeControl,
+    name: 'feeBreakdown',
+  });
+  const watchedEditFeeBreakdown = watchEditFee('feeBreakdown');
+  const editFeeTotal = (watchedEditFeeBreakdown ?? []).reduce(
+    (sum, row) => sum + (Number(row.amount) || 0),
+    0,
+  );
+
+  // Edit salary form
+  const {
+    control: editSalaryControl,
+    handleSubmit: handleEditSalarySubmit,
+    reset: resetEditSalary,
+  } = useForm<UpdateTeacherSalaryBody>({
+    resolver: zodResolver(UpdateTeacherSalaryBody),
+    defaultValues: { month: '', amount: 0 },
+  });
 
   const feeSort = feeSorting[0];
   const feeListQuery = {
@@ -162,8 +217,37 @@ export const AdminFinance: React.FC = () => {
       toast.success('Fee payment recorded successfully!');
       queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
       setIsCollectFeeOpen(false);
       reset(emptyFeeDefaults);
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+
+  const editFeeMutation = useMutation({
+    mutationFn: ({ feeId, body }: { feeId: string; body: UpdateStudentFeeBody }) =>
+      adminService.updateStudentFee(feeId, body),
+    onSuccess: () => {
+      toast.success('Fee updated successfully!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
+      setIsEditFeeOpen(false);
+      setEditingFee(null);
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+
+  const editSalaryMutation = useMutation({
+    mutationFn: ({ salaryId, body }: { salaryId: string; body: UpdateTeacherSalaryBody }) =>
+      adminService.updateTeacherSalary(salaryId, body),
+    onSuccess: () => {
+      toast.success('Salary updated successfully!');
+      queryClient.invalidateQueries({ queryKey: qk.admin.teacherSalaries() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
+      setIsEditSalaryOpen(false);
+      setEditingSalary(null);
     },
     onError: (err) => toast.error(getErrorMessage(err)),
   });
@@ -175,6 +259,7 @@ export const AdminFinance: React.FC = () => {
       toast.success('Fee status updated!');
       queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
     },
     onError: (err) => toast.error(getErrorMessage(err)),
   });
@@ -186,9 +271,31 @@ export const AdminFinance: React.FC = () => {
       toast.success('Salary status updated!');
       queryClient.invalidateQueries({ queryKey: qk.admin.teacherSalaries() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
     },
     onError: (err) => toast.error(getErrorMessage(err)),
   });
+
+  // Audit log tab state
+  const [auditPageIndex, setAuditPageIndex] = useState(0);
+  const [auditEntityFilter, setAuditEntityFilter] = useState('');
+
+  const auditLogQuery = {
+    page: auditPageIndex + 1,
+    pageSize: 10,
+    entityType: (auditEntityFilter || undefined) as
+      'StudentFee' | 'TeacherSalary' | 'Transaction' | undefined,
+  };
+
+  const { data: auditLogsResponse, isLoading: auditLogsLoading } = useQuery({
+    queryKey: qk.admin.financeAuditLogs(auditLogQuery),
+    queryFn: () => adminService.getFinanceAuditLogs(auditLogQuery),
+  });
+  const auditLogs = auditLogsResponse?.data ?? [];
+
+  useEffect(() => {
+    queueMicrotask(() => setAuditPageIndex(0));
+  }, [auditEntityFilter]);
 
   const onCollectSubmit: SubmitHandler<CreateStudentFeeBody> = (values) => {
     collectFeeMutation.mutate(values);
@@ -197,6 +304,40 @@ export const AdminFinance: React.FC = () => {
   const openReceiptModal = (fee: StudentFeeRecord) => {
     setSelectedReceipt(fee);
     setIsReceiptOpen(true);
+  };
+
+  const openEditFeeModal = async (fee: StudentFeeRecord) => {
+    try {
+      const detail = await adminService.getStudentFeeById(fee.id);
+      setEditingFee(detail);
+      resetEditFee({
+        month: detail.month,
+        title: detail.title,
+        feeBreakdown: detail.feeBreakdown,
+      });
+      setIsEditFeeOpen(true);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
+  const openEditSalaryModal = (salary: TeacherSalaryRecord) => {
+    setEditingSalary(salary);
+    resetEditSalary({
+      month: salary.month,
+      amount: salary.finalAmount,
+    });
+    setIsEditSalaryOpen(true);
+  };
+
+  const onEditFeeSubmit: SubmitHandler<UpdateStudentFeeBody> = (values) => {
+    if (!editingFee) return;
+    editFeeMutation.mutate({ feeId: editingFee.id, body: values });
+  };
+
+  const onEditSalarySubmit: SubmitHandler<UpdateTeacherSalaryBody> = (values) => {
+    if (!editingSalary) return;
+    editSalaryMutation.mutate({ salaryId: editingSalary.id, body: values });
   };
 
   const feeColumns: ColumnDef<StudentFeeRecord, unknown>[] = [
@@ -257,25 +398,43 @@ export const AdminFinance: React.FC = () => {
       ),
     },
     {
-      id: 'receipt',
-      header: 'Receipt',
+      id: 'actions',
+      header: 'Actions',
       enableSorting: false,
       enableHiding: false,
-      cell: ({ row }) =>
-        row.original.status === 'Paid' ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-primary hover:bg-primary/10 h-7 text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              openReceiptModal(row.original);
-            }}
-          >
-            <PiPrinter className="mr-1 h-3.5 w-3.5" />
-            <span>Print Receipt</span>
-          </Button>
-        ) : null,
+      cell: ({ row }) => {
+        const fee = row.original;
+        return (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-primary hover:bg-primary/10 h-7 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                openEditFeeModal(fee);
+              }}
+            >
+              <PiPencilSimple className="mr-1 h-3.5 w-3.5" />
+              <span>Edit</span>
+            </Button>
+            {fee.status === 'Paid' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary hover:bg-primary/10 h-7 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openReceiptModal(fee);
+                }}
+              >
+                <PiPrinter className="mr-1 h-3.5 w-3.5" />
+                <span>Receipt</span>
+              </Button>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -340,6 +499,125 @@ export const AdminFinance: React.FC = () => {
       cell: ({ row }) => (
         <span className="text-muted-foreground text-xs">{row.original.paidAt}</span>
       ),
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      enableSorting: false,
+      enableHiding: false,
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-primary hover:bg-primary/10 h-7 text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            openEditSalaryModal(row.original);
+          }}
+        >
+          <PiPencilSimple className="mr-1 h-3.5 w-3.5" />
+          <span>Edit</span>
+        </Button>
+      ),
+    },
+  ];
+
+  const ACTION_BADGE_COLORS: Record<string, string> = {
+    CREATE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    UPDATE: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    UPDATE_STATUS: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+    DELETE: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+  };
+
+  const auditLogColumns: ColumnDef<FinanceAuditLogRecord, unknown>[] = [
+    {
+      accessorKey: 'createdAt',
+      header: 'Timestamp',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className="text-muted-foreground text-xs">{row.original.createdAt}</span>
+      ),
+    },
+    {
+      accessorKey: 'action',
+      header: 'Action',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <Badge
+          variant="outline"
+          className={`border-0 text-[10px] font-semibold ${ACTION_BADGE_COLORS[row.original.action] ?? ''}`}
+        >
+          {row.original.action.replace('_', ' ')}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'entityType',
+      header: 'Type',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className="text-xs font-medium">
+          {row.original.entityType === 'StudentFee'
+            ? 'Student Fee'
+            : row.original.entityType === 'TeacherSalary'
+              ? 'Teacher Salary'
+              : 'Transaction'}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'actorUsername',
+      header: 'Actor',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className="text-primary font-mono text-xs">{row.original.actorUsername}</span>
+      ),
+    },
+    {
+      id: 'summary',
+      header: 'Summary',
+      enableSorting: false,
+      cell: ({ row }) => {
+        const { action, before, after } = row.original;
+        if (action === 'CREATE') {
+          const a = after as Record<string, unknown> | null;
+          return (
+            <span className="text-xs">
+              Created — ₹{((a?.finalAmount as number) ?? 0).toLocaleString()}
+            </span>
+          );
+        }
+        if (action === 'DELETE') {
+          const b = before as Record<string, unknown> | null;
+          return (
+            <span className="text-xs text-rose-600 dark:text-rose-400">
+              Deleted — ₹{((b?.finalAmount as number) ?? 0).toLocaleString()}
+            </span>
+          );
+        }
+        if (action === 'UPDATE_STATUS') {
+          const b = before as Record<string, unknown> | null;
+          const a = after as Record<string, unknown> | null;
+          return (
+            <span className="text-xs">
+              Status: {(b?.status as string) ?? '?'} → {(a?.status as string) ?? '?'}
+            </span>
+          );
+        }
+        // UPDATE
+        const b = before as Record<string, unknown> | null;
+        const a = after as Record<string, unknown> | null;
+        const oldAmt = (b?.finalAmount as number) ?? 0;
+        const newAmt = (a?.finalAmount as number) ?? 0;
+        return (
+          <span className="text-xs">
+            Edited
+            {oldAmt !== newAmt
+              ? ` — ₹${oldAmt.toLocaleString()} → ₹${newAmt.toLocaleString()}`
+              : ''}
+          </span>
+        );
+      },
     },
   ];
 
@@ -428,6 +706,10 @@ export const AdminFinance: React.FC = () => {
           <TabsTrigger value="expenses" className="rounded-md px-4 text-xs font-semibold">
             <PiReceipt className="mr-1.5 h-3.5 w-3.5" />
             <span>Expenses</span>
+          </TabsTrigger>
+          <TabsTrigger value="activityLog" className="rounded-md px-4 text-xs font-semibold">
+            <PiClockCounterClockwise className="mr-1.5 h-3.5 w-3.5" />
+            <span>Activity Log</span>
           </TabsTrigger>
         </TabsList>
 
@@ -554,6 +836,43 @@ export const AdminFinance: React.FC = () => {
               categoriesQueryKey: qk.admin.expenseCategories(),
             }}
           />
+        </TabsContent>
+
+        {/* Activity Log Tab (admin-only) */}
+        <TabsContent value="activityLog" className="space-y-4 pt-4 focus:outline-hidden">
+          <Card className="overflow-hidden border border-slate-200/80 bg-white/90 p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+            <DataTable
+              columns={auditLogColumns}
+              data={auditLogs}
+              isLoading={auditLogsLoading}
+              emptyTitle="No activity logs yet"
+              emptyDescription="Financial actions (create, edit, delete, status change) will be logged here."
+              searchPlaceholder=""
+              manual={{
+                pageIndex: auditPageIndex,
+                pageSize: 10,
+                pageCount: auditLogsResponse?.totalPages ?? 1,
+                totalRows: auditLogsResponse?.total ?? 0,
+                onPageChange: setAuditPageIndex,
+                search: '',
+                onSearchChange: () => {},
+                sorting: [],
+                onSortingChange: () => {},
+              }}
+              toolbar={
+                <select
+                  value={auditEntityFilter}
+                  onChange={(e) => setAuditEntityFilter(e.target.value)}
+                  className="h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
+                >
+                  <option value="">All Types</option>
+                  <option value="StudentFee">Student Fee</option>
+                  <option value="TeacherSalary">Teacher Salary</option>
+                  <option value="Transaction">Transaction</option>
+                </select>
+              }
+            />
+          </Card>
         </TabsContent>
       </Tabs>
 
@@ -729,6 +1048,182 @@ export const AdminFinance: React.FC = () => {
                 </Button>
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Fee Modal */}
+      <Dialog
+        open={isEditFeeOpen}
+        onOpenChange={(next) => {
+          setIsEditFeeOpen(next);
+          if (!next) setEditingFee(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-xl lg:max-w-2xl">
+          <DialogHeader>
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiPencilSimple className="h-4 w-4" />
+              <span>Edit Fee</span>
+            </div>
+            <DialogTitle className="text-lg font-bold">Edit Student Fee</DialogTitle>
+          </DialogHeader>
+
+          {editingFee && (
+            <form onSubmit={handleEditFeeSubmit(onEditFeeSubmit)} className="space-y-4 pt-2">
+              <div className="rounded-md bg-slate-50 px-3 py-2 text-xs dark:bg-zinc-800/50">
+                <span className="text-muted-foreground">Student:</span>{' '}
+                <span className="font-semibold">
+                  {editingFee.firstName} {editingFee.lastName ?? ''} ({editingFee.studentId})
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <MonthField control={editFeeControl} name="month" label="Billing Month" required />
+                <TextField
+                  control={editFeeControl}
+                  name="title"
+                  label="Fee Title"
+                  placeholder="Term Fee"
+                />
+              </div>
+
+              <div className="space-y-2 rounded-md bg-slate-50 p-3 dark:bg-zinc-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold">Fee Breakdown</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => appendEditFeeRow({ feeType: '', amount: 0 })}
+                  >
+                    <PiPlus className="mr-1 h-3 w-3" />
+                    Add Row
+                  </Button>
+                </div>
+
+                {editFeeRows.map((row, index) => (
+                  <div key={row.id} className="flex items-end gap-2">
+                    <div className="flex-2">
+                      <TextField
+                        control={editFeeControl}
+                        name={`feeBreakdown.${index}.feeType`}
+                        label={index === 0 ? 'Fee Type' : ''}
+                        placeholder="e.g. Tuition Fee"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <NumberField
+                        control={editFeeControl}
+                        name={`feeBreakdown.${index}.amount`}
+                        label={index === 0 ? 'Amount' : ''}
+                        currency
+                        min={0}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="mb-1 h-8 w-8 shrink-0 text-rose-600"
+                      disabled={editFeeRows.length === 1}
+                      onClick={() => removeEditFeeRow(index)}
+                    >
+                      <PiTrash className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+
+                <div className="flex justify-between border-t pt-2 text-xs font-bold text-slate-900 dark:text-white">
+                  <span>Total Payable:</span>
+                  <span>₹{editFeeTotal.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <DialogFooter className="pt-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditFeeOpen(false)}
+                  className="h-9 text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={editFeeMutation.isPending}
+                  className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
+                >
+                  {editFeeMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Salary Modal */}
+      <Dialog
+        open={isEditSalaryOpen}
+        onOpenChange={(next) => {
+          setIsEditSalaryOpen(next);
+          if (!next) setEditingSalary(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="text-primary flex items-center gap-2 text-xs font-semibold">
+              <PiPencilSimple className="h-4 w-4" />
+              <span>Edit Salary</span>
+            </div>
+            <DialogTitle className="text-lg font-bold">Edit Teacher Salary</DialogTitle>
+          </DialogHeader>
+
+          {editingSalary && (
+            <form onSubmit={handleEditSalarySubmit(onEditSalarySubmit)} className="space-y-4 pt-2">
+              <div className="rounded-md bg-slate-50 px-3 py-2 text-xs dark:bg-zinc-800/50">
+                <span className="text-muted-foreground">Teacher:</span>{' '}
+                <span className="font-semibold">
+                  {editingSalary.firstName} {editingSalary.lastName ?? ''} (
+                  {editingSalary.teacherId})
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <MonthField
+                  control={editSalaryControl}
+                  name="month"
+                  label="Payroll Month"
+                  required
+                />
+                <NumberField
+                  control={editSalaryControl}
+                  name="amount"
+                  label="Amount"
+                  currency
+                  min={0}
+                />
+              </div>
+
+              <DialogFooter className="pt-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditSalaryOpen(false)}
+                  className="h-9 text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={editSalaryMutation.isPending}
+                  className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
+                >
+                  {editSalaryMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </DialogFooter>
+            </form>
           )}
         </DialogContent>
       </Dialog>

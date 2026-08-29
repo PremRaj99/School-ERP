@@ -4,9 +4,16 @@ import type {
   CreateTeacherSalaryBody,
   TeacherSalaryListQuery,
   TeacherSalaryRecord,
+  UpdateTeacherSalaryBody,
 } from '@schoolerp/contracts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@schoolerp/contracts';
 import { fromISOMonth, toISODate, toISOMonth } from '@/shared/helpers/isoDate';
+import { FinanceAuditLogService } from './financeAuditLog.service';
+
+interface Actor {
+  id: string;
+  username: string;
+}
 
 interface PaginatedTeacherSalaries {
   data: TeacherSalaryRecord[];
@@ -109,7 +116,10 @@ export class AdminTeacherSalaryService {
     };
   }
 
-  static async createTeacherSalary(data: CreateTeacherSalaryBody): Promise<TeacherSalaryRecord> {
+  static async createTeacherSalary(
+    data: CreateTeacherSalaryBody,
+    actor?: Actor,
+  ): Promise<TeacherSalaryRecord> {
     const teacher = await prisma.teacher.findUnique({ where: { teacherId: data.teacherId } });
     if (!teacher) {
       throw new NotFoundError('Teacher not found.');
@@ -147,26 +157,110 @@ export class AdminTeacherSalaryService {
       throw new DatabaseError();
     }
 
-    return this.getTeacherSalaryById(salaryId);
+    const result = await this.getTeacherSalaryById(salaryId);
+
+    if (actor) {
+      await FinanceAuditLogService.log({
+        action: 'CREATE',
+        entityType: 'TeacherSalary',
+        entityId: salaryId,
+        actorId: actor.id,
+        actorUsername: actor.username,
+        after: result,
+      });
+    }
+
+    return result;
+  }
+
+  static async updateTeacherSalary(
+    salaryId: string,
+    data: UpdateTeacherSalaryBody,
+    actor?: Actor,
+  ): Promise<TeacherSalaryRecord> {
+    const before = await this.getTeacherSalaryById(salaryId);
+
+    const salary = await prisma.teacherSalary.findUnique({ where: { id: salaryId } });
+    if (!salary) {
+      throw new NotFoundError();
+    }
+
+    try {
+      await prisma.$transaction(async (txn) => {
+        if (data.month) {
+          const newMonth = fromISOMonth(data.month);
+          await txn.teacherSalary.update({ where: { id: salaryId }, data: { month: newMonth } });
+        }
+        if (data.amount !== undefined) {
+          await txn.transaction.update({
+            where: { id: salary.transactionId },
+            data: { finalAmount: data.amount },
+          });
+        }
+      });
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      throw new DatabaseError();
+    }
+
+    const after = await this.getTeacherSalaryById(salaryId);
+
+    if (actor) {
+      await FinanceAuditLogService.log({
+        action: 'UPDATE',
+        entityType: 'TeacherSalary',
+        entityId: salaryId,
+        actorId: actor.id,
+        actorUsername: actor.username,
+        before,
+        after,
+      });
+    }
+
+    return after;
   }
 
   static async updateTeacherSalaryStatus(
     salaryId: string,
     status: 'Paid' | 'Pending' | 'Failed',
+    actor?: Actor,
   ): Promise<TeacherSalaryRecord> {
     const salary = await prisma.teacherSalary.findUnique({ where: { id: salaryId } });
     if (!salary) {
       throw new NotFoundError();
     }
 
+    const before = await this.getTeacherSalaryById(salaryId);
+    const beforeStatus = before.status;
+
     await prisma.transaction.update({ where: { id: salary.transactionId }, data: { status } });
-    return this.getTeacherSalaryById(salaryId);
+
+    const result = await this.getTeacherSalaryById(salaryId);
+
+    if (actor) {
+      await FinanceAuditLogService.log({
+        action: 'UPDATE_STATUS',
+        entityType: 'TeacherSalary',
+        entityId: salaryId,
+        actorId: actor.id,
+        actorUsername: actor.username,
+        before: { status: beforeStatus },
+        after: { status },
+      });
+    }
+
+    return result;
   }
 
-  static async deleteTeacherSalary(salaryId: string): Promise<{ id: string }> {
+  static async deleteTeacherSalary(salaryId: string, actor?: Actor): Promise<{ id: string }> {
     const salary = await prisma.teacherSalary.findUnique({ where: { id: salaryId } });
     if (!salary) {
       throw new NotFoundError();
+    }
+
+    let beforeSnapshot: TeacherSalaryRecord | undefined;
+    if (actor) {
+      beforeSnapshot = await this.getTeacherSalaryById(salaryId);
     }
 
     try {
@@ -176,6 +270,17 @@ export class AdminTeacherSalaryService {
       });
     } catch (_e) {
       throw new DatabaseError();
+    }
+
+    if (actor && beforeSnapshot) {
+      await FinanceAuditLogService.log({
+        action: 'DELETE',
+        entityType: 'TeacherSalary',
+        entityId: salaryId,
+        actorId: actor.id,
+        actorUsername: actor.username,
+        before: beforeSnapshot,
+      });
     }
 
     return { id: salaryId };

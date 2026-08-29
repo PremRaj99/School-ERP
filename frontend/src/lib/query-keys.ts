@@ -50,6 +50,10 @@ export const qk = {
     transactions: (query?: Record<string, unknown>) =>
       query ? (['admin', 'transactions', query] as const) : (['admin', 'transactions'] as const),
     expenseCategories: () => ['admin', 'expense-categories'] as const,
+    financeAuditLogs: (query?: Record<string, unknown>) =>
+      query
+        ? (['admin', 'finance-audit-logs', query] as const)
+        : (['admin', 'finance-audit-logs'] as const),
     teacherAttendanceByDate: (date: string) =>
       ['admin', 'teacher-attendance', 'date', date] as const,
     teacherAttendanceByMonth: (teacherId: string, month: string) =>

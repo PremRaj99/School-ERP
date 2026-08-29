@@ -72,6 +72,16 @@ export const CreateStudentFeeBody = z.object({
 });
 export type CreateStudentFeeBody = z.infer<typeof CreateStudentFeeBody>;
 
+export const UpdateStudentFeeBody = z.object({
+  month: ISOMonth.optional(),
+  title: z.string().min(2, 'Title must be at least 2 characters long.').optional(),
+  feeBreakdown: z
+    .array(FeeBreakdownItem, { message: 'Fee breakdown is required.' })
+    .min(1, 'At least one fee breakdown item is required.')
+    .optional(),
+});
+export type UpdateStudentFeeBody = z.infer<typeof UpdateStudentFeeBody>;
+
 export const UpdateStatusBody = z.object({ status: TxnStatusEnum });
 export type UpdateStatusBody = z.infer<typeof UpdateStatusBody>;
 
@@ -96,6 +106,14 @@ export const adminStudentFeeContract = defineContract({
     body: CreateStudentFeeBody,
     response: StudentFeeDetail,
     successStatus: 201,
+  },
+  update: {
+    method: 'PUT',
+    path: '/admin/finance/student-fee/:feeId',
+    params: z.object({ feeId: ObjectId }),
+    body: UpdateStudentFeeBody,
+    response: StudentFeeDetail,
+    successStatus: 202,
   },
   updateStatus: {
     method: 'PUT',
@@ -148,6 +166,15 @@ export const CreateTeacherSalaryBody = z.object({
 });
 export type CreateTeacherSalaryBody = z.infer<typeof CreateTeacherSalaryBody>;
 
+export const UpdateTeacherSalaryBody = z.object({
+  month: ISOMonth.optional(),
+  amount: z
+    .number({ message: 'Amount must be a number.' })
+    .positive('Amount must be a positive number.')
+    .optional(),
+});
+export type UpdateTeacherSalaryBody = z.infer<typeof UpdateTeacherSalaryBody>;
+
 export const adminTeacherSalaryContract = defineContract({
   list: {
     method: 'GET',
@@ -167,6 +194,14 @@ export const adminTeacherSalaryContract = defineContract({
     body: CreateTeacherSalaryBody,
     response: TeacherSalaryRecord,
     successStatus: 201,
+  },
+  update: {
+    method: 'PUT',
+    path: '/admin/finance/teacher-salary/:salaryId',
+    params: z.object({ salaryId: ObjectId }),
+    body: UpdateTeacherSalaryBody,
+    response: TeacherSalaryRecord,
+    successStatus: 202,
   },
   updateStatus: {
     method: 'PUT',
@@ -271,5 +306,35 @@ export const adminTransactionContract = defineContract({
     response: ExpenseCategoriesResponse,
     summary:
       'Distinct `expenseCategory` values already in use, for the category combobox — lets a user pick a previously-typed label (e.g. "Books") instead of retyping it, without restricting them to a fixed list.',
+  },
+} as const);
+
+// ---- Finance audit log -------------------------------------------------------
+
+export const FinanceAuditLogRecord = z.object({
+  id: ObjectId,
+  action: z.string(),
+  entityType: z.string(),
+  entityId: z.string(),
+  actorUsername: z.string(),
+  before: z.unknown().nullable(),
+  after: z.unknown().nullable(),
+  note: z.string().nullable(),
+  createdAt: ISODate,
+});
+export type FinanceAuditLogRecord = z.infer<typeof FinanceAuditLogRecord>;
+
+export const FinanceAuditLogQuery = PageQuery.extend({
+  entityType: z.enum(['StudentFee', 'TeacherSalary', 'Transaction']).optional(),
+  entityId: ObjectId.optional(),
+});
+export type FinanceAuditLogQuery = z.infer<typeof FinanceAuditLogQuery>;
+
+export const adminFinanceAuditLogContract = defineContract({
+  list: {
+    method: 'GET',
+    path: '/admin/finance/audit-log',
+    query: FinanceAuditLogQuery,
+    response: paginatedResponse(FinanceAuditLogRecord),
   },
 } as const);

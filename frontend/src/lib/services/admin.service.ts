@@ -5,6 +5,7 @@ import {
   adminContactContract,
   adminDashboardContract,
   adminExamContract,
+  adminFinanceAuditLogContract,
   adminNoticeContract,
   adminPromotionContract,
   adminStudentAttendanceContract,
@@ -36,6 +37,7 @@ import {
   type CreateTransactionBody,
   type ExamListQuery,
   type ExamRecord,
+  type FinanceAuditLogQuery,
   type MarkTeacherAttendanceBody,
   type NoticeListQuery,
   type NoticeRecord,
@@ -55,9 +57,11 @@ import {
   type UpdateExamBody,
   type UpdateNoticeBody,
   type UpdateStudentBody,
+  type UpdateStudentFeeBody,
   type UpdateSubjectBody,
   type UpdateTeacherAttendanceBody,
   type UpdateTeacherBody,
+  type UpdateTeacherSalaryBody,
   type UpdateTimeTableBody,
   type UpdateTransactionBody,
 } from '@schoolerp/contracts';
@@ -153,6 +157,8 @@ export const adminService = {
     api(adminStudentFeeContract.list, { query: query ?? {} }),
   getStudentFeeById: (feeId: string) => api(adminStudentFeeContract.detail, { params: { feeId } }),
   createStudentFee: (body: CreateStudentFeeBody) => api(adminStudentFeeContract.create, { body }),
+  updateStudentFee: (feeId: string, body: UpdateStudentFeeBody) =>
+    api(adminStudentFeeContract.update, { params: { feeId }, body }),
   updateStudentFeeStatus: (
     feeId: string,
     status: StudentFeeRecord['status'],
@@ -167,6 +173,8 @@ export const adminService = {
     api(adminTeacherSalaryContract.detail, { params: { salaryId } }),
   createTeacherSalary: (body: CreateTeacherSalaryBody) =>
     api(adminTeacherSalaryContract.create, { body }),
+  updateTeacherSalary: (salaryId: string, body: UpdateTeacherSalaryBody) =>
+    api(adminTeacherSalaryContract.update, { params: { salaryId }, body }),
   updateTeacherSalaryStatus: (
     salaryId: string,
     status: TeacherSalaryRecord['status'],
@@ -189,6 +197,10 @@ export const adminService = {
   deleteTransaction: (transactionId: string): Promise<{ id: string }> =>
     api(adminTransactionContract.remove, { params: { transactionId } }),
   getExpenseCategories: (): Promise<string[]> => api(adminTransactionContract.expenseCategories),
+
+  // Finance Audit Logs
+  getFinanceAuditLogs: (query?: FinanceAuditLogQuery) =>
+    api(adminFinanceAuditLogContract.list, { query: query ?? {} }),
 
   // Contact Messages
   getContactMessages: (query?: ContactListQuery) =>
