@@ -48,7 +48,7 @@ export const ClassName = z
   .string({ message: 'Class name is required.' })
   .trim()
   .min(1, { message: 'Class name cannot be empty.' })
-  .max(3, { message: 'Class name must be 3 characters or less.' });
+  .max(10, { message: 'Class name must be 10 characters or less.' });
 
 export const Section = z
   .string({ message: 'Section is required.' })

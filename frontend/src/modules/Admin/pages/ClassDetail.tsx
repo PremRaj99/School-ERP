@@ -42,10 +42,15 @@ import {
 } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-const GRADE_OPTIONS = Array.from({ length: 12 }, (_, i) => {
-  const value = String(i + 1);
-  return { value, label: `Grade ${value}` };
-});
+const GRADE_OPTIONS = [
+  { value: 'Nursery', label: 'Nursery' },
+  { value: 'LKG', label: 'LKG' },
+  { value: 'UKG', label: 'UKG' },
+  ...Array.from({ length: 12 }, (_, i) => {
+    const value = String(i + 1);
+    return { value, label: `Grade ${value}` };
+  }),
+];
 const SECTION_OPTIONS = ['A', 'B', 'C', 'D', 'E', 'F'].map((s) => ({
   value: s,
   label: `Section ${s}`,
