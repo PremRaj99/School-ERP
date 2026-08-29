@@ -26,7 +26,7 @@ export const AdminAnalytics: React.FC = () => {
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList className="h-10 flex-wrap rounded-md border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
+        <TabsList className="h-10 rounded-md border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
           <TabsTrigger value="overview" className="rounded-md px-3 text-xs font-semibold">
             <PiSquaresFour className="mr-1.5 h-3.5 w-3.5" />
             Overview
