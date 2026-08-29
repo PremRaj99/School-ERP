@@ -12,29 +12,75 @@ export const apiClient = axios.create({
   },
 });
 
+let isRedirecting = false;
+let refreshPromise: Promise<unknown> | null = null;
+
+export const redirectToLogin = () => {
+  if (typeof window === 'undefined') return;
+
+  const pathname = window.location.pathname;
+  // Never redirect if already on login page
+  if (pathname === '/auth/login' || pathname.startsWith('/auth/login')) {
+    return;
+  }
+
+  // Clear auth state in store
+  useAuthStore.getState().clear();
+
+  // On public non-authenticated pages (like Home or Contact), don't forcibly redirect visitors
+  if (pathname === '/' || pathname === '/contact') {
+    return;
+  }
+
+  if (isRedirecting) return;
+  isRedirecting = true;
+
+  const currentUrl = window.location.pathname + window.location.search;
+  const nextParam =
+    currentUrl && currentUrl !== '/' && !currentUrl.startsWith('/auth/login')
+      ? `?next=${encodeURIComponent(currentUrl)}`
+      : '';
+
+  const loginUrl = `/auth/login${nextParam}`;
+  window.location.replace(loginUrl);
+};
+
 // Response interceptor for standard error handling & refresh
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<{ message?: string; error?: string }>) => {
     const originalRequest = error.config as { _retry?: boolean } & typeof error.config;
-    if (
-      error.response?.status === 401 &&
-      !originalRequest?._retry &&
-      !originalRequest?.url?.includes('/auth/login') &&
-      !originalRequest?.url?.includes('/auth/refresh')
-    ) {
-      originalRequest._retry = true;
-      try {
-        await axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true });
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        // The refresh itself failed — the session is really over. Clear the cached auth state so
-        // route guards redirect to login instead of showing a stale "authenticated" page that
-        // every subsequent request will 401 on.
-        useAuthStore.getState().clear();
-        return Promise.reject(refreshError);
+    const isLoginEndpoint = originalRequest?.url?.includes('/auth/login');
+    const isRefreshEndpoint =
+      originalRequest?.url?.includes('/auth/refresh') ||
+      originalRequest?.url?.includes('/user/refresh');
+
+    if (error.response?.status === 401 && !isLoginEndpoint) {
+      // Try to refresh token once if this is not already a retry or refresh call
+      if (!originalRequest?._retry && !isRefreshEndpoint) {
+        originalRequest._retry = true;
+
+        if (!refreshPromise) {
+          refreshPromise = axios
+            .post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true })
+            .finally(() => {
+              refreshPromise = null;
+            });
+        }
+
+        try {
+          await refreshPromise;
+          return apiClient(originalRequest);
+        } catch (refreshError) {
+          redirectToLogin();
+          return Promise.reject(refreshError);
+        }
       }
+
+      // If already retried or refresh itself failed with 401, re-route to login
+      redirectToLogin();
     }
+
     return Promise.reject(error);
   },
 );
