@@ -98,7 +98,7 @@ export const FinanceAnalytics: React.FC = () => {
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight">Financial Analytics</h1>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Collections, payroll, and expenses — the complete picture.
+            Fee collections, honorarium, and expenses — the complete picture.
           </p>
         </div>
         <select
@@ -235,7 +235,7 @@ export const FinanceAnalytics: React.FC = () => {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
                   <PiWallet className="text-primary h-4 w-4" />
-                  Salary Burn vs. Fee Collection
+                  Honorarium vs. Fee Collection
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-64">
@@ -252,7 +252,7 @@ export const FinanceAnalytics: React.FC = () => {
                       <Line
                         type="monotone"
                         dataKey="salaryBurn"
-                        name="Salary Burn"
+                        name="Honorarium Paid"
                         stroke="#f43f5e"
                         strokeWidth={2}
                       />

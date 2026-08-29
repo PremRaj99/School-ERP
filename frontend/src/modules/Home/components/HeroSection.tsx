@@ -200,21 +200,22 @@ export const HeroSection: React.FC = () => {
                 alt="Gyandeep Logo"
                 className="h-4 w-4 rounded-full object-contain"
               />
-              <span>Gyandeep bal vikas vidyamandir</span>
+              <span>Gyandeep Bal Vikas Vidyamandir</span>
             </div>
 
             <div className="space-y-3">
               <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl lg:leading-[1.15] dark:text-white">
-                School Management Made Clear & Simple
+                Where Academics Meet संस्कार
               </h1>
               <p className="text-base font-semibold text-slate-700 sm:text-lg dark:text-zinc-300">
-                Admissions, attendance, fee ledgers, and exam grading in one synchronized workspace.
+                A Naya Savera Parivar initiative — admissions, attendance, fee records, and exam
+                grading in one place, for a school built on values as much as marks.
               </p>
             </div>
 
             <p className="text-muted-foreground mx-auto max-w-xl text-sm leading-relaxed sm:text-base lg:mx-0">
-              Test the live interactive preview on the right — search students, mark attendance roll
-              calls, collect fee receipts, and test Excel import in real time.
+              Try the live preview on the right — search students, mark attendance roll calls,
+              record fee receipts, and test the Excel import in real time.
             </p>
 
             {/* CTA Buttons */}

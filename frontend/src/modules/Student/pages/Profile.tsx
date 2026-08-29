@@ -82,7 +82,7 @@ export const StudentProfile: React.FC = () => {
                 />
                 <div>
                   <h3 className="text-xs font-bold tracking-tight">
-                    Gyandeep bal vikas vidyamandir
+                    Gyandeep Bal Vikas Vidyamandir
                   </h3>
                   <p className="text-[9px] text-white/80">Identity Pass {student.session}</p>
                 </div>

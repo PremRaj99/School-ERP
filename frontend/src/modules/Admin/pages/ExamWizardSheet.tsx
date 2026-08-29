@@ -127,7 +127,7 @@ export function ExamWizardSheet({
           <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiSparkle className="h-4 w-4" />
-              <span>Exam Controller Office</span>
+              <span>New Examination</span>
             </div>
             <DialogTitle className="text-lg font-bold">Schedule Term Examination</DialogTitle>
             <DialogDescription className="text-xs">

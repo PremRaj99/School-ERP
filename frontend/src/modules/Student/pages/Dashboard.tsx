@@ -60,11 +60,14 @@ export const StudentDashboard: React.FC = () => {
       <div className="border-primary/20 bg-primary flex flex-col items-start justify-between gap-4 rounded-md border p-6 text-white shadow-xl sm:flex-row sm:items-center sm:p-8">
         <div className="space-y-2">
           <Badge variant="outline" className="border-white/30 text-xs text-white/90">
-            Student Academic Hub
+            Gyandeep Bal Vikas Vidyamandir
           </Badge>
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
             Welcome back, {profile.firstName} {profile.lastName || ''}!
           </h1>
+          <p className="max-w-xl text-xs text-white/80">
+            Stay on top of your learning, attendance, exams, and school updates.
+          </p>
           <p className="max-w-xl text-xs text-white/80">
             Class {profile.className}-{profile.section} • Roll No #{profile.rollNo} • Student ID:{' '}
             {profile.studentId} • Session {profile.session}
@@ -241,7 +244,7 @@ export const StudentDashboard: React.FC = () => {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-bold">
                 <PiBell className="text-primary h-4 w-4" />
-                <span>Notice Bulletin</span>
+                <span>School Notices</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2.5 pt-1 text-xs">

@@ -292,7 +292,7 @@ export const ExpenseManager: React.FC<{ adapter: ExpenseManagerAdapter }> = ({ a
               {editTarget ? 'Edit Expense' : 'Log an Expense'}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              For anything that isn't a student fee or teacher salary — supplies, utilities,
+              For anything that isn't a student fee or teacher honorarium — supplies, utilities,
               equipment, repairs.
             </DialogDescription>
           </DialogHeader>

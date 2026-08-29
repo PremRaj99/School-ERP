@@ -169,7 +169,7 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/teacher/salary'))}>
             <PiCreditCard className="text-muted-foreground mr-2 h-4 w-4" />
-            <span>My Salary Slips</span>
+            <span>My Honorarium Slips</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/teacher/profile'))}>
             <PiGear className="mr-2 h-4 w-4 text-slate-500" />

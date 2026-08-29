@@ -36,7 +36,8 @@ export const FinanceDashboard: React.FC = () => {
       <div className="border-b border-slate-200/80 pb-2 dark:border-zinc-800">
         <h1 className="text-2xl font-extrabold tracking-tight">Finance Dashboard</h1>
         <p className="text-muted-foreground mt-0.5 text-xs">
-          Pending collections, this month's spend, and the latest ledger activity.
+          Gyandeep Bal Vikas Vidyamandir — pending fee collections, this month's spending, and the
+          latest activity across the school's accounts.
         </p>
       </div>
 
@@ -70,7 +71,7 @@ export const FinanceDashboard: React.FC = () => {
               <CardContent className="space-y-1.5 p-4">
                 <div className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold">
                   <PiWarning className="h-3.5 w-3.5 text-rose-500" />
-                  Pending Salaries
+                  Pending Honorarium
                 </div>
                 <div className="text-2xl font-extrabold">
                   ₹{data.pendingTeacherSalaries.totalAmount.toLocaleString()}
@@ -112,7 +113,7 @@ export const FinanceDashboard: React.FC = () => {
                 Recent Activity
               </CardTitle>
               <CardDescription className="text-xs">
-                The most recent ledger entries across fees, salaries, and expenses.
+                The most recent ledger entries across fees, honorarium, and expenses.
               </CardDescription>
             </CardHeader>
             {data.recentTransactions.length === 0 ? (
@@ -121,7 +122,9 @@ export const FinanceDashboard: React.FC = () => {
                   <PiReceipt className="size-5" />
                 </EmptyMedia>
                 <EmptyTitle>No activity yet</EmptyTitle>
-                <EmptyDescription>Nothing has been logged to the ledger yet.</EmptyDescription>
+                <EmptyDescription>
+                  No fee, honorarium, or expense entries have been logged yet.
+                </EmptyDescription>
               </Empty>
             ) : (
               <Table>

@@ -98,7 +98,7 @@ export const AdminExamDetail: React.FC = () => {
         </Button>
         <ErrorState
           title={isError ? undefined : 'Exam not found'}
-          description={isError ? getErrorMessage(error) : `No examination matches this id.`}
+          description={isError ? getErrorMessage(error) : `No examination matches this ID.`}
           onRetry={() => refetch()}
         />
       </div>
@@ -201,7 +201,7 @@ export const AdminExamDetail: React.FC = () => {
               <PiListChecks className="size-5" />
             </EmptyMedia>
             <EmptyTitle>No subjects scheduled</EmptyTitle>
-            <EmptyDescription>This exam has no subject rows.</EmptyDescription>
+            <EmptyDescription>No subjects have been added to this exam yet.</EmptyDescription>
           </Empty>
         ) : (
           <Table>
@@ -259,10 +259,10 @@ export const AdminExamDetail: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
               <PiTrash className="h-4 w-4" />
-              <span>Confirm Exam Schedule Deletion</span>
+              <span>Delete Exam</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">
-              Are you sure you want to delete this examination master?
+              Are you sure you want to delete this exam? This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="pt-2">

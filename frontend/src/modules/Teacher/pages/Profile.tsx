@@ -48,9 +48,9 @@ export const TeacherProfile: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Faculty Academic Profile</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">My Profile</h1>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Official staff credentials and departmental designation.
+            Your details and teaching assignment at Gyandeep Bal Vikas Vidyamandir.
           </p>
         </div>
         <Button
@@ -79,7 +79,7 @@ export const TeacherProfile: React.FC = () => {
                   variant="secondary"
                   className="bg-muted text-muted-foreground text-[10px] font-semibold"
                 >
-                  Active Faculty
+                  Active Teacher
                 </Badge>
               </div>
 
@@ -89,7 +89,7 @@ export const TeacherProfile: React.FC = () => {
                 </h2>
                 <p className="text-primary text-xs font-semibold">{teacher.qualifications}</p>
                 <p className="text-muted-foreground mt-0.5 font-mono text-[11px]">
-                  Employee ID: {teacher.teacherId}
+                  Teacher ID: {teacher.teacherId}
                 </p>
               </div>
 
@@ -108,7 +108,7 @@ export const TeacherProfile: React.FC = () => {
                 </div>
                 <div className="text-muted-foreground flex items-center gap-2">
                   <PiMedal className="text-primary h-3.5 w-3.5" />
-                  <span>Salary: ₹{teacher.salaryPerMonth.toLocaleString()}/month</span>
+                  <span>Honorarium: ₹{teacher.salaryPerMonth.toLocaleString()}/month</span>
                 </div>
               </div>
             </CardContent>
@@ -126,7 +126,7 @@ export const TeacherProfile: React.FC = () => {
 
               <div className="border-t border-slate-100 pt-2 dark:border-zinc-800">
                 <span className="mb-2 block text-[11px] font-semibold text-slate-800 dark:text-zinc-200">
-                  Assigned Teaching Disciplines
+                  Subjects Taught
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {teacher.subjectHandled.length === 0 ? (

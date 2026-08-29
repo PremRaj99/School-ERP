@@ -80,14 +80,15 @@ export const StudentAnalytics: React.FC = () => {
       {/* Header */}
       <div className="border-b border-slate-200/80 pb-2 dark:border-zinc-800">
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-extrabold tracking-tight">My Analytics</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">My Progress</h1>
           <Badge variant="outline" className="border-primary/30 text-primary text-xs">
             <PiChartBar className="mr-1 h-3 w-3" />
             Performance Insights
           </Badge>
         </div>
         <p className="text-muted-foreground mt-0.5 text-xs">
-          Your attendance, academic performance across exams, and fee payment history.
+          Your attendance, academic performance across exams, and fee payment history, all in one
+          place.
         </p>
       </div>
 
@@ -275,7 +276,7 @@ function EmptyChart() {
         <PiChartBar className="size-5" />
       </EmptyMedia>
       <EmptyTitle>No data yet</EmptyTitle>
-      <EmptyDescription>Nothing to show here yet.</EmptyDescription>
+      <EmptyDescription>This chart will fill in as more records are added.</EmptyDescription>
     </Empty>
   );
 }

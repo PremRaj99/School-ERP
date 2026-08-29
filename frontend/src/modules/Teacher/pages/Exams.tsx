@@ -33,11 +33,9 @@ export const TeacherExams: React.FC = () => {
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight">
-              Faculty Examination Duty & Schedules
-            </h1>
+            <h1 className="text-2xl font-extrabold tracking-tight">Exams & Grading</h1>
             <Badge variant="outline" className="border-primary/30 text-primary text-xs">
-              Invigilation & Evaluation
+              Marking Schedule
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
@@ -66,7 +64,7 @@ export const TeacherExams: React.FC = () => {
         <Empty className="rounded-md border p-8">
           <EmptyMedia illustration="exams" illustrationSize={120} />
           <EmptyTitle>No exams assigned yet</EmptyTitle>
-          <EmptyDescription>You have no subjects scheduled in any examination.</EmptyDescription>
+          <EmptyDescription>None of your subjects appear in an examination yet.</EmptyDescription>
         </Empty>
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">

@@ -131,13 +131,13 @@ export const AdminSubjects: React.FC = () => {
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight">Academic Curriculum Subjects</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight">Curriculum Subjects</h1>
             <Badge variant="outline" className="text-xs">
               {filteredSubjects.length} Registered Subjects
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Manage course disciplines, subject identifiers, and curriculum syllabi.
+            Manage subjects, subject codes, and class assignments.
           </p>
         </div>
 
@@ -356,7 +356,7 @@ export const AdminSubjects: React.FC = () => {
               <PiSparkle className="h-4 w-4" />
               <span>Curriculum Registry</span>
             </div>
-            <DialogTitle className="text-lg font-bold">Add New Course Subject</DialogTitle>
+            <DialogTitle className="text-lg font-bold">Add New Subject</DialogTitle>
             <DialogDescription className="text-xs">
               Define the course title and optional custom subject code.
             </DialogDescription>

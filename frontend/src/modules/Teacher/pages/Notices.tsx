@@ -53,15 +53,13 @@ export const TeacherNotices: React.FC = () => {
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight">
-              Faculty Circulars & Directives
-            </h1>
+            <h1 className="text-2xl font-extrabold tracking-tight">Notices</h1>
             <Badge variant="outline" className="border-primary/30 text-primary text-xs">
-              Staff Notice Board
+              Notice Board
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Official administrative announcements and academic directives for teaching faculty.
+            Announcements and updates from the school administration.
           </p>
         </div>
       </div>
@@ -70,7 +68,7 @@ export const TeacherNotices: React.FC = () => {
       <div className="relative w-full">
         <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
         <Input
-          placeholder="Search faculty circulars..."
+          placeholder="Search notices..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="h-9 pl-9 text-xs"

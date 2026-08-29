@@ -133,12 +133,11 @@ export const AdminExams: React.FC = () => {
               Examinations & Result Publishing
             </h1>
             <Badge variant="outline" className="text-xs">
-              {filteredExams.length} Exam Master Schedules
+              {filteredExams.length} Exam Schedules
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Build examination date sheets, monitor subject marks completion, and officially publish
-            term results.
+            Create exam schedules, track subject-wise marking, and publish results.
           </p>
         </div>
 
@@ -350,10 +349,10 @@ export const AdminExams: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
               <PiTrash className="h-4 w-4" />
-              <span>Confirm Exam Schedule Deletion</span>
+              <span>Delete Exam</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">
-              Are you sure you want to delete this examination master?
+              Are you sure you want to delete this exam? This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="pt-2">

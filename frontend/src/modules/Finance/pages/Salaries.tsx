@@ -72,7 +72,7 @@ export const FinanceSalaries: React.FC = () => {
   const processMutation = useMutation({
     mutationFn: (body: CreateTeacherSalaryBody) => financeService.createTeacherSalary(body),
     onSuccess: () => {
-      toast.success('Salary processed');
+      toast.success('Honorarium prepared successfully');
       invalidate();
       setIsProcessOpen(false);
       reset(emptyDefaults);
@@ -93,7 +93,7 @@ export const FinanceSalaries: React.FC = () => {
   const deleteMutation = useMutation({
     mutationFn: (salaryId: string) => financeService.deleteTeacherSalary(salaryId),
     onSuccess: () => {
-      toast.success('Salary record removed');
+      toast.success('Honorarium record removed');
       invalidate();
       setDeleteTarget(null);
     },
@@ -125,7 +125,7 @@ export const FinanceSalaries: React.FC = () => {
     },
     {
       accessorKey: 'finalAmount',
-      header: 'Amount',
+      header: 'Honorarium Amount',
       cell: ({ row }) => (
         <span className="text-xs font-bold">₹{row.original.finalAmount.toLocaleString()}</span>
       ),
@@ -179,13 +179,13 @@ export const FinanceSalaries: React.FC = () => {
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight">Teacher Salaries</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight">Teacher Honorarium</h1>
             <Badge variant="outline" className="text-xs">
               {salariesResponse?.total ?? 0} Records
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Process payroll and track the faculty salary ledger.
+            Prepare honorarium payouts and track the faculty honorarium ledger.
           </p>
         </div>
         <Button
@@ -196,7 +196,7 @@ export const FinanceSalaries: React.FC = () => {
           className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
         >
           <PiPlus className="h-3.5 w-3.5" />
-          <span>Process Salary</span>
+          <span>Prepare Honorarium</span>
         </Button>
       </div>
 
@@ -209,8 +209,8 @@ export const FinanceSalaries: React.FC = () => {
             data={salaries}
             isLoading={isLoading}
             emptyIllustration="fees"
-            emptyTitle="No salary records yet"
-            emptyDescription="Process the first payout to get started."
+            emptyTitle="No honorarium records yet"
+            emptyDescription="Prepare the first honorarium payout to get started."
             searchPlaceholder="Search by teacher name or ID…"
           />
         </Card>
@@ -221,9 +221,9 @@ export const FinanceSalaries: React.FC = () => {
           <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiSparkle className="h-4 w-4" />
-              <span>Payroll Desk</span>
+              <span>Honorarium Desk</span>
             </div>
-            <DialogTitle className="text-lg font-bold">Process Teacher Salary</DialogTitle>
+            <DialogTitle className="text-lg font-bold">Prepare Teacher Honorarium</DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
@@ -236,12 +236,12 @@ export const FinanceSalaries: React.FC = () => {
               placeholder="Select a teacher…"
             />
             <div className="grid grid-cols-2 gap-3">
-              <MonthField control={control} name="month" label="Payroll Month" required />
+              <MonthField control={control} name="month" label="Honorarium Month" required />
               <NumberField
                 control={control}
                 name="amount"
                 label="Amount (optional)"
-                description="Leave blank to use the teacher's configured monthly salary."
+                description="Leave blank to use the teacher's configured monthly honorarium."
                 currency
                 min={0}
               />
@@ -273,7 +273,7 @@ export const FinanceSalaries: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
               <PiTrash className="h-4 w-4" />
-              <span>Delete Salary Record</span>
+              <span>Delete Honorarium Record</span>
             </DialogTitle>
           </DialogHeader>
           <DialogFooter className="pt-2">

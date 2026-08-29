@@ -58,15 +58,13 @@ export const TeacherSalary: React.FC = () => {
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight">
-              Faculty Compensation & Payslips
-            </h1>
+            <h1 className="text-2xl font-extrabold tracking-tight">My Honorarium</h1>
             <Badge variant="outline" className="border-primary/30 text-primary text-xs">
-              Salary History
+              Honorarium History
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Review monthly salary payments and their disbursement status.
+            Review your monthly honorarium payments and their status.
           </p>
         </div>
       </div>
@@ -96,7 +94,7 @@ export const TeacherSalary: React.FC = () => {
         </Card>
       </div>
 
-      {/* Payslip History Table */}
+      {/* Honorarium History Table */}
       {isLoading ? (
         <div className="space-y-1.5">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -110,7 +108,7 @@ export const TeacherSalary: React.FC = () => {
           <EmptyMedia variant="icon">
             <PiWallet className="size-5" />
           </EmptyMedia>
-          <EmptyTitle>No salary records yet</EmptyTitle>
+          <EmptyTitle>No honorarium records yet</EmptyTitle>
           <EmptyDescription>Payments will show up here once processed.</EmptyDescription>
         </Empty>
       ) : (
@@ -166,7 +164,7 @@ export const TeacherSalary: React.FC = () => {
         </Card>
       )}
 
-      {/* Payslip View Modal */}
+      {/* Honorarium Statement Modal */}
       <Dialog open={!!selectedSlip} onOpenChange={() => setSelectedSlip(null)}>
         <DialogContent className="sm:max-w-lg lg:max-w-xl">
           {selectedSlip && (
@@ -175,7 +173,7 @@ export const TeacherSalary: React.FC = () => {
                 <div className="flex items-center justify-between border-b pb-3">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                      Salary Statement
+                      Honorarium Statement
                     </h3>
                     <p className="text-muted-foreground text-[10px]">{selectedSlip.month}</p>
                   </div>

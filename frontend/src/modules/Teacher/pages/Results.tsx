@@ -180,7 +180,7 @@ function MarksGrid({
                 Marks (Max {sheet.fullMarks})
               </TableHead>
               <TableHead className="w-20 text-xs font-bold">Grade</TableHead>
-              <TableHead className="text-xs font-bold">Faculty Remark</TableHead>
+              <TableHead className="text-xs font-bold">Remarks</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

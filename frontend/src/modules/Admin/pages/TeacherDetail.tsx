@@ -256,7 +256,7 @@ export const AdminTeacherDetail: React.FC = () => {
               </div>
             </div>
             <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
-              <span className="text-muted-foreground text-[10px]">Monthly Salary</span>
+              <span className="text-muted-foreground text-[10px]">Monthly Honorarium</span>
               <p className="font-semibold">₹{teacher.salaryPerMonth.toLocaleString()}</p>
             </div>
             <div className="rounded-md bg-slate-50 p-2 dark:bg-zinc-800/50">
@@ -368,10 +368,10 @@ export const AdminTeacherDetail: React.FC = () => {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
             <PiWallet className="text-primary h-4 w-4" />
-            Salary Disbursement History
+            Honorarium Disbursement History
           </CardTitle>
           <CardDescription className="text-xs">
-            Every salary transaction raised for this teacher, most recent first.
+            Every honorarium transaction raised for this teacher, most recent first.
           </CardDescription>
         </CardHeader>
         {salariesLoading ? (
@@ -381,12 +381,12 @@ export const AdminTeacherDetail: React.FC = () => {
             ))}
           </div>
         ) : salariesErrored ? (
-          <div className="text-muted-foreground p-4 text-xs">Couldn't load salary history.</div>
+          <div className="text-muted-foreground p-4 text-xs">Couldn't load honorarium history.</div>
         ) : sortedSalaries.length === 0 ? (
           <Empty className="rounded-md border-0 border-t p-6">
             <EmptyMedia illustration="salaries" illustrationSize={120} />
-            <EmptyTitle>No salary records yet</EmptyTitle>
-            <EmptyDescription>No salary has been raised for this teacher.</EmptyDescription>
+            <EmptyTitle>No honorarium records yet</EmptyTitle>
+            <EmptyDescription>No honorarium has been raised for this teacher.</EmptyDescription>
           </Empty>
         ) : (
           <Table>

@@ -242,7 +242,7 @@ export const AdminFinance: React.FC = () => {
     mutationFn: ({ salaryId, body }: { salaryId: string; body: UpdateTeacherSalaryBody }) =>
       adminService.updateTeacherSalary(salaryId, body),
     onSuccess: () => {
-      toast.success('Salary updated successfully!');
+      toast.success('Honorarium updated successfully!');
       queryClient.invalidateQueries({ queryKey: qk.admin.teacherSalaries() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
       queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
@@ -268,7 +268,7 @@ export const AdminFinance: React.FC = () => {
     mutationFn: ({ salaryId, status }: { salaryId: string; status: TxnStatus }) =>
       adminService.updateTeacherSalaryStatus(salaryId, status),
     onSuccess: () => {
-      toast.success('Salary status updated!');
+      toast.success('Honorarium status updated!');
       queryClient.invalidateQueries({ queryKey: qk.admin.teacherSalaries() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
       queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
@@ -451,12 +451,12 @@ export const AdminFinance: React.FC = () => {
     },
     {
       accessorKey: 'month',
-      header: 'Payroll Month',
+      header: 'Honorarium Month',
       cell: ({ row }) => <span className="text-xs">{row.original.month}</span>,
     },
     {
       accessorKey: 'finalAmount',
-      header: 'Salary Amount',
+      header: 'Honorarium Amount',
       cell: ({ row }) => (
         <span className="text-xs font-bold">₹{row.original.finalAmount.toLocaleString()}</span>
       ),
@@ -560,7 +560,7 @@ export const AdminFinance: React.FC = () => {
           {row.original.entityType === 'StudentFee'
             ? 'Student Fee'
             : row.original.entityType === 'TeacherSalary'
-              ? 'Teacher Salary'
+              ? 'Teacher Honorarium'
               : 'Transaction'}
         </span>
       ),
@@ -627,15 +627,13 @@ export const AdminFinance: React.FC = () => {
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight">
-              Institutional Finance & Fee Ledger
-            </h1>
+            <h1 className="text-2xl font-extrabold tracking-tight">Finance & Fee Ledger</h1>
             <Badge variant="outline" className="text-xs">
-              Audit Session 2025-2026
+              Session 2025-2026
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Real-time tuition fee collections, payment receipts, and faculty payroll disbursements.
+            Fee collections, payment receipts, and staff honorarium disbursements.
           </p>
         </div>
 
@@ -652,9 +650,7 @@ export const AdminFinance: React.FC = () => {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="p-4">
-            <span className="text-muted-foreground text-xs font-semibold">
-              Term Fee Realization
-            </span>
+            <span className="text-muted-foreground text-xs font-semibold">Fees Collected</span>
             <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
               ₹{feesRealized.toLocaleString()}
             </p>
@@ -667,7 +663,7 @@ export const AdminFinance: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="p-4">
             <span className="text-muted-foreground text-xs font-semibold">
-              Faculty Payroll Disbursed
+              Staff Honorarium Disbursed
             </span>
             <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
               ₹{payrollDisbursed.toLocaleString()}
@@ -701,7 +697,7 @@ export const AdminFinance: React.FC = () => {
           </TabsTrigger>
           <TabsTrigger value="teacherSalary" className="rounded-md px-4 text-xs font-semibold">
             <PiCreditCard className="mr-1.5 h-3.5 w-3.5" />
-            <span>Faculty Payroll Ledger</span>
+            <span>Staff Honorarium</span>
           </TabsTrigger>
           <TabsTrigger value="expenses" className="rounded-md px-4 text-xs font-semibold">
             <PiReceipt className="mr-1.5 h-3.5 w-3.5" />
@@ -773,7 +769,7 @@ export const AdminFinance: React.FC = () => {
           )}
         </TabsContent>
 
-        {/* Teacher Payroll Tab */}
+        {/* Teacher Honorarium Tab */}
         <TabsContent value="teacherSalary" className="space-y-4 pt-4 focus:outline-hidden">
           {salariesErrored ? (
             <ErrorState
@@ -786,11 +782,11 @@ export const AdminFinance: React.FC = () => {
                 columns={salaryColumns}
                 data={teacherSalaries}
                 isLoading={salariesLoading}
-                emptyTitle="No payroll records yet"
+                emptyTitle="No honorarium records yet"
                 emptyDescription={
                   salaryStatusFilter || salarySearch
-                    ? 'No salary records match this filter.'
-                    : 'Salary records will show up here once created.'
+                    ? 'No honorarium records match this filter.'
+                    : 'Honorarium records will show up here once created.'
                 }
                 searchPlaceholder="Search by teacher name or ID…"
                 manual={{
@@ -867,7 +863,7 @@ export const AdminFinance: React.FC = () => {
                 >
                   <option value="">All Types</option>
                   <option value="StudentFee">Student Fee</option>
-                  <option value="TeacherSalary">Teacher Salary</option>
+                  <option value="TeacherSalary">Teacher Honorarium</option>
                   <option value="Transaction">Transaction</option>
                 </select>
               }
@@ -991,7 +987,7 @@ export const AdminFinance: React.FC = () => {
                 <div className="flex items-center justify-between border-b pb-3">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                      Gyandeep bal vikas vidyamandir
+                      Gyandeep Bal Vikas Vidyamandir
                     </h3>
                     <p className="text-muted-foreground text-[10px]">Official Fee Receipt</p>
                   </div>
@@ -1044,7 +1040,7 @@ export const AdminFinance: React.FC = () => {
                   onClick={() => toast.success('Sending receipt to printer...')}
                 >
                   <PiPrinter className="mr-1.5 h-3.5 w-3.5" />
-                  <span>Print Formal Receipt</span>
+                  <span>Print Receipt</span>
                 </Button>
               </div>
             </div>
@@ -1175,9 +1171,9 @@ export const AdminFinance: React.FC = () => {
           <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiPencilSimple className="h-4 w-4" />
-              <span>Edit Salary</span>
+              <span>Edit Honorarium</span>
             </div>
-            <DialogTitle className="text-lg font-bold">Edit Teacher Salary</DialogTitle>
+            <DialogTitle className="text-lg font-bold">Edit Teacher Honorarium</DialogTitle>
           </DialogHeader>
 
           {editingSalary && (
@@ -1194,7 +1190,7 @@ export const AdminFinance: React.FC = () => {
                 <MonthField
                   control={editSalaryControl}
                   name="month"
-                  label="Payroll Month"
+                  label="Honorarium Month"
                   required
                 />
                 <NumberField

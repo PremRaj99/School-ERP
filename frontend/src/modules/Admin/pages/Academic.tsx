@@ -162,8 +162,7 @@ export const AdminAcademic: React.FC = () => {
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Configure weekly classroom period schedules and official institutional holiday/exam
-            calendars.
+            Set weekly class period schedules and manage the school's holiday and exam calendar.
           </p>
         </div>
 
@@ -198,7 +197,7 @@ export const AdminAcademic: React.FC = () => {
                     Class {selectedClass} Weekly Schedule
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Monday to Saturday period distribution and assigned faculty instructors.
+                    Monday to Saturday period schedule with assigned subject teachers.
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">

@@ -164,15 +164,13 @@ export const AdminNotices: React.FC = () => {
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-2 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight">
-              Institutional Circulars & Notices
-            </h1>
+            <h1 className="text-2xl font-extrabold tracking-tight">Notices & Circulars</h1>
             <Badge variant="outline" className="text-xs">
-              {filteredNotices.length} Published Bulletins
+              {filteredNotices.length} Published
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Broadcast school-wide announcements, exam notifications, and staff directives.
+            Announcements, exam notifications, and staff instructions for the school.
           </p>
         </div>
 
@@ -193,7 +191,7 @@ export const AdminNotices: React.FC = () => {
         <div className="relative w-full flex-1">
           <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
           <Input
-            placeholder="Search circulars by headline or keyword..."
+            placeholder="Search notices by title or keyword..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="h-9 pl-9 text-xs"
@@ -252,7 +250,7 @@ export const AdminNotices: React.FC = () => {
           <EmptyDescription>
             {searchTerm || targetFilter !== 'All' || statusFilter !== 'All'
               ? 'No notices match your filters.'
-              : 'Broadcast the first institutional circular.'}
+              : 'Publish the first notice for students or staff.'}
           </EmptyDescription>
           {!searchTerm && targetFilter === 'All' && statusFilter === 'All' && (
             <Button size="sm" className="mt-1 text-xs" onClick={() => setIsCreateOpen(true)}>
@@ -307,7 +305,7 @@ export const AdminNotices: React.FC = () => {
                   {/* The list endpoint only returns title/date/targetRole — full body and expiry
                     live on the detail view (not wired into this card yet). */}
                   <p className="text-muted-foreground leading-relaxed">
-                    Official institutional communication for designated campus members.
+                    Notice for the selected audience — open Edit to view full details.
                   </p>
 
                   <div className="flex items-center justify-end gap-1 border-t border-slate-100 pt-2 dark:border-zinc-800">
@@ -342,10 +340,10 @@ export const AdminNotices: React.FC = () => {
           <DialogHeader>
             <div className="text-primary flex items-center gap-2 text-xs font-semibold">
               <PiSparkle className="h-4 w-4" />
-              <span>Institutional Broadcast</span>
+              <span>Notice Board</span>
             </div>
             <DialogTitle className="text-lg font-bold">
-              {editingNoticeId ? 'Edit Notice' : 'Publish Official Notice'}
+              {editingNoticeId ? 'Edit Notice' : 'Publish Notice'}
             </DialogTitle>
             <DialogDescription className="text-xs">
               {editingNoticeId
@@ -358,7 +356,7 @@ export const AdminNotices: React.FC = () => {
             <TextField
               control={control}
               name="title"
-              label="Circular Title / Headline"
+              label="Notice Title"
               required
               placeholder="e.g. Annual Sports & Athletics Meet 2026"
             />
@@ -377,7 +375,7 @@ export const AdminNotices: React.FC = () => {
             <TextField
               control={control}
               name="description"
-              label="Circular Body / Details"
+              label="Notice Details"
               required
               multiline
               placeholder="Please state the complete announcement details, instructions, dates, and venues..."
@@ -411,7 +409,7 @@ export const AdminNotices: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-rose-600">
               <PiTrash className="h-4 w-4" />
-              <span>Confirm Circular Removal</span>
+              <span>Delete Notice</span>
             </DialogTitle>
             <DialogDescription className="pt-2 text-xs">
               Are you sure you want to delete this notice? It will be removed from all user

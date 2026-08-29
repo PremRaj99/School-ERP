@@ -28,11 +28,10 @@ export const HomePage: React.FC = () => {
             <span>Academic & Administrative Suite</span>
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
-            Comprehensive School Management Modules
+            Everything the School Runs On
           </h2>
           <p className="text-muted-foreground text-sm">
-            Everything your school needs to run daily academic operations smoothly and
-            transparently.
+            One portal for admissions, attendance, fees, exams, and daily school administration.
           </p>
         </div>
 
@@ -76,7 +75,7 @@ export const HomePage: React.FC = () => {
             {
               icon: <PiShieldCheck className="h-5 w-5" />,
               title: 'Faculty & Staff Directory',
-              desc: 'Maintain teacher profiles, designated subject allocations, monthly salary ledgers, and publish emergency campus notices.',
+              desc: 'Maintain teacher profiles, subject allocations, monthly honorarium records, and publish emergency campus notices.',
               link: '/admin/teachers',
               role: 'Administration',
             },
@@ -117,11 +116,11 @@ export const HomePage: React.FC = () => {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="bg-primary rounded-md p-8 text-center text-white shadow-2xl sm:p-12">
           <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Ready to experience the future of school management?
+            See the Portal for Yourself
           </h3>
           <p className="mx-auto mt-3 max-w-xl text-sm text-white/80">
-            Test any module instantly with our pre-populated sample database and interactive
-            portals.
+            Try the interactive preview above, or sign in to explore the admin, faculty, and student
+            portals directly.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <Button

@@ -271,7 +271,7 @@ function EmptyChart() {
         <PiChartBar className="size-5" />
       </EmptyMedia>
       <EmptyTitle>No data yet</EmptyTitle>
-      <EmptyDescription>Nothing to show here yet.</EmptyDescription>
+      <EmptyDescription>There isn't enough data to chart yet.</EmptyDescription>
     </Empty>
   );
 }

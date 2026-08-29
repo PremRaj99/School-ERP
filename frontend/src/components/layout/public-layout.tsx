@@ -29,7 +29,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
                   Gyandeep
                 </span>
               </div>
-              <p className="text-muted-foreground -mt-0.5 text-[10px]">bal vikas vidyamandir</p>
+              <p className="text-muted-foreground -mt-0.5 text-[10px]">Bal Vikas Vidyamandir</p>
             </div>
           </NavLink>
 
@@ -64,20 +64,21 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
               <span className="text-base font-bold tracking-tight">Gyandeep</span>
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Gyandeep bal vikas vidyamandir — Unified educational enterprise management platform.
+              Gyandeep Bal Vikas Vidyamandir — a Naya Savera Parivar initiative, nurturing academics
+              and संस्कार together from Nursery to Class 10.
             </p>
           </div>
 
           <div>
             <h4 className="mb-3 text-xs font-semibold tracking-wider text-slate-900 uppercase dark:text-zinc-100">
-              Key Features
+              What the Portal Covers
             </h4>
             <ul className="text-muted-foreground space-y-2 text-xs">
-              <li>Digital Attendance & Biometrics</li>
-              <li>Exam Schedule & Grade Book</li>
-              <li>Automated Fee Invoicing & Receipts</li>
-              <li>Academic Timetable Generator</li>
-              <li>Instant Emergency Circulars</li>
+              <li>Daily Attendance Tracking</li>
+              <li>Exam Schedules & Report Cards</li>
+              <li>Fee Records & Receipts</li>
+              <li>Academic Timetable</li>
+              <li>School Notices & Circulars</li>
             </ul>
           </div>
 
@@ -103,7 +104,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         </div>
 
         <div className="text-muted-foreground mx-auto mt-8 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 text-xs sm:flex-row dark:border-zinc-800">
-          <p>© {new Date().getFullYear()} Gyandeep bal vikas vidyamandir. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Gyandeep Bal Vikas Vidyamandir. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <span className="cursor-pointer hover:text-slate-900 dark:hover:text-white">
               Privacy Policy

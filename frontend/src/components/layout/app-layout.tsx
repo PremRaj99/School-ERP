@@ -116,7 +116,7 @@ const teacherNavSections: NavSection[] = [
     title: 'Personal',
     items: [
       { title: 'School Notices', href: '/teacher/notices', icon: PiBell },
-      { title: 'Salary Slips', href: '/teacher/salary', icon: PiCreditCard },
+      { title: 'Honorarium Slips', href: '/teacher/salary', icon: PiCreditCard },
       { title: 'My Profile', href: '/teacher/profile', icon: PiUsers },
     ],
   },
@@ -161,7 +161,7 @@ const financeNavSections: NavSection[] = [
     title: 'Ledger',
     items: [
       { title: 'Student Fees', href: '/finance/fees', icon: PiGraduationCap },
-      { title: 'Teacher Salaries', href: '/finance/salaries', icon: PiUsers },
+      { title: 'Teacher Honorarium', href: '/finance/salaries', icon: PiUsers },
       { title: 'Expenses', href: '/finance/expenses', icon: PiCreditCard },
     ],
   },
@@ -290,7 +290,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                 </Badge>
               </div>
               <p className="text-muted-foreground -mt-0.5 truncate text-[10px]">
-                bal vikas vidyamandir
+                Bal Vikas Vidyamandir
               </p>
             </div>
           </NavLink>
@@ -396,7 +396,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, role }) => {
                 />
                 <div className="flex flex-col">
                   <span className="text-xs leading-tight font-bold">Gyandeep</span>
-                  <span className="text-muted-foreground text-[9px]">bal vikas vidyamandir</span>
+                  <span className="text-muted-foreground text-[9px]">Bal Vikas Vidyamandir</span>
                 </div>
               </NavLink>
               <Button

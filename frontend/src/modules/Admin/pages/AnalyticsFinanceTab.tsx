@@ -202,12 +202,12 @@ export function AnalyticsFinanceTab() {
               </CardContent>
             </Card>
 
-            {/* Salary Burn vs Fee Collection */}
+            {/* Honorarium vs Fee Collection */}
             <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
                   <PiWallet className="text-primary h-4 w-4" />
-                  Salary Burn vs. Fee Collection
+                  Honorarium vs. Fee Collection
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-64">
@@ -224,7 +224,7 @@ export function AnalyticsFinanceTab() {
                       <Line
                         type="monotone"
                         dataKey="salaryBurn"
-                        name="Salary Burn"
+                        name="Honorarium"
                         stroke="#f43f5e"
                         strokeWidth={2}
                       />

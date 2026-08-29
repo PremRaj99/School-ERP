@@ -67,7 +67,7 @@ export const TeacherDashboard: React.FC = () => {
       <div className="border-primary/20 bg-primary flex flex-col items-start justify-between gap-4 rounded-md border p-6 text-white shadow-xl sm:flex-row sm:items-center sm:p-8">
         <div className="space-y-2">
           <Badge variant="outline" className="border-white/30 text-xs text-white/90">
-            Faculty Workspace
+            Today's Overview
           </Badge>
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
             Welcome back, {profile.firstName} {profile.lastName || ''}!
@@ -147,7 +147,9 @@ export const TeacherDashboard: React.FC = () => {
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <span className="text-muted-foreground text-xs font-semibold">Pending Salary</span>
+              <span className="text-muted-foreground text-xs font-semibold">
+                Pending Honorarium
+              </span>
               <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {pendingSalary.count === 0
                   ? '✓ Clear'
@@ -222,7 +224,7 @@ export const TeacherDashboard: React.FC = () => {
         <div className="space-y-6 lg:col-span-4">
           <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold">Faculty Quick Tools</CardTitle>
+              <CardTitle className="text-sm font-bold">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pt-2">
               <Button
@@ -256,7 +258,7 @@ export const TeacherDashboard: React.FC = () => {
               >
                 <div className="flex items-center gap-2">
                   <PiCreditCard className="text-primary h-4 w-4" />
-                  <span>View Monthly Payslips</span>
+                  <span>View Honorarium Statements</span>
                 </div>
                 <PiArrowRight className="text-muted-foreground h-3.5 w-3.5" />
               </Button>

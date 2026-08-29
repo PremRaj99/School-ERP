@@ -87,7 +87,7 @@ export const AdminDashboard: React.FC = () => {
             </h1>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Live enrollment, faculty attendance, finance, and academic notices.
+            A quick view of today's attendance, admissions, fee collection, and academic notices.
           </p>
         </div>
 
@@ -300,7 +300,7 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                   <div className="border-primary/20 bg-primary/5 dark:bg-primary/10 rounded-md border p-4">
                     <span className="text-muted-foreground text-xs font-semibold">
-                      Pending Salaries
+                      Pending Honorarium
                     </span>
                     <p className="text-primary mt-1 text-xl font-black">
                       ₹{dashboardData.finance.pendingTeacherSalaries.totalAmount.toLocaleString()}

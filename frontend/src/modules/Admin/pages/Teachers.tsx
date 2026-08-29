@@ -309,7 +309,7 @@ export const AdminTeachers: React.FC = () => {
     },
     {
       accessorKey: 'salaryPerMonth',
-      header: 'Monthly Salary',
+      header: 'Monthly Honorarium',
       cell: ({ row }) => (
         <span className="text-xs font-semibold">
           ₹{row.original.salaryPerMonth.toLocaleString()}
@@ -379,7 +379,7 @@ export const AdminTeachers: React.FC = () => {
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Manage teaching faculty, assigned subjects, salary structures, and credentials.
+            Manage teaching faculty, assigned subjects, honorarium, and login credentials.
           </p>
         </div>
 
@@ -435,7 +435,7 @@ export const AdminTeachers: React.FC = () => {
                   onClick={() =>
                     downloadCsv(
                       'teachers-selected',
-                      ['Teacher ID', 'Name', 'Qualifications', 'Subjects', 'Phone', 'Salary'],
+                      ['Teacher ID', 'Name', 'Qualifications', 'Subjects', 'Phone', 'Honorarium'],
                       selected.map((t) => [
                         t.teacherId,
                         `${t.firstName} ${t.lastName ?? ''}`.trim(),
@@ -507,7 +507,7 @@ export const AdminTeachers: React.FC = () => {
               <NumberField
                 control={control}
                 name="salaryPerMonth"
-                label="Monthly Salary"
+                label="Monthly Honorarium"
                 required
                 currency
                 min={0}
@@ -565,7 +565,7 @@ export const AdminTeachers: React.FC = () => {
                   ? 'Saving...'
                   : formTarget
                     ? 'Save Changes'
-                    : 'Confirm Faculty'}
+                    : 'Register Faculty'}
               </Button>
             </DialogFooter>
           </form>
