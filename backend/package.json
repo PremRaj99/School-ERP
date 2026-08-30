@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "prepare": "cd .. && husky .husky",
-    "seed": "bun prisma/seed.ts"
+    "seed": "bun prisma/seed.ts",
+    "seed:admin": "bun prisma/seed-admin.ts"
   },
   "lint-staged": {
     "*.ts": [
