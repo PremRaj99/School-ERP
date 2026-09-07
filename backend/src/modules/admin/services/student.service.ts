@@ -8,7 +8,12 @@ import type {
   StudentRecord,
   UpdateStudentBody,
 } from '@schoolerp/contracts';
-import { CreateStudentBody, DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@schoolerp/contracts';
+import {
+  CreateStudentBody,
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  normalizeClassName,
+} from '@schoolerp/contracts';
 import {
   ACTIVE_STUDENT_STATUS_FILTER,
   generateId,
@@ -116,8 +121,8 @@ export class AdminStudentService {
       query.className || query.section || query.session
         ? {
             class: {
-              ...(query.className ? { className: query.className } : {}),
-              ...(query.section ? { section: query.section } : {}),
+              ...(query.className ? { className: normalizeClassName(query.className) } : {}),
+              ...(query.section ? { section: query.section.toUpperCase() } : {}),
               ...(query.session ? { session: query.session } : {}),
             },
           }
@@ -185,11 +190,14 @@ export class AdminStudentService {
   }
 
   static async createStudent(data: CreateStudentBody): Promise<StudentRecord> {
+    const className = normalizeClassName(data.className);
+    const section = data.section.toUpperCase();
+
     let classRecord = await prisma.class.findUnique({
       where: {
         className_section_session: {
-          className: data.className,
-          section: data.section,
+          className,
+          section,
           session: data.session,
         },
       },
@@ -198,8 +206,8 @@ export class AdminStudentService {
     if (!classRecord) {
       classRecord = await prisma.class.create({
         data: {
-          className: data.className,
-          section: data.section,
+          className,
+          section,
           session: data.session,
         },
       });
@@ -265,11 +273,14 @@ export class AdminStudentService {
 
     let classId = student.classId;
     if (data.className && data.section && data.session) {
+      const className = normalizeClassName(data.className);
+      const section = data.section.toUpperCase();
+
       let classRecord = await prisma.class.findUnique({
         where: {
           className_section_session: {
-            className: data.className,
-            section: data.section,
+            className,
+            section,
             session: data.session,
           },
         },
@@ -278,8 +289,8 @@ export class AdminStudentService {
       if (!classRecord) {
         classRecord = await prisma.class.create({
           data: {
-            className: data.className,
-            section: data.section,
+            className,
+            section,
             session: data.session,
           },
         });

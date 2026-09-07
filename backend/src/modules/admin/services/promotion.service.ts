@@ -1,6 +1,7 @@
 import prisma from '@/core/db';
 import { NotFoundError, ValidationError } from '@/core/errors';
 import type { PromoteClassBody, PromoteClassResponse } from '@schoolerp/contracts';
+import { normalizeClassName } from '@schoolerp/contracts';
 import { ACTIVE_STUDENT_STATUS_FILTER } from '../helpers';
 
 export class AdminPromotionService {
@@ -10,9 +11,12 @@ export class AdminPromotionService {
       throw new NotFoundError('Source class not found.');
     }
 
+    const toClassName = normalizeClassName(data.toClassName);
+    const toSection = data.toSection.toUpperCase();
+
     if (
-      fromClass.className === data.toClassName &&
-      fromClass.section === data.toSection &&
+      fromClass.className === toClassName &&
+      fromClass.section === toSection &&
       fromClass.session === data.toSession
     ) {
       throw new ValidationError('The target class must differ from the source class.');
@@ -25,15 +29,15 @@ export class AdminPromotionService {
     let toClass = await prisma.class.findUnique({
       where: {
         className_section_session: {
-          className: data.toClassName,
-          section: data.toSection,
+          className: toClassName,
+          section: toSection,
           session: data.toSession,
         },
       },
     });
     if (!toClass) {
       toClass = await prisma.class.create({
-        data: { className: data.toClassName, section: data.toSection, session: data.toSession },
+        data: { className: toClassName, section: toSection, session: data.toSession },
       });
     }
 

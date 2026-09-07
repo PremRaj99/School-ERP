@@ -44,11 +44,27 @@ export const ISOMonth = z
 
 export const ObjectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid id.');
 
+export const normalizeClassName = (val: string): string => {
+  const trimmed = val.trim();
+  const lower = trimmed.toLowerCase();
+  if (lower === 'lkg') return 'LKG';
+  if (lower === 'ukg') return 'UKG';
+  if (lower === 'kg') return 'KG';
+  if (lower === 'nursery') return 'Nursery';
+  if (lower === 'playgroup') return 'Playgroup';
+  // Regulate short letter-only codes (e.g. LKG, UKG, PP1, PRE) to uppercase
+  if (/^[a-zA-Z]{1,4}$/.test(trimmed)) {
+    return trimmed.toUpperCase();
+  }
+  return trimmed;
+};
+
 export const ClassName = z
   .string({ message: 'Class name is required.' })
   .trim()
   .min(1, { message: 'Class name cannot be empty.' })
-  .max(10, { message: 'Class name must be 10 characters or less.' });
+  .max(10, { message: 'Class name must be 10 characters or less.' })
+  .transform(normalizeClassName);
 
 export const Section = z
   .string({ message: 'Section is required.' })

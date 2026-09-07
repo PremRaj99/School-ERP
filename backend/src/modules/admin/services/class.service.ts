@@ -6,6 +6,7 @@ import type {
   CreateClassBody,
   UpdateClassBody,
 } from '@schoolerp/contracts';
+import { normalizeClassName } from '@schoolerp/contracts';
 
 export class AdminClassService {
   static async getClasses(query: ClassListQuery): Promise<ClassRecord[]> {
@@ -23,8 +24,8 @@ export class AdminClassService {
     try {
       return await prisma.class.create({
         data: {
-          className: data.className,
-          section: data.section,
+          className: normalizeClassName(data.className),
+          section: data.section.toUpperCase(),
           session: data.session,
         },
       });
@@ -38,8 +39,10 @@ export class AdminClassService {
       const updated = await prisma.class.update({
         where: { id: classId },
         data: {
-          ...(data.className !== undefined ? { className: data.className } : {}),
-          ...(data.section !== undefined ? { section: data.section } : {}),
+          ...(data.className !== undefined
+            ? { className: normalizeClassName(data.className) }
+            : {}),
+          ...(data.section !== undefined ? { section: data.section.toUpperCase() } : {}),
           ...(data.session !== undefined ? { session: data.session } : {}),
         },
       });

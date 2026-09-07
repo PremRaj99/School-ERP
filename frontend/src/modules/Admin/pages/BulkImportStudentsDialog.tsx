@@ -13,7 +13,11 @@ import { downloadCsv, parseCsv } from '@/components/data-table';
 import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import type { BulkImportStudentsBody, BulkImportStudentsResponse } from '@schoolerp/contracts';
+import {
+  normalizeClassName,
+  type BulkImportStudentsBody,
+  type BulkImportStudentsResponse,
+} from '@schoolerp/contracts';
 import { toast } from 'sonner';
 import { PiCloudArrowUp, PiFileArrowDown, PiCheckCircle, PiXCircle } from 'react-icons/pi';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -76,7 +80,13 @@ function rowsToPayload(rows: string[][]): {
       if (!key) return; // unrecognized column — ignore rather than fail the whole file
       const raw = (row[i] ?? '').trim();
       if (raw === '') return; // leave optional fields unset; backend validation catches required-but-blank
-      record[key] = key === 'rollNo' ? Number(raw) : raw;
+      if (key === 'className') {
+        record[key] = normalizeClassName(raw);
+      } else if (key === 'section') {
+        record[key] = raw.toUpperCase();
+      } else {
+        record[key] = key === 'rollNo' ? Number(raw) : raw;
+      }
     });
     return record;
   });
