@@ -45,30 +45,28 @@ export const StudentRecord = z.object({
 });
 export type StudentRecord = z.infer<typeof StudentRecord>;
 
-const emptyStringToUndefined = (val: unknown) => (val === '' ? undefined : val);
+const emptyStringToUndefined = z.literal('').transform(() => undefined);
 
 export const CreateStudentBody = z.object({
   firstName: z
     .string({ message: 'First name is required.' })
     .min(2, 'First name must be at least 2 characters long.'),
-  lastName: z.preprocess(
-    emptyStringToUndefined,
-    z.string().min(2, 'Last name must be at least 2 characters long.').optional(),
-  ),
+  lastName: emptyStringToUndefined
+    .or(z.string().min(2, 'Last name must be at least 2 characters long.'))
+    .optional(),
   dob: ISODate,
   gender: GenderEnum.optional(),
-  address: z.preprocess(
-    emptyStringToUndefined,
-    z.string().min(10, 'Address must be at least 10 characters long.').optional(),
-  ),
+  address: emptyStringToUndefined
+    .or(z.string().min(10, 'Address must be at least 10 characters long.'))
+    .optional(),
   phone: Phone,
-  fatherName: z.preprocess(emptyStringToUndefined, z.string().min(2).optional()),
-  motherName: z.preprocess(emptyStringToUndefined, z.string().min(2).optional()),
-  fatherOccupation: z.preprocess(emptyStringToUndefined, z.string().min(2).optional()),
-  motherOccupation: z.preprocess(emptyStringToUndefined, z.string().min(2).optional()),
-  studentAadhar: z.preprocess(emptyStringToUndefined, Aadhar.optional()),
-  fatherAadhar: z.preprocess(emptyStringToUndefined, Aadhar.optional()),
-  motherAadhar: z.preprocess(emptyStringToUndefined, Aadhar.optional()),
+  fatherName: emptyStringToUndefined.or(z.string().min(2)).optional(),
+  motherName: emptyStringToUndefined.or(z.string().min(2)).optional(),
+  fatherOccupation: emptyStringToUndefined.or(z.string().min(2)).optional(),
+  motherOccupation: emptyStringToUndefined.or(z.string().min(2)).optional(),
+  studentAadhar: emptyStringToUndefined.or(Aadhar).optional(),
+  fatherAadhar: emptyStringToUndefined.or(Aadhar).optional(),
+  motherAadhar: emptyStringToUndefined.or(Aadhar).optional(),
   className: ClassName,
   section: Section,
   session: Session,
@@ -77,9 +75,9 @@ export const CreateStudentBody = z.object({
     .number({ message: 'Roll No is required.' })
     .int()
     .positive('Roll No must be a positive number.'),
-  appId: z.preprocess(emptyStringToUndefined, z.string().optional()),
-  penNumber: z.preprocess(emptyStringToUndefined, z.string().optional()),
-  profilePhoto: ProfilePhotoUrl.optional(),
+  appId: emptyStringToUndefined.or(z.string()).optional(),
+  penNumber: emptyStringToUndefined.or(z.string()).optional(),
+  profilePhoto: emptyStringToUndefined.or(ProfilePhotoUrl).optional(),
 });
 export type CreateStudentBody = z.infer<typeof CreateStudentBody>;
 
