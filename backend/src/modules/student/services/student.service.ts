@@ -54,7 +54,7 @@ export class StudentService {
       studentId: student.studentId,
       firstName: student.firstName,
       lastName: student.lastName,
-      dob: toISODate(student.dob),
+      dob: student.dob ? toISODate(student.dob) : null,
       gender: student.gender ?? null,
       address: student.address,
       phone: student.phone,

@@ -61,7 +61,7 @@ const GENDER_OPTIONS = [
 const emptyDefaults: CreateStudentBody = {
   firstName: '',
   lastName: '',
-  dob: '2010-01-01',
+  dob: '',
   gender: undefined,
   address: '',
   phone: '',
@@ -85,7 +85,9 @@ const emptyDefaults: CreateStudentBody = {
  * several are regex-validated (`Aadhar`) and reject an empty string outright. */
 const OPTIONAL_STRING_FIELDS = [
   'lastName',
+  'dob',
   'address',
+  'phone',
   'fatherName',
   'motherName',
   'fatherOccupation',
@@ -109,10 +111,10 @@ function toFormValues(s: StudentRecord): CreateStudentBody {
   return {
     firstName: s.firstName,
     lastName: s.lastName ?? '',
-    dob: s.dob,
+    dob: s.dob ?? '',
     gender: s.gender ?? undefined,
     address: s.address ?? '',
-    phone: s.phone,
+    phone: s.phone ?? '',
     fatherName: s.fatherName ?? '',
     motherName: s.motherName ?? '',
     fatherOccupation: s.fatherOccupation ?? '',
@@ -344,7 +346,7 @@ export const AdminStudents: React.FC = () => {
       cell: ({ row }) => (
         <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
           <PiPhone className="h-3 w-3 text-emerald-500" />
-          <span>{row.original.phone}</span>
+          <span>{row.original.phone || '—'}</span>
         </div>
       ),
     },
@@ -547,7 +549,7 @@ export const AdminStudents: React.FC = () => {
                         s.className,
                         s.section,
                         s.rollNo,
-                        s.phone,
+                        s.phone ?? '',
                         s.appId ?? '',
                         s.penNumber ?? '',
                         s.session,
@@ -626,14 +628,14 @@ export const AdminStudents: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <DateField control={control} name="dob" label="Date of Birth" required />
+              <DateField control={control} name="dob" label="Date of Birth" />
               <SelectField
                 control={control}
                 name="gender"
                 label="Gender"
                 options={GENDER_OPTIONS}
               />
-              <TextField control={control} name="phone" label="Primary Mobile" required />
+              <TextField control={control} name="phone" label="Primary Mobile" />
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

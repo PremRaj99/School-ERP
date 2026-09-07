@@ -21,11 +21,11 @@ export const StudentRecord = z.object({
   status: StudentStatusEnum,
   firstName: z.string(),
   lastName: z.string().nullable(),
-  dob: ISODate,
+  dob: ISODate.nullable(),
   // Nullable — no backfill for a document that predates this field (schema.prisma `Student.gender`).
   gender: GenderEnum.nullable(),
   address: z.string().nullable(),
-  phone: Phone,
+  phone: Phone.nullable(),
   fatherName: z.string().nullable(),
   motherName: z.string().nullable(),
   fatherOccupation: z.string().nullable(),
@@ -54,12 +54,12 @@ export const CreateStudentBody = z.object({
   lastName: emptyStringToUndefined
     .or(z.string().min(2, 'Last name must be at least 2 characters long.'))
     .optional(),
-  dob: ISODate,
+  dob: emptyStringToUndefined.or(ISODate).optional(),
   gender: GenderEnum.optional(),
   address: emptyStringToUndefined
     .or(z.string().min(10, 'Address must be at least 10 characters long.'))
     .optional(),
-  phone: Phone,
+  phone: emptyStringToUndefined.or(Phone).optional(),
   fatherName: emptyStringToUndefined.or(z.string().min(2)).optional(),
   motherName: emptyStringToUndefined.or(z.string().min(2)).optional(),
   fatherOccupation: emptyStringToUndefined.or(z.string().min(2)).optional(),

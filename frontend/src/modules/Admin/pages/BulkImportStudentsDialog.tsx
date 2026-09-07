@@ -23,8 +23,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
  * blank. */
 const REQUIRED_COLUMNS = [
   'firstName',
-  'dob',
-  'phone',
   'className',
   'section',
   'session',

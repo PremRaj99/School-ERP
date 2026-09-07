@@ -40,13 +40,13 @@ model Student {
   userId            String              @unique @db.ObjectId
   firstName         String
   lastName          String?
-  dob               DateTime
+  dob               DateTime?
   // Nullable, no backfill — same "optional, no default" treatment as `address`/the Aadhar fields
   // below: not asked for anywhere before this field existed, so a pre-existing document simply has
   // no `gender` key rather than a guessed value.
   gender            Gender?
   address           String?
-  phone             String
+  phone             String?
   fatherName        String?
   motherName        String?
   fatherOccupation  String?

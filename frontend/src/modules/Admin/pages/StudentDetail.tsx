@@ -217,7 +217,9 @@ export const AdminStudentDetail: React.FC = () => {
               <p className="text-xs text-white/80">
                 Class {student.className}-{student.section} (Roll #{student.rollNo})
               </p>
-              <p className="text-[11px] text-white/70">DOB: {isoToDisplayDate(student.dob)}</p>
+              <p className="text-[11px] text-white/70">
+                DOB: {student.dob ? isoToDisplayDate(student.dob) : 'N/A'}
+              </p>
             </div>
           </div>
 
@@ -228,7 +230,7 @@ export const AdminStudentDetail: React.FC = () => {
             </div>
             <div>
               <span className="text-[10px] text-white/70">Emergency Phone:</span>
-              <p className="font-semibold">{student.phone}</p>
+              <p className="font-semibold">{student.phone || 'N/A'}</p>
             </div>
           </div>
 
