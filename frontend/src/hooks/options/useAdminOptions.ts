@@ -56,7 +56,12 @@ export function useSessionOptions(): Option[] {
   return useMemo(() => {
     const now = new Date();
     const currentStartYear = now.getMonth() + 1 >= 4 ? now.getFullYear() : now.getFullYear() - 1;
-    const startYears = [currentStartYear - 1, currentStartYear, currentStartYear + 1];
+    const minStartYear = 2023;
+    const maxStartYear = Math.max(currentStartYear + 1, 2026);
+    const startYears: number[] = [];
+    for (let year = minStartYear; year <= maxStartYear; year++) {
+      startYears.push(year);
+    }
     return startYears.map((year) => ({
       value: `${year}-${year + 1}`,
       label: `${year}-${year + 1}`,

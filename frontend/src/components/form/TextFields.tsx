@@ -109,9 +109,7 @@ export function NumberField<TValues extends FieldValues>({
               className={currency ? `pl-6 ${className ?? ''}` : className}
               aria-invalid={!!fieldState.error}
               value={field.value ?? ''}
-              onChange={(e) =>
-                field.onChange(e.target.value === '' ? undefined : Number(e.target.value))
-              }
+              onChange={(e) => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
               onBlur={field.onBlur}
               name={field.name}
               ref={field.ref}

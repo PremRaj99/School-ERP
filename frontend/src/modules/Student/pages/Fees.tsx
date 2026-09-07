@@ -32,9 +32,13 @@ import { useQuery } from '@tanstack/react-query';
 function sessionOptions(): string[] {
   const now = new Date();
   const currentStartYear = now.getMonth() + 1 >= 4 ? now.getFullYear() : now.getFullYear() - 1;
-  return [currentStartYear - 1, currentStartYear, currentStartYear + 1].map(
-    (year) => `${year}-${year + 1}`,
-  );
+  const minStartYear = 2023;
+  const maxStartYear = Math.max(currentStartYear + 1, 2026);
+  const years: string[] = [];
+  for (let y = minStartYear; y <= maxStartYear; y++) {
+    years.push(`${y}-${y + 1}`);
+  }
+  return years;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -44,7 +48,11 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 const YEARS = sessionOptions();
-const defaultYear = YEARS[1];
+const defaultYear = (() => {
+  const now = new Date();
+  const currentStartYear = now.getMonth() + 1 >= 4 ? now.getFullYear() : now.getFullYear() - 1;
+  return `${currentStartYear}-${currentStartYear + 1}`;
+})();
 
 export const StudentFees: React.FC = () => {
   const [year, setYear] = useState(defaultYear);

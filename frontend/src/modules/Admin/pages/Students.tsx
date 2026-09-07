@@ -76,7 +76,7 @@ const emptyDefaults: CreateStudentBody = {
   section: '',
   session: '',
   dateOfAdmission: new Date().toISOString().slice(0, 10),
-  rollNo: 1,
+  rollNo: '' as unknown as number,
   appId: '',
   penNumber: '',
 };
@@ -615,7 +615,14 @@ export const AdminStudents: React.FC = () => {
                 options={sectionOptions}
                 placeholder={watchedClassName ? 'Select…' : 'Pick a class first'}
               />
-              <NumberField control={control} name="rollNo" label="Roll No" required min={1} />
+              <NumberField
+                control={control}
+                name="rollNo"
+                label="Roll No"
+                required
+                min={1}
+                placeholder="e.g. 1"
+              />
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

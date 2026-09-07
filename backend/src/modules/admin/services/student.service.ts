@@ -185,7 +185,7 @@ export class AdminStudentService {
   }
 
   static async createStudent(data: CreateStudentBody): Promise<StudentRecord> {
-    const classRecord = await prisma.class.findUnique({
+    let classRecord = await prisma.class.findUnique({
       where: {
         className_section_session: {
           className: data.className,
@@ -196,9 +196,13 @@ export class AdminStudentService {
     });
 
     if (!classRecord) {
-      throw new NotFoundError(
-        `Class ${data.className}-${data.section} (${data.session}) does not exist. Create it first.`,
-      );
+      classRecord = await prisma.class.create({
+        data: {
+          className: data.className,
+          section: data.section,
+          session: data.session,
+        },
+      });
     }
 
     const serialNumber = await getNewStudentSerialNumber();
@@ -234,8 +238,8 @@ export class AdminStudentService {
             motherAadhar: data.motherAadhar,
             dateOfAdmission: fromISODate(data.dateOfAdmission),
             rollNo: data.rollNo,
-            appId: data.appId,
-            penNumber: data.penNumber,
+            appId: data.appId || undefined,
+            penNumber: data.penNumber || undefined,
             profilePhoto: data.profilePhoto,
             classId: classRecord.id,
             userId: user.id,
@@ -261,7 +265,7 @@ export class AdminStudentService {
 
     let classId = student.classId;
     if (data.className && data.section && data.session) {
-      const classRecord = await prisma.class.findUnique({
+      let classRecord = await prisma.class.findUnique({
         where: {
           className_section_session: {
             className: data.className,
@@ -272,9 +276,13 @@ export class AdminStudentService {
       });
 
       if (!classRecord) {
-        throw new NotFoundError(
-          `Class ${data.className}-${data.section} (${data.session}) does not exist. Create it first.`,
-        );
+        classRecord = await prisma.class.create({
+          data: {
+            className: data.className,
+            section: data.section,
+            session: data.session,
+          },
+        });
       }
       classId = classRecord.id;
     }
@@ -298,8 +306,8 @@ export class AdminStudentService {
           motherAadhar: data.motherAadhar,
           dateOfAdmission: data.dateOfAdmission ? fromISODate(data.dateOfAdmission) : undefined,
           rollNo: data.rollNo,
-          appId: data.appId,
-          penNumber: data.penNumber,
+          appId: data.appId !== undefined ? data.appId || null : undefined,
+          penNumber: data.penNumber !== undefined ? data.penNumber || null : undefined,
           profilePhoto: data.profilePhoto,
           classId,
         },

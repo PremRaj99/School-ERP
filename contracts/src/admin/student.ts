@@ -45,22 +45,30 @@ export const StudentRecord = z.object({
 });
 export type StudentRecord = z.infer<typeof StudentRecord>;
 
+const emptyStringToUndefined = (val: unknown) => (val === '' ? undefined : val);
+
 export const CreateStudentBody = z.object({
   firstName: z
     .string({ message: 'First name is required.' })
     .min(2, 'First name must be at least 2 characters long.'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters long.').optional(),
+  lastName: z.preprocess(
+    emptyStringToUndefined,
+    z.string().min(2, 'Last name must be at least 2 characters long.').optional(),
+  ),
   dob: ISODate,
   gender: GenderEnum.optional(),
-  address: z.string().min(10, 'Address must be at least 10 characters long.').optional(),
+  address: z.preprocess(
+    emptyStringToUndefined,
+    z.string().min(10, 'Address must be at least 10 characters long.').optional(),
+  ),
   phone: Phone,
-  fatherName: z.string().min(2).optional(),
-  motherName: z.string().min(2).optional(),
-  fatherOccupation: z.string().min(2).optional(),
-  motherOccupation: z.string().min(2).optional(),
-  studentAadhar: Aadhar.optional(),
-  fatherAadhar: Aadhar.optional(),
-  motherAadhar: Aadhar.optional(),
+  fatherName: z.preprocess(emptyStringToUndefined, z.string().min(2).optional()),
+  motherName: z.preprocess(emptyStringToUndefined, z.string().min(2).optional()),
+  fatherOccupation: z.preprocess(emptyStringToUndefined, z.string().min(2).optional()),
+  motherOccupation: z.preprocess(emptyStringToUndefined, z.string().min(2).optional()),
+  studentAadhar: z.preprocess(emptyStringToUndefined, Aadhar.optional()),
+  fatherAadhar: z.preprocess(emptyStringToUndefined, Aadhar.optional()),
+  motherAadhar: z.preprocess(emptyStringToUndefined, Aadhar.optional()),
   className: ClassName,
   section: Section,
   session: Session,
@@ -69,8 +77,8 @@ export const CreateStudentBody = z.object({
     .number({ message: 'Roll No is required.' })
     .int()
     .positive('Roll No must be a positive number.'),
-  appId: z.string().min(5, 'APAAR ID must be at least 5 characters long.').optional(),
-  penNumber: z.string().min(5, 'PEN Number must be at least 5 characters long.').optional(),
+  appId: z.preprocess(emptyStringToUndefined, z.string().optional()),
+  penNumber: z.preprocess(emptyStringToUndefined, z.string().optional()),
   profilePhoto: ProfilePhotoUrl.optional(),
 });
 export type CreateStudentBody = z.infer<typeof CreateStudentBody>;
