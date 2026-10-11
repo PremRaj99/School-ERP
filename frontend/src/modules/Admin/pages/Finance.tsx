@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm, useFieldArray, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { ColumnDef, SortingState } from '@tanstack/react-table';
@@ -15,8 +15,16 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { DataTable, ErrorState } from '@/components/data-table';
-import { TextField, NumberField, MonthField, SelectField } from '@/components/form';
+import { TextField, NumberField, MonthField, SearchableSelectField } from '@/components/form';
 import { ExpenseManager } from '@/components/finance/ExpenseManager';
+import { MonthlyFeeStatus } from '@/components/finance/MonthlyFeeStatus';
+import { MonthlyHonorariumStatus } from '@/components/finance/MonthlyHonorariumStatus';
+import {
+  PersonFinanceSummaryDialog,
+  type SummaryTarget,
+} from '@/components/finance/PersonFinanceSummaryDialog';
+import { SCHOOL_NAME } from '@/lib/finance-format';
+import { printElement } from '@/lib/print';
 import { adminService } from '@/lib/services/admin.service';
 import { useStudentOptions } from '@/hooks/options/useAdminOptions';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -70,6 +78,13 @@ export const AdminFinance: React.FC = () => {
   const [isCollectFeeOpen, setIsCollectFeeOpen] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<StudentFeeRecord | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const receiptRef = useRef<HTMLDivElement>(null);
+
+  // Monthly status ("who has / hasn't paid") vs. the full record ledger, per tab.
+  const [feeView, setFeeView] = useState<'monthly' | 'ledger'>('monthly');
+  const [salaryView, setSalaryView] = useState<'monthly' | 'ledger'>('monthly');
+  // Per-student / per-teacher month-by-month summary dialog.
+  const [summaryTarget, setSummaryTarget] = useState<SummaryTarget | null>(null);
 
   // Edit fee dialog state
   const [editingFee, setEditingFee] = useState<StudentFeeDetail | null>(null);
@@ -297,6 +312,11 @@ export const AdminFinance: React.FC = () => {
     queueMicrotask(() => setAuditPageIndex(0));
   }, [auditEntityFilter]);
 
+  const openCollectFor = (studentId: string, month: string) => {
+    reset({ ...emptyFeeDefaults, studentId, month });
+    setIsCollectFeeOpen(true);
+  };
+
   const onCollectSubmit: SubmitHandler<CreateStudentFeeBody> = (values) => {
     collectFeeMutation.mutate(values);
   };
@@ -418,6 +438,18 @@ export const AdminFinance: React.FC = () => {
               <PiPencilSimple className="mr-1 h-3.5 w-3.5" />
               <span>Edit</span>
             </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSummaryTarget({ kind: 'student', studentId: fee.studentId });
+              }}
+            >
+              <PiReceipt className="mr-1 h-3.5 w-3.5" />
+              <span>Summary</span>
+            </Button>
             {fee.status === 'Paid' && (
               <Button
                 variant="ghost"
@@ -506,18 +538,32 @@ export const AdminFinance: React.FC = () => {
       enableSorting: false,
       enableHiding: false,
       cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-primary hover:bg-primary/10 h-7 text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            openEditSalaryModal(row.original);
-          }}
-        >
-          <PiPencilSimple className="mr-1 h-3.5 w-3.5" />
-          <span>Edit</span>
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-primary hover:bg-primary/10 h-7 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              openEditSalaryModal(row.original);
+            }}
+          >
+            <PiPencilSimple className="mr-1 h-3.5 w-3.5" />
+            <span>Edit</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSummaryTarget({ kind: 'teacher', teacherId: row.original.teacherId });
+            }}
+          >
+            <PiReceipt className="mr-1 h-3.5 w-3.5" />
+            <span>Summary</span>
+          </Button>
+        </div>
       ),
     },
   ];
@@ -711,7 +757,18 @@ export const AdminFinance: React.FC = () => {
 
         {/* Student Fee Ledger Tab */}
         <TabsContent value="studentFees" className="space-y-4 pt-4 focus:outline-hidden">
-          {feesErrored ? (
+          <ViewToggle
+            value={feeView}
+            onChange={setFeeView}
+            monthlyLabel="Monthly Status"
+            ledgerLabel="All Fee Records"
+          />
+          {feeView === 'monthly' ? (
+            <MonthlyFeeStatus
+              onCreateInvoice={openCollectFor}
+              onOpenSummary={(studentId) => setSummaryTarget({ kind: 'student', studentId })}
+            />
+          ) : feesErrored ? (
             <ErrorState description={getErrorMessage(feesError)} onRetry={() => refetchFees()} />
           ) : (
             <Card className="overflow-hidden border border-slate-200/80 bg-white/90 p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
@@ -771,7 +828,17 @@ export const AdminFinance: React.FC = () => {
 
         {/* Teacher Honorarium Tab */}
         <TabsContent value="teacherSalary" className="space-y-4 pt-4 focus:outline-hidden">
-          {salariesErrored ? (
+          <ViewToggle
+            value={salaryView}
+            onChange={setSalaryView}
+            monthlyLabel="Monthly Status"
+            ledgerLabel="All Honorarium Records"
+          />
+          {salaryView === 'monthly' ? (
+            <MonthlyHonorariumStatus
+              onOpenSummary={(teacherId) => setSummaryTarget({ kind: 'teacher', teacherId })}
+            />
+          ) : salariesErrored ? (
             <ErrorState
               description={getErrorMessage(salariesError)}
               onRetry={() => refetchSalaries()}
@@ -890,13 +957,13 @@ export const AdminFinance: React.FC = () => {
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onCollectSubmit)} className="space-y-4 pt-2">
-            <SelectField
+            <SearchableSelectField
               control={control}
               name="studentId"
               label="Student"
               required
               options={studentOptions}
-              placeholder="Select a student…"
+              placeholder="Type a name, roll no. or ID…"
             />
 
             <div className="grid grid-cols-2 gap-3">
@@ -978,16 +1045,21 @@ export const AdminFinance: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      <PersonFinanceSummaryDialog target={summaryTarget} onClose={() => setSummaryTarget(null)} />
+
       {/* Official Payment Receipt Modal */}
       <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
         <DialogContent className="sm:max-w-lg lg:max-w-xl">
           {selectedReceipt && (
             <div className="space-y-4 pt-2">
-              <div className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-5 text-xs dark:border-zinc-700 dark:bg-zinc-800/60">
+              <div
+                ref={receiptRef}
+                className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-5 text-xs dark:border-zinc-700 dark:bg-zinc-800/60"
+              >
                 <div className="flex items-center justify-between border-b pb-3">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                      Gyandeep Bal Vikas Vidyamandir
+                      {SCHOOL_NAME}
                     </h3>
                     <p className="text-muted-foreground text-[10px]">Official Fee Receipt</p>
                   </div>
@@ -1037,7 +1109,9 @@ export const AdminFinance: React.FC = () => {
               <div className="flex gap-2">
                 <Button
                   className="bg-primary hover:bg-primary/90 w-full text-xs text-white"
-                  onClick={() => toast.success('Sending receipt to printer...')}
+                  onClick={() =>
+                    printElement(receiptRef.current, `Fee receipt - ${selectedReceipt.studentId}`)
+                  }
                 >
                   <PiPrinter className="mr-1.5 h-3.5 w-3.5" />
                   <span>Print Receipt</span>
@@ -1228,3 +1302,32 @@ export const AdminFinance: React.FC = () => {
 };
 
 export default AdminFinance;
+
+const ViewToggle: React.FC<{
+  value: 'monthly' | 'ledger';
+  onChange: (value: 'monthly' | 'ledger') => void;
+  monthlyLabel: string;
+  ledgerLabel: string;
+}> = ({ value, onChange, monthlyLabel, ledgerLabel }) => (
+  <div className="inline-flex rounded-md border border-slate-200 bg-slate-100 p-0.5 dark:border-zinc-700 dark:bg-zinc-800/80">
+    {(
+      [
+        ['monthly', monthlyLabel],
+        ['ledger', ledgerLabel],
+      ] as const
+    ).map(([key, label]) => (
+      <button
+        key={key}
+        type="button"
+        onClick={() => onChange(key)}
+        className={`h-7 rounded px-3 text-[11px] font-semibold transition-colors ${
+          value === key
+            ? 'bg-white text-slate-900 shadow-xs dark:bg-zinc-900 dark:text-white'
+            : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200'
+        }`}
+      >
+        {label}
+      </button>
+    ))}
+  </div>
+);

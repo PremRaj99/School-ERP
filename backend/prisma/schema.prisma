@@ -193,6 +193,10 @@ model Transaction {
   // required field, so every existing Transaction document (which predates this column) reads
   // correctly with no backfill needed.
   expenseCategory String?
+  // When the transaction was actually marked `Paid` (set on the Pending/Failed -> Paid transition,
+  // cleared when it moves back off Paid). Nullable with no backfill: a pre-existing Paid
+  // transaction has no `paidAt`, and readers fall back to `createdAt` for those.
+  paidAt        DateTime?
   createdAt     DateTime       @default(now())
   studentFee    StudentFee?
   teacherSalary TeacherSalary?

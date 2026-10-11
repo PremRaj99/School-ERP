@@ -12,6 +12,7 @@ export class AdminTimetableService {
           select: {
             className: true,
             section: true,
+            session: true,
           },
         },
         teacher: {
@@ -39,8 +40,8 @@ export class AdminTimetableService {
     // Was `findFirst({ className, section })` with no session — if the same className+section
     // pair exists across more than one session (a school's normal year-to-year rollover), this
     // could silently edit the wrong session's class (ALIGNMENT_PLAN.md 2A/B8). Scoped to the
-    // current session, matching how `createClassAttendance`/`storeExamData` already do this.
-    const currentSession = getCurrentSessionYear();
+    // requested session, defaulting to the current one like `createClassAttendance`/`storeExamData`.
+    const currentSession = data.session ?? getCurrentSessionYear();
     const classRecord = await prisma.class.findUnique({
       where: {
         className_section_session: {
@@ -118,6 +119,7 @@ export class AdminTimetableService {
     return {
       className: data.className,
       section: data.section,
+      session: currentSession,
       weekday: slot.weekday,
       period: slot.period,
       subjectCode: slot.subject.subjectCode,

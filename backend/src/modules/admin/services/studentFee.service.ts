@@ -2,13 +2,35 @@ import prisma from '@/core/db';
 import { DatabaseError, NotFoundError, ValidationError } from '@/core/errors';
 import type {
   CreateStudentFeeBody,
+  MonthlyPaymentStatus,
+  MonthlyStatusSummary,
+  PersonMonthEntry,
   StudentFeeDetail,
   StudentFeeListQuery,
   StudentFeeRecord,
+  StudentFeeSummary,
+  StudentMonthlyStatusQuery,
+  StudentMonthlyStatusRow,
   UpdateStudentFeeBody,
 } from '@schoolerp/contracts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@schoolerp/contracts';
-import { fromISOMonth, toISODate, toISOMonth } from '@/shared/helpers/isoDate';
+import {
+  fromISOMonth,
+  monthStartEndFromISO,
+  toISODate,
+  toISOMonth,
+} from '@/shared/helpers/isoDate';
+import { ACTIVE_STUDENT_STATUS_FILTER } from '@/shared/helpers/activeStudentFilter';
+import { getCurrentSessionYear } from '@/shared/helpers/getCurrentSessionYear';
+import {
+  matchesStatusFilter,
+  paginate,
+  paidAtForStatus,
+  paidOnFor,
+  sessionMonths,
+  summarizeMonth,
+  summarizePerson,
+} from '@/shared/helpers/financeStatus';
 import { FinanceAuditLogService } from './financeAuditLog.service';
 
 interface Actor {
@@ -104,6 +126,162 @@ export class AdminStudentFeeService {
       pageSize,
       total,
       totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    };
+  }
+
+  /**
+   * Every student relevant to `month` with their fee status for it, including students with no
+   * fee record yet (`NotGenerated`). "Relevant" = active and admitted before the month ended, or
+   * holding a fee record for that month (so a since-graduated student's history still shows).
+   * The summary covers the class/section/session filter; `q` and `status` only narrow the rows.
+   */
+  static async getMonthlyStatus(query: StudentMonthlyStatusQuery): Promise<{
+    data: StudentMonthlyStatusRow[];
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+    summary: MonthlyStatusSummary;
+  }> {
+    const page = query.page ?? DEFAULT_PAGE;
+    const pageSize = query.pageSize ?? DEFAULT_PAGE_SIZE;
+    const monthDate = fromISOMonth(query.month);
+    const { endDate } = monthStartEndFromISO(query.month);
+
+    const classFilter = {
+      ...(query.className ? { className: query.className } : {}),
+      ...(query.section ? { section: query.section } : {}),
+      ...(query.session ? { session: query.session } : {}),
+    };
+    const hasClassFilter = Object.keys(classFilter).length > 0;
+
+    const studentSelect = {
+      id: true,
+      studentId: true,
+      firstName: true,
+      lastName: true,
+      rollNo: true,
+      phone: true,
+      class: { select: { className: true, section: true } },
+    } as const;
+
+    const [rosterStudents, fees] = await Promise.all([
+      prisma.student.findMany({
+        where: {
+          ...ACTIVE_STUDENT_STATUS_FILTER,
+          dateOfAdmission: { lt: endDate },
+          ...(hasClassFilter ? { class: classFilter } : {}),
+        },
+        select: studentSelect,
+      }),
+      prisma.studentFee.findMany({
+        where: {
+          month: monthDate,
+          ...(hasClassFilter ? { student: { class: classFilter } } : {}),
+        },
+        include: { transaction: true, student: { select: studentSelect } },
+      }),
+    ]);
+
+    const feeByStudent = new Map(fees.map((f) => [f.studentId, f]));
+    const students = new Map(rosterStudents.map((s) => [s.id, s]));
+    for (const fee of fees) {
+      if (!students.has(fee.studentId)) students.set(fee.studentId, fee.student);
+    }
+
+    const allRows: StudentMonthlyStatusRow[] = Array.from(students.values()).map((student) => {
+      const fee = feeByStudent.get(student.id);
+      const status: MonthlyPaymentStatus = fee ? fee.transaction.status : 'NotGenerated';
+      return {
+        studentId: student.studentId,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        className: student.class?.className,
+        section: student.class?.section,
+        rollNo: student.rollNo,
+        phone: student.phone,
+        status,
+        feeId: fee?.id ?? null,
+        title: fee?.transaction.title ?? null,
+        amount: fee?.transaction.finalAmount ?? null,
+        paidOn: fee ? paidOnFor(fee.transaction) : null,
+      };
+    });
+
+    allRows.sort(
+      (a, b) =>
+        (a.className ?? '').localeCompare(b.className ?? '', undefined, { numeric: true }) ||
+        (a.section ?? '').localeCompare(b.section ?? '') ||
+        a.rollNo - b.rollNo,
+    );
+    if (query.sortDir === 'desc') allRows.reverse();
+
+    const summary = summarizeMonth(query.month, allRows);
+
+    const q = query.q?.toLowerCase();
+    const filtered = allRows.filter(
+      (row) =>
+        matchesStatusFilter(row.status, query.status) &&
+        (!q ||
+          row.studentId.toLowerCase().includes(q) ||
+          row.firstName.toLowerCase().includes(q) ||
+          (row.lastName ?? '').toLowerCase().includes(q)),
+    );
+
+    return { ...paginate(filtered, page, pageSize), summary };
+  }
+
+  /** One student's fee status for each month of a session (April -> March). */
+  static async getStudentSummary(studentId: string, session?: string): Promise<StudentFeeSummary> {
+    const student = await prisma.student.findUnique({
+      where: { studentId },
+      select: {
+        id: true,
+        studentId: true,
+        firstName: true,
+        lastName: true,
+        rollNo: true,
+        class: { select: { className: true, section: true, session: true } },
+      },
+    });
+    if (!student) {
+      throw new NotFoundError('Student not found.');
+    }
+
+    const targetSession = session ?? student.class?.session ?? getCurrentSessionYear();
+    const months = sessionMonths(targetSession);
+
+    const fees = await prisma.studentFee.findMany({
+      where: {
+        studentId: student.id,
+        month: { gte: fromISOMonth(months[0]!), lte: fromISOMonth(months[11]!) },
+      },
+      include: { transaction: true },
+    });
+    const feeByMonth = new Map(fees.map((f) => [toISOMonth(f.month), f]));
+
+    const entries: PersonMonthEntry[] = months.map((month) => {
+      const fee = feeByMonth.get(month);
+      return {
+        month,
+        status: fee ? fee.transaction.status : 'NotGenerated',
+        recordId: fee?.id ?? null,
+        title: fee?.transaction.title ?? null,
+        amount: fee?.transaction.finalAmount ?? null,
+        paidOn: fee ? paidOnFor(fee.transaction) : null,
+      };
+    });
+
+    return {
+      studentId: student.studentId,
+      firstName: student.firstName,
+      lastName: student.lastName,
+      className: student.class?.className,
+      section: student.class?.section,
+      rollNo: student.rollNo,
+      session: targetSession,
+      months: entries,
+      totals: summarizePerson(entries),
     };
   }
 
@@ -288,7 +466,11 @@ export class AdminStudentFeeService {
     const beforeDetail = await this.getStudentFeeById(feeId);
     const beforeStatus = beforeDetail.status;
 
-    await prisma.transaction.update({ where: { id: fee.transactionId }, data: { status } });
+    const txn = await prisma.transaction.findUnique({ where: { id: fee.transactionId } });
+    await prisma.transaction.update({
+      where: { id: fee.transactionId },
+      data: { status, paidAt: txn ? paidAtForStatus(status, txn) : null },
+    });
 
     const {
       feeBreakdown: _feeBreakdown,

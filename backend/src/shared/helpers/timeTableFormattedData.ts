@@ -4,6 +4,7 @@ interface RawTimeTableEntry {
   class: {
     className: string;
     section: string;
+    session: string;
   };
   teacher: {
     teacherId: string;
@@ -34,6 +35,7 @@ interface FormattedDaySchedule {
 interface FormattedClassSchedule {
   className: string;
   section: string;
+  session: string;
   schedule: FormattedDaySchedule[];
 }
 
@@ -42,16 +44,17 @@ export const timeTableFormattedData = (
 ): FormattedClassSchedule[] => {
   const classMap = new Map<
     string,
-    { className: string; section: string; entries: RawTimeTableEntry[] }
+    { className: string; section: string; session: string; entries: RawTimeTableEntry[] }
   >();
 
   for (const entry of timeTableEntries) {
-    const classKey = `${entry.class.className}-${entry.class.section}`;
+    const classKey = `${entry.class.className}-${entry.class.section}-${entry.class.session}`;
 
     if (!classMap.has(classKey)) {
       classMap.set(classKey, {
         className: entry.class.className,
         section: entry.class.section,
+        session: entry.class.session,
         entries: [],
       });
     }
@@ -98,6 +101,7 @@ export const timeTableFormattedData = (
     formattedResults.push({
       className: classData.className,
       section: classData.section,
+      session: classData.session,
       schedule: schedule,
     });
   }

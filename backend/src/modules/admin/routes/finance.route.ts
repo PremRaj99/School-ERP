@@ -3,6 +3,8 @@ import {
   createStudentFee,
   deleteStudentFee,
   getStudentFeeDetail,
+  getStudentFeeMonthlyStatus,
+  getStudentFeeSummary,
   getStudentFees,
   updateStudentFee,
   updateStudentFeeStatus,
@@ -10,8 +12,10 @@ import {
 import {
   createTeacherSalary,
   deleteTeacherSalary,
+  getTeacherHonorariumSummary,
   getTeacherSalaries,
   getTeacherSalaryDetail,
+  getTeacherSalaryMonthlyStatus,
   updateTeacherSalary,
   updateTeacherSalaryStatus,
 } from '../controllers/teacherSalary.controller';
@@ -32,6 +36,10 @@ financeRouter.get('/audit-log', getFinanceAuditLogs);
 
 // Student fees
 financeRouter.get('/student-fee', getStudentFees);
+// Monthly status / per-student summary — registered before `/:feeId` so the param route can't
+// swallow `monthly-status` (same issue as `/transaction/expense-categories` below).
+financeRouter.get('/student-fee/monthly-status', getStudentFeeMonthlyStatus);
+financeRouter.get('/student-fee/summary/:studentId', getStudentFeeSummary);
 financeRouter.get('/student-fee/:feeId', getStudentFeeDetail);
 financeRouter.post('/student-fee', createStudentFee);
 // Full edit (month, title, fee breakdown) — distinct from the status-only update below
@@ -41,6 +49,8 @@ financeRouter.delete('/student-fee/:feeId', deleteStudentFee);
 
 // Teacher salaries
 financeRouter.get('/teacher-salary', getTeacherSalaries);
+financeRouter.get('/teacher-salary/monthly-status', getTeacherSalaryMonthlyStatus);
+financeRouter.get('/teacher-salary/summary/:teacherId', getTeacherHonorariumSummary);
 financeRouter.get('/teacher-salary/:salaryId', getTeacherSalaryDetail);
 financeRouter.post('/teacher-salary', createTeacherSalary);
 // Full edit (month, amount) — distinct from the status-only update below

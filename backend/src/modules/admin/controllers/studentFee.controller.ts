@@ -43,3 +43,17 @@ export const deleteStudentFee = defineRoute(
     return AdminStudentFeeService.deleteStudentFee(params.feeId, toActor(user));
   },
 );
+
+export const getStudentFeeMonthlyStatus = defineRoute(
+  adminStudentFeeContract.monthlyStatus,
+  async ({ query }) => {
+    return AdminStudentFeeService.getMonthlyStatus(query);
+  },
+);
+
+export const getStudentFeeSummary = defineRoute(
+  adminStudentFeeContract.summary,
+  async ({ params, query }) => {
+    return AdminStudentFeeService.getStudentSummary(params.studentId, query.session);
+  },
+);

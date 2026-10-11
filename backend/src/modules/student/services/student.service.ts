@@ -178,7 +178,7 @@ export class StudentService {
     const timeTable = await prisma.timeTable.findMany({
       where: { classId: student.classId },
       select: {
-        class: { select: { className: true, section: true } },
+        class: { select: { className: true, section: true, session: true } },
         teacher: { select: { teacherId: true, firstName: true, lastName: true } },
         weekday: true,
         subject: { select: { subjectName: true, subjectCode: true } },

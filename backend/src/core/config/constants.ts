@@ -9,3 +9,7 @@ export const REFRESH_TOKEN_SECRET =
 export const ACCESS_TOKEN_SECRET =
   process.env.ACCESS_TOKEN_SECRET ||
   '0abac188fd39fb9b900e68c60351c678732be612caccdf610fd470bf17649357';
+// Was a hardcoded '15s' in both login and refresh — every request after 15 seconds 401'd and went
+// through a refresh round-trip (two extra DB queries + a retry), flooding the backend.
+export const ACCESS_TOKEN_EXPIRY = '15m';
+export const REFRESH_TOKEN_EXPIRY = '30d';

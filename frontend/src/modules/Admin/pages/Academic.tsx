@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,11 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import { useSubjectOptions, useTeacherOptions } from '@/hooks/options/useAdminOptions';
+import {
+  useSessionOptions,
+  useSubjectOptions,
+  useTeacherOptions,
+} from '@/hooks/options/useAdminOptions';
 import type { CreateCalendarEventBody, WeekDay } from '@schoolerp/contracts';
 import { toast } from 'sonner';
 import {
@@ -36,6 +40,28 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 const WEEKDAYS: WeekDay[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8];
 
+/** Mirrors the backend's `getCurrentSessionYear()` — a session starts in April. */
+function getCurrentSessionYear() {
+  const now = new Date();
+  const start = now.getMonth() + 1 >= 4 ? now.getFullYear() : now.getFullYear() - 1;
+  return `${start}-${start + 1}`;
+}
+
+/** The academic session an ISO `YYYY-MM-DD` date falls in — same April-start rule as above. */
+function sessionOfDate(isoDate: string) {
+  const [year, month] = isoDate.split('-').map(Number);
+  const start = month >= 4 ? year : year - 1;
+  return `${start}-${start + 1}`;
+}
+
+/** Today as ISO `YYYY-MM-DD` in local time. */
+function todayIso() {
+  const now = new Date();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${mm}-${dd}`;
+}
+
 interface EditingCell {
   weekday: WeekDay;
   period: number;
@@ -45,12 +71,13 @@ interface EditingCell {
 
 export const AdminAcademic: React.FC = () => {
   const queryClient = useQueryClient();
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('timetable');
+  const [selectedSession, setSelectedSession] = useState(getCurrentSessionYear);
 
   const [eventFormData, setEventFormData] = useState<CreateCalendarEventBody>({
     title: '',
-    date: '2025-08-15',
+    date: todayIso(),
     category: 'HOLIDAY',
   });
 
@@ -65,6 +92,23 @@ export const AdminAcademic: React.FC = () => {
     queryFn: () => adminService.getCalendar(),
   });
 
+  // Events carry no session of their own — it's derived from the date. Offer every generated
+  // session plus any older one an existing event falls in, newest first.
+  const baseSessionOptions = useSessionOptions();
+  const sessionOptions = useMemo(() => {
+    const all = new Set(baseSessionOptions.map((o) => o.value));
+    for (const ev of calendarEvents ?? []) all.add(sessionOfDate(ev.date));
+    return Array.from(all).sort().reverse();
+  }, [baseSessionOptions, calendarEvents]);
+
+  const sessionEvents = useMemo(
+    () =>
+      (calendarEvents ?? [])
+        .filter((ev) => sessionOfDate(ev.date) === selectedSession)
+        .sort((a, b) => a.date.localeCompare(b.date)),
+    [calendarEvents, selectedSession],
+  );
+
   const {
     data: classSchedules,
     isLoading: timetableLoading,
@@ -76,9 +120,62 @@ export const AdminAcademic: React.FC = () => {
     queryFn: () => adminService.getTimetable(),
   });
 
-  const classOptions = (classSchedules ?? []).map((c) => `${c.className}-${c.section}`);
-  const activeClass = selectedClass ?? classOptions[0] ?? null;
-  const activeSchedule = classSchedules?.find((c) => `${c.className}-${c.section}` === activeClass);
+  const { data: classes, isLoading: classesLoading } = useQuery({
+    queryKey: qk.admin.classes(),
+    queryFn: () => adminService.getClasses(),
+  });
+
+  const [ttSession, setTtSession] = useState(getCurrentSessionYear);
+  const [ttClassName, setTtClassName] = useState<string | null>(null);
+  const [ttSection, setTtSection] = useState<string | null>(null);
+
+  // Every class gets a grid, even before its first slot is saved — the timetable endpoint only
+  // returns class-sections that already have slots, so the class list is the source of truth.
+  const allClassSections = useMemo(() => {
+    const keys = new Map<string, { className: string; section: string; session: string }>();
+    for (const c of [...(classes ?? []), ...(classSchedules ?? [])]) {
+      keys.set(`${c.session}|${c.className}|${c.section}`, {
+        className: c.className,
+        section: c.section,
+        session: c.session,
+      });
+    }
+    return Array.from(keys.values());
+  }, [classes, classSchedules]);
+
+  const byNumeric = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
+
+  const ttSessionOptions = useMemo(() => {
+    const all = new Set(allClassSections.map((c) => c.session));
+    all.add(getCurrentSessionYear());
+    return Array.from(all).sort().reverse();
+  }, [allClassSections]);
+
+  const classNameOptions = Array.from(
+    new Set(allClassSections.filter((c) => c.session === ttSession).map((c) => c.className)),
+  ).sort(byNumeric);
+  const activeClassName =
+    ttClassName && classNameOptions.includes(ttClassName) ? ttClassName : classNameOptions[0];
+
+  const sectionOptions = Array.from(
+    new Set(
+      allClassSections
+        .filter((c) => c.session === ttSession && c.className === activeClassName)
+        .map((c) => c.section),
+    ),
+  ).sort(byNumeric);
+  const activeSection =
+    ttSection && sectionOptions.includes(ttSection) ? ttSection : sectionOptions[0];
+
+  const activeClassInfo =
+    activeClassName && activeSection
+      ? { className: activeClassName, section: activeSection, session: ttSession }
+      : undefined;
+  const activeClass = activeClassInfo ? `${activeClassName}-${activeSection}` : null;
+  const activeSchedule = classSchedules?.find(
+    (c) =>
+      c.session === ttSession && c.className === activeClassName && c.section === activeSection,
+  );
 
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const subjectOptions = useSubjectOptions();
@@ -93,7 +190,8 @@ export const AdminAcademic: React.FC = () => {
   const findConflict = (weekday: WeekDay, period: number, teacherId: string) => {
     if (!teacherId) return null;
     for (const cls of classSchedules ?? []) {
-      if (cls.className === activeSchedule?.className && cls.section === activeSchedule?.section)
+      if (cls.session !== ttSession) continue;
+      if (cls.className === activeClassInfo?.className && cls.section === activeClassInfo?.section)
         continue;
       const hit = cls.schedule
         .find((d) => d.weekday === weekday)
@@ -110,10 +208,11 @@ export const AdminAcademic: React.FC = () => {
 
   const updateSlotMutation = useMutation({
     mutationFn: (cell: EditingCell) => {
-      if (!activeSchedule) throw new Error('No class selected');
+      if (!activeClassInfo) throw new Error('No class selected');
       return adminService.updateTimetableSlot({
-        className: activeSchedule.className,
-        section: activeSchedule.section,
+        className: activeClassInfo.className,
+        section: activeClassInfo.section,
+        session: activeClassInfo.session,
         weekday: cell.weekday,
         period: cell.period,
         subjectCode: cell.subjectCode,
@@ -130,11 +229,12 @@ export const AdminAcademic: React.FC = () => {
 
   const createEventMutation = useMutation({
     mutationFn: (payload: CreateCalendarEventBody) => adminService.createCalendarEvent(payload),
-    onSuccess: () => {
+    onSuccess: (created) => {
       toast.success('Calendar event added!');
+      setSelectedSession(sessionOfDate(created.date));
       queryClient.invalidateQueries({ queryKey: qk.admin.calendar() });
       setIsAddEventOpen(false);
-      setEventFormData({ title: '', date: '2025-08-15', category: 'EVENT' });
+      setEventFormData({ title: '', date: todayIso(), category: 'HOLIDAY' });
     },
     onError: (err) => toast.error(getErrorMessage(err)),
   });
@@ -166,16 +266,18 @@ export const AdminAcademic: React.FC = () => {
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsAddEventOpen(true)}
-          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
-        >
-          <PiPlus className="h-3.5 w-3.5" />
-          <span>Add Calendar Event</span>
-        </Button>
+        {activeTab === 'calendar' && (
+          <Button
+            onClick={() => setIsAddEventOpen(true)}
+            className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
+          >
+            <PiPlus className="h-3.5 w-3.5" />
+            <span>Add Calendar Event</span>
+          </Button>
+        )}
       </div>
 
-      <Tabs defaultValue="timetable" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="h-10 rounded-md border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
           <TabsTrigger value="timetable" className="rounded-md px-4 text-xs font-semibold">
             <PiClock className="mr-1.5 h-3.5 w-3.5" />
@@ -194,32 +296,70 @@ export const AdminAcademic: React.FC = () => {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="text-base font-bold">
-                    Class {selectedClass} Weekly Schedule
+                    {activeClass
+                      ? `Class ${activeClass} Weekly Schedule · ${ttSession}`
+                      : 'Class Weekly Schedule'}
                   </CardTitle>
                   <CardDescription className="text-xs">
                     Monday to Saturday period schedule with assigned subject teachers.
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground text-xs font-semibold">Select Class:</span>
-                  <select
-                    value={activeClass ?? ''}
-                    onChange={(e) => setSelectedClass(e.target.value)}
-                    disabled={classOptions.length === 0}
-                    className="h-8 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
-                  >
-                    {classOptions.length === 0 && <option value="">No classes yet</option>}
-                    {classOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        Class {opt}
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground text-xs font-semibold">Session:</span>
+                    <select
+                      value={ttSession}
+                      onChange={(e) => setTtSession(e.target.value)}
+                      className="h-8 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
+                    >
+                      {ttSessionOptions.map((session) => (
+                        <option key={session} value={session}>
+                          {session}
+                          {session === getCurrentSessionYear() ? ' (Current)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground text-xs font-semibold">Class:</span>
+                    <select
+                      value={activeClassName ?? ''}
+                      onChange={(e) => {
+                        setTtClassName(e.target.value);
+                        setTtSection(null);
+                      }}
+                      disabled={classNameOptions.length === 0}
+                      className="h-8 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
+                    >
+                      {classNameOptions.length === 0 && <option value="">None</option>}
+                      {classNameOptions.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground text-xs font-semibold">Section:</span>
+                    <select
+                      value={activeSection ?? ''}
+                      onChange={(e) => setTtSection(e.target.value)}
+                      disabled={sectionOptions.length === 0}
+                      className="h-8 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
+                    >
+                      {sectionOptions.length === 0 && <option value="">None</option>}
+                      {sectionOptions.map((section) => (
+                        <option key={section} value={section}>
+                          {section}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
               </div>
             </CardHeader>
 
-            {timetableLoading ? (
+            {timetableLoading || classesLoading ? (
               <div className="space-y-1.5 p-4">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <Skeleton key={i} className="h-14 w-full" />
@@ -233,9 +373,9 @@ export const AdminAcademic: React.FC = () => {
             ) : !activeClass ? (
               <Empty className="rounded-md border-0 p-8">
                 <EmptyMedia illustration="timetable" illustrationSize={120} />
-                <EmptyTitle>No classes yet</EmptyTitle>
+                <EmptyTitle>No classes in {ttSession}</EmptyTitle>
                 <EmptyDescription>
-                  Create a class section first, then build its timetable here.
+                  Create a class section for this session first, then build its timetable here.
                 </EmptyDescription>
               </Empty>
             ) : (
@@ -311,7 +451,23 @@ export const AdminAcademic: React.FC = () => {
         </TabsContent>
 
         {/* Academic Calendar Events Tab */}
-        <TabsContent value="calendar" className="pt-4 focus:outline-hidden">
+        <TabsContent value="calendar" className="space-y-4 pt-4 focus:outline-hidden">
+          <div className="flex items-center justify-end gap-2">
+            <span className="text-muted-foreground text-xs font-semibold">Session:</span>
+            <select
+              value={selectedSession}
+              onChange={(e) => setSelectedSession(e.target.value)}
+              className="h-8 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              {sessionOptions.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                  {session === getCurrentSessionYear() ? ' (Current)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {calendarLoading ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -323,11 +479,13 @@ export const AdminAcademic: React.FC = () => {
               description={getErrorMessage(calendarError)}
               onRetry={() => refetchCalendar()}
             />
-          ) : (calendarEvents ?? []).length === 0 ? (
+          ) : sessionEvents.length === 0 ? (
             <Empty className="rounded-md border p-8">
               <EmptyMedia illustration="calendar" illustrationSize={120} />
-              <EmptyTitle>No calendar events yet</EmptyTitle>
-              <EmptyDescription>Add the first holiday, exam, or event date.</EmptyDescription>
+              <EmptyTitle>No calendar events for {selectedSession}</EmptyTitle>
+              <EmptyDescription>
+                Add a holiday, exam, or event date for this session.
+              </EmptyDescription>
               <Button size="sm" className="mt-1 text-xs" onClick={() => setIsAddEventOpen(true)}>
                 <PiPlus className="mr-1 h-3.5 w-3.5" />
                 Add Calendar Event
@@ -335,7 +493,7 @@ export const AdminAcademic: React.FC = () => {
             </Empty>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {(calendarEvents ?? []).map((ev, idx) => {
+              {sessionEvents.map((ev, idx) => {
                 const eventId = ev.id || `ev-${idx}`;
                 return (
                   <Card
@@ -367,7 +525,9 @@ export const AdminAcademic: React.FC = () => {
                     </CardHeader>
 
                     <CardContent className="flex items-center justify-between pt-0">
-                      <span className="text-muted-foreground text-xs">Session 2025-2026</span>
+                      <span className="text-muted-foreground text-xs">
+                        Session {sessionOfDate(ev.date)}
+                      </span>
                       <Button
                         variant="ghost"
                         size="icon"

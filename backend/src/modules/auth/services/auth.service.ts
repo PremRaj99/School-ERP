@@ -2,7 +2,12 @@ import prisma from '@/core/db';
 import { NotFoundError, ValidationError } from '@/core/errors';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from '@/core/config/constants';
+import {
+  ACCESS_TOKEN_EXPIRY,
+  ACCESS_TOKEN_SECRET,
+  REFRESH_TOKEN_EXPIRY,
+  REFRESH_TOKEN_SECRET,
+} from '@/core/config/constants';
 import type { LoginBody } from '@schoolerp/contracts';
 
 export class AuthService {
@@ -22,11 +27,11 @@ export class AuthService {
     }
 
     const accessToken = jwt.sign({ id: user.id, role: user.role }, ACCESS_TOKEN_SECRET, {
-      expiresIn: '15s',
+      expiresIn: ACCESS_TOKEN_EXPIRY,
     });
 
     const refreshToken = jwt.sign({ id: user.id, role: user.role }, REFRESH_TOKEN_SECRET, {
-      expiresIn: '7d',
+      expiresIn: REFRESH_TOKEN_EXPIRY,
     });
 
     await prisma.user.update({

@@ -3,3 +3,4 @@ export { TextField, NumberField, DateField, MonthField, SelectField } from './Te
 export { MultiSelectField } from './MultiSelectField';
 export { TagsField } from './TagsField';
 export { SessionField } from './SessionField';
+export { SearchableSelectField } from './SearchableSelectField';

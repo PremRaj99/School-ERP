@@ -50,3 +50,17 @@ export const deleteTeacherSalary = defineRoute(
     return AdminTeacherSalaryService.deleteTeacherSalary(params.salaryId, toActor(user));
   },
 );
+
+export const getTeacherSalaryMonthlyStatus = defineRoute(
+  adminTeacherSalaryContract.monthlyStatus,
+  async ({ query }) => {
+    return AdminTeacherSalaryService.getMonthlyStatus(query);
+  },
+);
+
+export const getTeacherHonorariumSummary = defineRoute(
+  adminTeacherSalaryContract.summary,
+  async ({ params, query }) => {
+    return AdminTeacherSalaryService.getTeacherSummary(params.teacherId, query.session);
+  },
+);

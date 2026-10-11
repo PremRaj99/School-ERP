@@ -19,6 +19,7 @@ import {
   adminTransactionContract,
   type AdminDashboard,
   type AdminStudentAttendanceQuery,
+  type AdminClassesAttendanceQuery,
   type BulkImportStudentsBody,
   type CalendarEventRecord,
   type ClassListQuery,
@@ -43,6 +44,8 @@ import {
   type NoticeRecord,
   type PromoteClassBody,
   type StudentFeeListQuery,
+  type StudentMonthlyStatusQuery,
+  type TeacherMonthlyStatusQuery,
   type StudentFeeRecord,
   type StudentListQuery,
   type StudentRecord,
@@ -166,6 +169,10 @@ export const adminService = {
     api(adminStudentFeeContract.updateStatus, { params: { feeId }, body: { status } }),
   deleteStudentFee: (feeId: string): Promise<{ id: string }> =>
     api(adminStudentFeeContract.remove, { params: { feeId } }),
+  getStudentFeeMonthlyStatus: (query: StudentMonthlyStatusQuery) =>
+    api(adminStudentFeeContract.monthlyStatus, { query }),
+  getStudentFeeSummary: (studentId: string, session?: string) =>
+    api(adminStudentFeeContract.summary, { params: { studentId }, query: { session } }),
 
   getTeacherSalaries: (query?: TeacherSalaryListQuery) =>
     api(adminTeacherSalaryContract.list, { query: query ?? {} }),
@@ -182,6 +189,10 @@ export const adminService = {
     api(adminTeacherSalaryContract.updateStatus, { params: { salaryId }, body: { status } }),
   deleteTeacherSalary: (salaryId: string): Promise<{ id: string }> =>
     api(adminTeacherSalaryContract.remove, { params: { salaryId } }),
+  getTeacherSalaryMonthlyStatus: (query: TeacherMonthlyStatusQuery) =>
+    api(adminTeacherSalaryContract.monthlyStatus, { query }),
+  getTeacherHonorariumSummary: (teacherId: string, session?: string) =>
+    api(adminTeacherSalaryContract.summary, { params: { teacherId }, query: { session } }),
 
   getTransactions: (query?: TransactionListQuery): Promise<TransactionRecord[]> =>
     api(adminTransactionContract.list, { query: query ?? {} }),
@@ -221,6 +232,8 @@ export const adminService = {
     api(adminTeacherAttendanceContract.update, { body: attendance }),
   getStudentAttendanceReport: (query: AdminStudentAttendanceQuery) =>
     api(adminStudentAttendanceContract.report, { query }),
+  getClassesAttendanceSummary: (query: AdminClassesAttendanceQuery) =>
+    api(adminStudentAttendanceContract.classesSummary, { query }),
 
   // Session promotion
   promoteClass: (body: PromoteClassBody) => api(adminPromotionContract.promote, { body }),

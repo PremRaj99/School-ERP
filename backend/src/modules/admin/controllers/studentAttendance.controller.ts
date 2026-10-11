@@ -8,3 +8,10 @@ export const getStudentAttendanceReport = defineRoute(
     return AdminStudentAttendanceService.getReport(query);
   },
 );
+
+export const getClassesAttendanceSummary = defineRoute(
+  adminStudentAttendanceContract.classesSummary,
+  async ({ query }) => {
+    return AdminStudentAttendanceService.getClassesSummary(query);
+  },
+);

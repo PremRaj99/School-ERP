@@ -43,10 +43,18 @@ export const qk = {
         : (['admin', 'contact-messages'] as const),
     studentFees: (query?: Record<string, unknown>) =>
       query ? (['admin', 'student-fees', query] as const) : (['admin', 'student-fees'] as const),
+    studentFeeMonthlyStatus: (query: Record<string, unknown>) =>
+      ['admin', 'student-fees', 'monthly-status', query] as const,
+    studentFeeSummary: (studentId: string, session?: string) =>
+      ['admin', 'student-fees', 'summary', studentId, session] as const,
     teacherSalaries: (query?: Record<string, unknown>) =>
       query
         ? (['admin', 'teacher-salaries', query] as const)
         : (['admin', 'teacher-salaries'] as const),
+    teacherSalaryMonthlyStatus: (query: Record<string, unknown>) =>
+      ['admin', 'teacher-salaries', 'monthly-status', query] as const,
+    teacherHonorariumSummary: (teacherId: string, session?: string) =>
+      ['admin', 'teacher-salaries', 'summary', teacherId, session] as const,
     transactions: (query?: Record<string, unknown>) =>
       query ? (['admin', 'transactions', query] as const) : (['admin', 'transactions'] as const),
     expenseCategories: () => ['admin', 'expense-categories'] as const,
@@ -66,6 +74,8 @@ export const qk = {
     analyticsStaff: (month: string) => ['admin', 'analytics', 'staff', month] as const,
     studentAttendanceReport: (classId: string, from: string, to: string) =>
       ['admin', 'student-attendance-report', classId, from, to] as const,
+    classesAttendanceSummary: (session: string, from: string, to: string) =>
+      ['admin', 'classes-attendance-summary', session, from, to] as const,
   },
   student: {
     profile: () => ['student', 'profile'] as const,

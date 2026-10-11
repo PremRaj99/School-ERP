@@ -7,6 +7,7 @@ import type {
   UpdateTransactionBody,
 } from '@schoolerp/contracts';
 import { toISODate } from '@/shared/helpers/isoDate';
+import { paidAtForStatus } from '@/shared/helpers/financeStatus';
 
 const toTransactionRecord = (t: {
   id: string;
@@ -63,6 +64,7 @@ export class AdminTransactionService {
         category: data.category,
         expenseCategory: data.expenseCategory,
         status: data.status ?? 'Pending',
+        paidAt: data.status === 'Paid' ? new Date() : null,
       },
     });
     return toTransactionRecord(transaction);
@@ -83,7 +85,13 @@ export class AdminTransactionService {
       );
     }
 
-    const updated = await prisma.transaction.update({ where: { id: transactionId }, data });
+    const updated = await prisma.transaction.update({
+      where: { id: transactionId },
+      data: {
+        ...data,
+        ...(data.status ? { paidAt: paidAtForStatus(data.status, transaction) } : {}),
+      },
+    });
     return toTransactionRecord(updated);
   }
 

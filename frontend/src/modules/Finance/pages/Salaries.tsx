@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { DataTable, ErrorState } from '@/components/data-table';
-import { NumberField, MonthField, SelectField } from '@/components/form';
+import { NumberField, MonthField, SearchableSelectField } from '@/components/form';
 import { financeService } from '@/lib/services/finance.service';
 import { useFinanceTeacherOptions } from '@/hooks/options/useFinanceOptions';
 import {
@@ -227,13 +227,13 @@ export const FinanceSalaries: React.FC = () => {
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
-            <SelectField
+            <SearchableSelectField
               control={control}
               name="teacherId"
               label="Teacher"
               required
               options={teacherOptions}
-              placeholder="Select a teacher…"
+              placeholder="Type a name or ID…"
             />
             <div className="grid grid-cols-2 gap-3">
               <MonthField control={control} name="month" label="Honorarium Month" required />

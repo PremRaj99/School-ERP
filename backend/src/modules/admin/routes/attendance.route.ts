@@ -5,7 +5,10 @@ import {
   markTeacherAttendanceForDate,
   updateTeacherAttendanceForDate,
 } from '../controllers/teacherAttendance.controller';
-import { getStudentAttendanceReport } from '../controllers/studentAttendance.controller';
+import {
+  getClassesAttendanceSummary,
+  getStudentAttendanceReport,
+} from '../controllers/studentAttendance.controller';
 
 export const attendanceRouter = Router();
 
@@ -15,3 +18,4 @@ attendanceRouter.post('/teacher-attendance', markTeacherAttendanceForDate);
 attendanceRouter.put('/teacher-attendance', updateTeacherAttendanceForDate);
 
 attendanceRouter.get('/student', getStudentAttendanceReport);
+attendanceRouter.get('/student/classes', getClassesAttendanceSummary);

@@ -43,7 +43,6 @@ export const AdminSubjects: React.FC = () => {
 
   const [formData, setFormData] = useState<CreateSubjectBody>({
     subjectName: '',
-    subjectCode: '',
   });
 
   const {
@@ -74,7 +73,7 @@ export const AdminSubjects: React.FC = () => {
       toast.success('Subject added successfully!');
       queryClient.invalidateQueries({ queryKey: qk.admin.subjects() });
       setIsCreateOpen(false);
-      setFormData({ subjectName: '', subjectCode: '' });
+      setFormData({ subjectName: '' });
     },
     onError: (err) => {
       toast.error(getErrorMessage(err));
@@ -143,7 +142,7 @@ export const AdminSubjects: React.FC = () => {
 
         <Button
           onClick={() => {
-            setFormData({ subjectName: '', subjectCode: '' });
+            setFormData({ subjectName: '' });
             setIsCreateOpen(true);
           }}
           className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
@@ -200,7 +199,7 @@ export const AdminSubjects: React.FC = () => {
                   size="sm"
                   className="mt-1 text-xs"
                   onClick={() => {
-                    setFormData({ subjectName: '', subjectCode: '' });
+                    setFormData({ subjectName: '' });
                     setIsCreateOpen(true);
                   }}
                 >
@@ -358,7 +357,7 @@ export const AdminSubjects: React.FC = () => {
             </div>
             <DialogTitle className="text-lg font-bold">Add New Subject</DialogTitle>
             <DialogDescription className="text-xs">
-              Define the course title and optional custom subject code.
+              Enter the subject name. A subject code is generated automatically.
             </DialogDescription>
           </DialogHeader>
 
@@ -374,21 +373,6 @@ export const AdminSubjects: React.FC = () => {
                 onChange={(e) => setFormData((prev) => ({ ...prev, subjectName: e.target.value }))}
                 required
                 className="h-9 text-xs"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="sCode" className="text-xs font-semibold">
-                Subject Code (Optional, auto-assigned if empty)
-              </Label>
-              <Input
-                id="sCode"
-                placeholder="e.g. ENV101"
-                value={formData.subjectCode}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, subjectCode: e.target.value.toUpperCase() }))
-                }
-                className="h-9 text-xs uppercase"
               />
             </div>
 

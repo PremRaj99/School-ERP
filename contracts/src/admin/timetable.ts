@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { defineContract } from '../envelope';
-import { ClassName, Section, SubjectCode, TeacherId } from '../primitives';
+import { ClassName, Section, Session, SubjectCode, TeacherId } from '../primitives';
 import { WeekDayEnum } from '../enums';
 
 export const PeriodDetail = z.object({
@@ -18,10 +18,11 @@ export const DaySchedule = z.object({
 });
 export type DaySchedule = z.infer<typeof DaySchedule>;
 
-/** One entry per class-section that has at least one timetable slot filled in. */
+/** One entry per class-section-session that has at least one timetable slot filled in. */
 export const ClassSchedule = z.object({
   className: ClassName,
   section: Section,
+  session: Session,
   schedule: z.array(DaySchedule),
 });
 export type ClassSchedule = z.infer<typeof ClassSchedule>;
@@ -29,6 +30,8 @@ export type ClassSchedule = z.infer<typeof ClassSchedule>;
 export const UpdateTimeTableBody = z.object({
   className: ClassName,
   section: Section,
+  /** Defaults to the current session when omitted. */
+  session: Session.optional(),
   weekday: WeekDayEnum,
   period: z.number().int().min(1, 'invalid period').max(8, 'invalid period'),
   subjectCode: SubjectCode.optional(),
@@ -45,6 +48,7 @@ export type UpdateTimeTableBody = z.infer<typeof UpdateTimeTableBody>;
 export const TimeTableSlotRecord = z.object({
   className: ClassName,
   section: Section,
+  session: Session,
   weekday: WeekDayEnum,
   period: z.number().int(),
   subjectCode: SubjectCode,

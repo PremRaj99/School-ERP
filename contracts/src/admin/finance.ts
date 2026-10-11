@@ -38,9 +38,9 @@ export const StudentFeeRecord = z.object({
   title: z.string(),
   finalAmount: z.number(),
   status: TxnStatusEnum,
-  // NOTE: this is `Transaction.createdAt`, not an actual payment date — there's no `paidAt` column
-  // on `Transaction` yet (ALIGNMENT_PLAN.md 2D/D3, a schema change, not done in this phase). A
-  // `Pending` fee already carries a (misleading) "paid at" timestamp because of this.
+  // NOTE: this is `Transaction.createdAt`, not an actual payment date (kept for compatibility). The
+  // real payment date now lives in `Transaction.paidAt` and is exposed as `paidOn` on the
+  // monthly-status / summary responses below.
   paidAt: ISODate,
 });
 export type StudentFeeRecord = z.infer<typeof StudentFeeRecord>;
@@ -87,7 +87,159 @@ export type UpdateStatusBody = z.infer<typeof UpdateStatusBody>;
 
 export const DeleteFeeResponse = z.object({ id: ObjectId });
 
+// ---- Monthly status / per-person summaries ----------------------------------
+//
+// The ledgers above only list records that exist. These answer the opposite question too: for a
+// given month, who has a fee/honorarium record at all, and of those who has actually paid/been paid.
+// `NotGenerated` = no StudentFee/TeacherSalary row exists for that person and month yet.
+
+export const MonthlyPaymentStatusEnum = z.enum(['Paid', 'Pending', 'Failed', 'NotGenerated']);
+export type MonthlyPaymentStatus = z.infer<typeof MonthlyPaymentStatusEnum>;
+
+/** Filter for a monthly-status list. `Unpaid` = everything except `Paid`. */
+export const MonthlyStatusFilterEnum = z.enum([
+  'Paid',
+  'Unpaid',
+  'Pending',
+  'Failed',
+  'NotGenerated',
+]);
+export type MonthlyStatusFilter = z.infer<typeof MonthlyStatusFilterEnum>;
+
+export const MonthlyStatusSummary = z.object({
+  month: ISOMonth,
+  total: z.number().int(),
+  paidCount: z.number().int(),
+  pendingCount: z.number().int(),
+  failedCount: z.number().int(),
+  notGeneratedCount: z.number().int(),
+  /** Sum of `finalAmount` over Paid records. */
+  paidAmount: z.number(),
+  /** Sum of `finalAmount` over Pending + Failed records (NotGenerated has no amount yet). */
+  outstandingAmount: z.number(),
+});
+export type MonthlyStatusSummary = z.infer<typeof MonthlyStatusSummary>;
+
+export function monthlyStatusResponse<T extends z.ZodTypeAny>(item: T) {
+  return paginatedResponse(item).extend({ summary: MonthlyStatusSummary });
+}
+
+/** One month in a person's summary. Record fields are null when `status` is `NotGenerated`. */
+export const PersonMonthEntry = z.object({
+  month: ISOMonth,
+  status: MonthlyPaymentStatusEnum,
+  recordId: ObjectId.nullable(),
+  title: z.string().nullable(),
+  amount: z.number().nullable(),
+  /** Real payment date when known; falls back to the record's creation date for legacy Paid rows. */
+  paidOn: ISODate.nullable(),
+});
+export type PersonMonthEntry = z.infer<typeof PersonMonthEntry>;
+
+export const PersonSummaryTotals = z.object({
+  billed: z.number(),
+  paid: z.number(),
+  outstanding: z.number(),
+  paidMonths: z.number().int(),
+  unpaidMonths: z.number().int(),
+  notGeneratedMonths: z.number().int(),
+});
+export type PersonSummaryTotals = z.infer<typeof PersonSummaryTotals>;
+
+/** Session is April -> March, matching `getCurrentSessionYear`. Omit for the current session. */
+export const PersonSummaryQuery = z.object({ session: Session.optional() });
+export type PersonSummaryQuery = z.infer<typeof PersonSummaryQuery>;
+
+// Student side
+
+export const StudentMonthlyStatusRow = z.object({
+  studentId: StudentId,
+  firstName: z.string(),
+  lastName: z.string().nullable(),
+  className: ClassName.optional(),
+  section: Section.optional(),
+  rollNo: z.number().int(),
+  phone: z.string().nullable(),
+  status: MonthlyPaymentStatusEnum,
+  feeId: ObjectId.nullable(),
+  title: z.string().nullable(),
+  amount: z.number().nullable(),
+  paidOn: ISODate.nullable(),
+});
+export type StudentMonthlyStatusRow = z.infer<typeof StudentMonthlyStatusRow>;
+
+export const StudentMonthlyStatusQuery = PageQuery.extend({
+  month: ISOMonth,
+  className: ClassName.optional(),
+  section: Section.optional(),
+  session: Session.optional(),
+  status: MonthlyStatusFilterEnum.optional(),
+});
+export type StudentMonthlyStatusQuery = z.infer<typeof StudentMonthlyStatusQuery>;
+
+export const StudentFeeSummary = z.object({
+  studentId: StudentId,
+  firstName: z.string(),
+  lastName: z.string().nullable(),
+  className: ClassName.optional(),
+  section: Section.optional(),
+  rollNo: z.number().int(),
+  session: Session,
+  months: z.array(PersonMonthEntry),
+  totals: PersonSummaryTotals,
+});
+export type StudentFeeSummary = z.infer<typeof StudentFeeSummary>;
+
+// Teacher side
+
+export const TeacherMonthlyStatusRow = z.object({
+  teacherId: TeacherId,
+  firstName: z.string(),
+  lastName: z.string().nullable(),
+  phone: z.string().nullable(),
+  salaryPerMonth: z.number(),
+  status: MonthlyPaymentStatusEnum,
+  salaryId: ObjectId.nullable(),
+  title: z.string().nullable(),
+  amount: z.number().nullable(),
+  paidOn: ISODate.nullable(),
+});
+export type TeacherMonthlyStatusRow = z.infer<typeof TeacherMonthlyStatusRow>;
+
+export const TeacherMonthlyStatusQuery = PageQuery.extend({
+  month: ISOMonth,
+  status: MonthlyStatusFilterEnum.optional(),
+});
+export type TeacherMonthlyStatusQuery = z.infer<typeof TeacherMonthlyStatusQuery>;
+
+export const TeacherHonorariumSummary = z.object({
+  teacherId: TeacherId,
+  firstName: z.string(),
+  lastName: z.string().nullable(),
+  salaryPerMonth: z.number(),
+  session: Session,
+  months: z.array(PersonMonthEntry),
+  totals: PersonSummaryTotals,
+});
+export type TeacherHonorariumSummary = z.infer<typeof TeacherHonorariumSummary>;
+
 export const adminStudentFeeContract = defineContract({
+  monthlyStatus: {
+    method: 'GET',
+    path: '/admin/finance/student-fee/monthly-status',
+    query: StudentMonthlyStatusQuery,
+    response: monthlyStatusResponse(StudentMonthlyStatusRow),
+    summary:
+      "Every student on the roster for a month (active, admitted by then, or with a fee record that month) with that month's fee status — Paid / Pending / Failed / NotGenerated — plus counts and totals.",
+  },
+  summary: {
+    method: 'GET',
+    path: '/admin/finance/student-fee/summary/:studentId',
+    params: z.object({ studentId: StudentId }),
+    query: PersonSummaryQuery,
+    response: StudentFeeSummary,
+    summary: "One student's fee status for each of the 12 months of a session.",
+  },
   list: {
     method: 'GET',
     path: '/admin/finance/student-fee',
@@ -176,6 +328,22 @@ export const UpdateTeacherSalaryBody = z.object({
 export type UpdateTeacherSalaryBody = z.infer<typeof UpdateTeacherSalaryBody>;
 
 export const adminTeacherSalaryContract = defineContract({
+  monthlyStatus: {
+    method: 'GET',
+    path: '/admin/finance/teacher-salary/monthly-status',
+    query: TeacherMonthlyStatusQuery,
+    response: monthlyStatusResponse(TeacherMonthlyStatusRow),
+    summary:
+      "Every teacher (joined by that month, or with a record for it) with that month's honorarium status plus counts and totals.",
+  },
+  summary: {
+    method: 'GET',
+    path: '/admin/finance/teacher-salary/summary/:teacherId',
+    params: z.object({ teacherId: TeacherId }),
+    query: PersonSummaryQuery,
+    response: TeacherHonorariumSummary,
+    summary: "One teacher's honorarium status for each of the 12 months of a session.",
+  },
   list: {
     method: 'GET',
     path: '/admin/finance/teacher-salary',
