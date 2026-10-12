@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +23,10 @@ import { ErrorState } from '@/components/data-table';
 import { studentService } from '@/lib/services/student.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import { PiReceipt } from 'react-icons/pi';
+import { PiPrinter, PiReceipt } from 'react-icons/pi';
+import { FeeReceipt } from '@/components/finance/FeeReceipt';
+import { FeeDueHint } from '@/components/finance/FeeDueHint';
+import { printElement } from '@/lib/print';
 import { useQuery } from '@tanstack/react-query';
 
 /** Matches `useSessionOptions()` (`hooks/options/useAdminOptions.ts`) — a session starts in April.
@@ -57,6 +60,7 @@ const defaultYear = (() => {
 export const StudentFees: React.FC = () => {
   const [year, setYear] = useState(defaultYear);
   const [selectedFeeId, setSelectedFeeId] = useState<string | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   const {
     data: fees,
@@ -196,6 +200,7 @@ export const StudentFees: React.FC = () => {
                     </TableCell>
                     <TableCell className="text-xs font-bold text-slate-900 dark:text-white">
                       ₹{fee.finalAmount.toLocaleString()}
+                      <FeeDueHint {...fee} />
                     </TableCell>
                     <TableCell className="text-xs">
                       <Badge
@@ -213,7 +218,7 @@ export const StudentFees: React.FC = () => {
                         onClick={() => setSelectedFeeId(fee.id)}
                       >
                         <PiReceipt className="mr-1 h-3.5 w-3.5" />
-                        <span>View Receipt</span>
+                        <span>{fee.status === 'Paid' ? 'View Receipt' : 'View Invoice'}</span>
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -234,7 +239,7 @@ export const StudentFees: React.FC = () => {
                 <SheetHeader>
                   <div className="text-primary flex items-center gap-2 text-xs font-semibold">
                     <PiReceipt className="h-4 w-4" />
-                    <span>Fee Receipt</span>
+                    <span>{feeDetail.status === 'Paid' ? 'Fee Receipt' : 'Fee Invoice'}</span>
                   </div>
                   <SheetTitle className="text-lg font-bold">{feeDetail.month}</SheetTitle>
                   <SheetDescription className="text-xs">
@@ -243,24 +248,42 @@ export const StudentFees: React.FC = () => {
                   </SheetDescription>
                 </SheetHeader>
 
-                <div className="space-y-1 rounded-md border bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
-                  {feeDetail.feeBreakdown.length === 0 ? (
-                    <p className="text-muted-foreground">No fee breakdown recorded.</p>
-                  ) : (
-                    feeDetail.feeBreakdown.map((item, i) => (
-                      <div key={i} className="flex justify-between">
-                        <span className="text-muted-foreground">{item.feeType}:</span>
-                        <span className="font-semibold">₹{item.amount.toLocaleString()}</span>
-                      </div>
-                    ))
-                  )}
-                  <div className="flex justify-between border-t pt-2 text-sm font-bold text-slate-900 dark:text-white">
-                    <span>Total Amount:</span>
-                    <span className="text-emerald-600 dark:text-emerald-400">
-                      ₹{feeDetail.finalAmount.toLocaleString()}
-                    </span>
+                {feeDetail.status === 'Paid' ? (
+                  <>
+                    <FeeReceipt ref={receiptRef} fee={feeDetail} />
+                    <Button
+                      className="w-full text-xs"
+                      onClick={() =>
+                        printElement(
+                          receiptRef.current,
+                          `Fee receipt ${feeDetail.receiptNo ?? feeDetail.month}`,
+                        )
+                      }
+                    >
+                      <PiPrinter className="mr-1.5 h-3.5 w-3.5" />
+                      Print Receipt
+                    </Button>
+                  </>
+                ) : (
+                  <div className="space-y-1 rounded-md border bg-slate-50 p-3 text-xs dark:bg-zinc-800/50">
+                    {feeDetail.feeBreakdown.length === 0 ? (
+                      <p className="text-muted-foreground">No fee breakdown recorded.</p>
+                    ) : (
+                      feeDetail.feeBreakdown.map((item, i) => (
+                        <div key={i} className="flex justify-between">
+                          <span className="text-muted-foreground">{item.feeType}:</span>
+                          <span className="font-semibold">₹{item.amount.toLocaleString()}</span>
+                        </div>
+                      ))
+                    )}
+                    <div className="flex justify-between border-t pt-2 text-sm font-bold text-slate-900 dark:text-white">
+                      <span>Total Amount:</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">
+                        ₹{feeDetail.finalAmount.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <Badge
                   variant="outline"

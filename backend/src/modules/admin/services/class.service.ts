@@ -7,6 +7,7 @@ import type {
   UpdateClassBody,
 } from '@schoolerp/contracts';
 import { normalizeClassName } from '@schoolerp/contracts';
+import { ACTIVE_STUDENT_STATUS_FILTER } from '@/shared/helpers/activeStudentFilter';
 
 export class AdminClassService {
   static async getClasses(query: ClassListQuery): Promise<ClassRecord[]> {
@@ -17,7 +18,17 @@ export class AdminClassService {
     const classes = await prisma.class.findMany({
       where: query.includeArchived ? {} : { isArchived: { not: true } },
     });
-    return classes.map((c) => ({ ...c, isArchived: c.isArchived ?? false }));
+    const counts = await prisma.student.groupBy({
+      by: ['classId'],
+      where: { classId: { in: classes.map((c) => c.id) }, ...ACTIVE_STUDENT_STATUS_FILTER },
+      _count: { _all: true },
+    });
+    const countByClass = new Map(counts.map((row) => [row.classId, row._count._all]));
+    return classes.map((c) => ({
+      ...c,
+      isArchived: c.isArchived ?? false,
+      studentCount: countByClass.get(c.id) ?? 0,
+    }));
   }
 
   static async createClass(data: CreateClassBody): Promise<ClassRecord> {

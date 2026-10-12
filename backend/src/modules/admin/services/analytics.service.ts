@@ -9,7 +9,14 @@ import type {
   AdminStaffAnalytics,
   WeekDay,
 } from '@schoolerp/contracts';
-import { fromISODate, monthStartEndFromISO, toISODate, toISOMonth } from '@/shared/helpers/isoDate';
+import {
+  fromISODate,
+  fromISOMonth,
+  monthStartEndFromISO,
+  toISODate,
+  toISOMonth,
+} from '@/shared/helpers/isoDate';
+import { sessionMonthRange } from '@/shared/helpers/financeStatus';
 
 const WEEKDAY_BY_JS_DAY = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'] as const;
 
@@ -316,10 +323,18 @@ export class AdminAnalyticsService {
 
   static async getFinance(session?: string): Promise<AdminFinanceAnalytics> {
     const targetSession = session ?? getCurrentSessionYear();
+    // Everything below is scoped to the session's April -> March: fees by the month they're for
+    // (not the student's current class, which changes on promotion), everything else by when the
+    // transaction was recorded.
+    const startYear = Number(targetSession.slice(0, 4));
+    const recordedIn = {
+      gte: fromISOMonth(`${startYear}-04`),
+      lt: fromISOMonth(`${startYear + 1}-04`),
+    };
 
     const [feeTxns, salaryTxns, categoryTotals, expenseTxns] = await Promise.all([
       prisma.transaction.findMany({
-        where: { category: 'Fee', studentFee: { student: { class: { session: targetSession } } } },
+        where: { category: 'Fee', studentFee: { month: sessionMonthRange(targetSession) } },
         select: {
           finalAmount: true,
           status: true,
@@ -340,15 +355,19 @@ export class AdminAnalyticsService {
         },
       }),
       prisma.transaction.findMany({
-        where: { category: 'Salary' },
+        where: { category: 'Salary', createdAt: recordedIn },
         select: { finalAmount: true, status: true, createdAt: true },
       }),
-      prisma.transaction.groupBy({ by: ['category'], _sum: { finalAmount: true } }),
+      prisma.transaction.groupBy({
+        by: ['category'],
+        where: { createdAt: recordedIn },
+        _sum: { finalAmount: true },
+      }),
       // P4 — every manually-logged expense (books, whiteboards, ...), regardless of category,
       // is anything carrying an `expenseCategory` label. Not filtered to `category: 'Other'`
       // specifically since a user can also attach a label to a `Utility`/`Infrastructure` entry.
       prisma.transaction.findMany({
-        where: { expenseCategory: { not: null } },
+        where: { expenseCategory: { not: null }, createdAt: recordedIn },
         select: { finalAmount: true, status: true, createdAt: true, expenseCategory: true },
       }),
     ]);

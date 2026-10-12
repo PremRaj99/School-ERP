@@ -9,6 +9,7 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { CHART_COLORS, chartTooltipStyle } from '@/lib/charts';
 import { useSessionOptions } from '@/hooks/options/useAdminOptions';
+import { getCurrentSessionYear } from '@/lib/session';
 import {
   PiUsers,
   PiGraduationCap,
@@ -26,7 +27,7 @@ const KPI_TILE_STYLE = 'bg-primary/10 text-primary';
 export function AnalyticsOverviewTab() {
   const navigate = useNavigate();
   const sessionOptions = useSessionOptions();
-  const [session, setSession] = useState(() => sessionOptions[1]?.value ?? '');
+  const [session, setSession] = useState(getCurrentSessionYear);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: qk.admin.analyticsOverview(session),

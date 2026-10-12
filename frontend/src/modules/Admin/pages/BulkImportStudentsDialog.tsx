@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { PiCloudArrowUp, PiFileArrowDown, PiCheckCircle, PiXCircle } from 'react-icons/pi';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { getCurrentSessionYear } from '@/lib/session';
 
 /** One column per `CreateStudentBody` field the CSV is expected to carry — the header row must
  * use these exact names (case-insensitive, whitespace-trimmed). Optional columns may be left
@@ -160,8 +161,8 @@ export const BulkImportStudentsDialog: React.FC<{
           '',
           '8',
           'A',
-          '2025-2026',
-          '2026-04-01',
+          getCurrentSessionYear(),
+          `${getCurrentSessionYear().slice(0, 4)}-04-01`,
           '1',
           '',
           '',

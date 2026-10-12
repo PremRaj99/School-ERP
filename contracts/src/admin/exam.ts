@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ReportCardSet } from '../reportCard';
 import { defineContract } from '../envelope';
 import {
   ClassName,
@@ -6,16 +7,24 @@ import {
   ObjectId,
   PageQuery,
   Section,
+  Session,
   SubjectCode,
   TeacherId,
+  TimeOfDay,
   paginatedResponse,
 } from '../primitives';
+
+/** A paper's start/end, if both given, must run forwards — "HH:MM" strings compare correctly. */
+const timesInOrder = (row: { startTime?: string | null; endTime?: string | null }) =>
+  !row.startTime || !row.endTime || row.startTime < row.endTime;
+const TIME_ORDER_ISSUE = { message: 'End time must be after start time.', path: ['endTime'] };
 
 export const ExamRecord = z.object({
   id: ObjectId,
   title: z.string(),
   className: ClassName,
   section: Section,
+  session: Session,
   dateFrom: ISODate,
   dateTo: ISODate.nullable(),
   isResultDecleared: z.boolean(),
@@ -33,6 +42,8 @@ export const AdminExamSubject = z.object({
   teacherId: TeacherId,
   teacherFullName: z.string(),
   date: ISODate,
+  startTime: TimeOfDay.nullable(),
+  endTime: TimeOfDay.nullable(),
   fullMarks: z.number(),
   isMarked: z.boolean(),
 });
@@ -43,14 +54,18 @@ export const ExamDetail = ExamRecord.extend({
 });
 export type ExamDetail = z.infer<typeof ExamDetail>;
 
-const CreateExamSubjectRow = z.object({
-  subjectCode: SubjectCode,
-  date: ISODate,
-  fullMarks: z
-    .number({ message: 'Full Marks is required.' })
-    .nonnegative('Full Marks cannot be negative.')
-    .max(100, 'Full Marks must be 100 or less.'),
-});
+const CreateExamSubjectRow = z
+  .object({
+    subjectCode: SubjectCode,
+    date: ISODate,
+    startTime: TimeOfDay.optional(),
+    endTime: TimeOfDay.optional(),
+    fullMarks: z
+      .number({ message: 'Full Marks is required.' })
+      .nonnegative('Full Marks cannot be negative.')
+      .max(100, 'Full Marks must be 100 or less.'),
+  })
+  .refine(timesInOrder, TIME_ORDER_ISSUE);
 
 const CreateExamClassGroup = z.object({
   className: ClassName,
@@ -58,14 +73,36 @@ const CreateExamClassGroup = z.object({
   subjects: z.array(CreateExamSubjectRow),
 });
 
-export const CreateExamBody = z.object({
-  title: z
-    .string({ message: 'Exam Title is required.' })
-    .min(3, 'Exam Title must be more than 3 characters.'),
-  dateFrom: ISODate,
-  dateTo: ISODate,
-  exams: z.array(CreateExamClassGroup),
-});
+export const CreateExamBody = z
+  .object({
+    title: z
+      .string({ message: 'Exam Title is required.' })
+      .min(3, 'Exam Title must be more than 3 characters.'),
+    dateFrom: ISODate,
+    dateTo: ISODate,
+    exams: z.array(CreateExamClassGroup),
+  })
+  .superRefine((body, ctx) => {
+    if (body.dateTo < body.dateFrom) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'End date must be on or after the start date.',
+        path: ['dateTo'],
+      });
+    }
+    // Every paper has to fall inside the exam's own window.
+    body.exams.forEach((group, g) =>
+      group.subjects.forEach((row, r) => {
+        if (row.date < body.dateFrom || row.date > body.dateTo) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Paper date must be within the exam dates.',
+            path: ['exams', g, 'subjects', r, 'date'],
+          });
+        }
+      }),
+    );
+  });
 export type CreateExamBody = z.infer<typeof CreateExamBody>;
 
 export const DeclareResultBody = z.object({
@@ -84,9 +121,28 @@ export const UpdateExamBody = z.object({
 });
 export type UpdateExamBody = z.infer<typeof UpdateExamBody>;
 
+/** Edit the date sheet after creation — one row per paper, keyed by `examSubjectId`. Each date
+ * must still fall within the exam's `dateFrom`–`dateTo` (checked server-side). */
+export const UpdateExamScheduleBody = z.object({
+  subjects: z
+    .array(
+      z
+        .object({
+          examSubjectId: ObjectId,
+          date: ISODate,
+          startTime: TimeOfDay.nullable(),
+          endTime: TimeOfDay.nullable(),
+        })
+        .refine(timesInOrder, TIME_ORDER_ISSUE),
+    )
+    .min(1),
+});
+export type UpdateExamScheduleBody = z.infer<typeof UpdateExamScheduleBody>;
+
 export const DeleteExamResponse = z.object({ id: ObjectId });
 
 export const ExamListQuery = PageQuery.extend({
+  session: Session.optional(),
   className: ClassName.optional(),
   section: Section.optional(),
   // Not `z.coerce.boolean()` — `Boolean("false")` is `true` in JS, so coercing a query string that
@@ -145,5 +201,20 @@ export const adminExamContract = defineContract({
     body: DeclareResultBody,
     response: ExamRecord,
     successStatus: 202,
+  },
+  updateSchedule: {
+    method: 'PUT',
+    path: '/admin/exam/:examId/schedule',
+    params: z.object({ examId: ObjectId }),
+    body: UpdateExamScheduleBody,
+    response: ExamDetail,
+    successStatus: 202,
+  },
+  reportCards: {
+    method: 'GET',
+    path: '/admin/exam/:examId/report-cards',
+    params: z.object({ examId: ObjectId }),
+    response: ReportCardSet,
+    summary: "Every student's report card for one exam, ranked within the class.",
   },
 } as const);

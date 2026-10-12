@@ -104,59 +104,62 @@ export const StudentAcademic: React.FC = () => {
               description={getErrorMessage(timetableError)}
               onRetry={() => refetchTimetable()}
             />
-          ) : grid.size === 0 ? (
-            <Empty className="rounded-md border p-8">
-              <EmptyMedia illustration="timetable" illustrationSize={120} />
-              <EmptyTitle>No timetable yet</EmptyTitle>
-              <EmptyDescription>Your class has no timetable slots scheduled yet.</EmptyDescription>
-            </Empty>
           ) : (
-            <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-800/60">
-                      <th className="w-20 p-3 font-bold text-slate-800 dark:text-zinc-200">
-                        Period
-                      </th>
-                      {WEEKDAYS.map((day) => (
-                        <th key={day} className="p-3 font-bold text-slate-800 dark:text-zinc-200">
-                          {day}
+            <div className="space-y-2">
+              {grid.size === 0 && (
+                <p className="text-muted-foreground rounded-md border border-dashed px-3 py-2 text-xs">
+                  Your class has no periods scheduled yet — every slot below is free.
+                </p>
+              )}
+              <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-800/60">
+                        <th className="w-20 p-3 font-bold text-slate-800 dark:text-zinc-200">
+                          Period
                         </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80">
-                    {PERIODS.map((period) => (
-                      <tr key={period} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30">
-                        <td className="text-primary bg-slate-50/30 p-3 text-center font-semibold dark:bg-zinc-900">
-                          P{period}
-                        </td>
-                        {WEEKDAYS.map((day) => {
-                          const cell = grid.get(`${day}-${period}`);
-                          return (
-                            <td key={day} className="p-2.5 align-top">
-                              {cell ? (
-                                <div className="border-primary/20 bg-primary/10 rounded-md border p-2">
-                                  <span className="text-primary block text-[11px] font-semibold">
-                                    {cell.subjectName}
-                                  </span>
-                                  <span className="text-muted-foreground text-[10px]">
-                                    {cell.teacherFullName}
-                                  </span>
-                                </div>
-                              ) : (
-                                <div className="h-10 rounded-md border border-dashed border-slate-200/60 dark:border-zinc-800/60" />
-                              )}
-                            </td>
-                          );
-                        })}
+                        {WEEKDAYS.map((day) => (
+                          <th key={day} className="p-3 font-bold text-slate-800 dark:text-zinc-200">
+                            {day}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80">
+                      {PERIODS.map((period) => (
+                        <tr key={period} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30">
+                          <td className="text-primary bg-slate-50/30 p-3 text-center font-semibold dark:bg-zinc-900">
+                            P{period}
+                          </td>
+                          {WEEKDAYS.map((day) => {
+                            const cell = grid.get(`${day}-${period}`);
+                            return (
+                              <td key={day} className="p-2.5 align-top">
+                                {cell ? (
+                                  <div className="border-primary/20 bg-primary/10 rounded-md border p-2">
+                                    <span className="text-primary block text-[11px] font-semibold">
+                                      {cell.subjectName}
+                                    </span>
+                                    <span className="text-muted-foreground text-[10px]">
+                                      {cell.teacherFullName}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div className="text-muted-foreground/60 flex h-10 items-center justify-center rounded-md border border-dashed border-slate-200/60 text-[10px] dark:border-zinc-800/60">
+                                    Free
+                                  </div>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </div>
           )}
         </TabsContent>
 

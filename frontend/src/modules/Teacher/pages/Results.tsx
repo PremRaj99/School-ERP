@@ -22,6 +22,9 @@ import type { ResultSheet } from '@schoolerp/contracts';
 import { toast } from 'sonner';
 import { PiFloppyDisk, PiMedal } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSessionOptions } from '@/hooks/options/useAdminOptions';
+import { ExportButton, FILTER_LABEL_CLASS, FILTER_SELECT_CLASS } from '@/components/filters';
+import { compareClassName, getCurrentSessionYear } from '@/lib/session';
 
 /** Mirrors `backend/src/shared/helpers/getGrade.ts` exactly, for the live preview only — the
  * server recomputes the real grade on save, this is never sent over the wire. */
@@ -170,9 +173,31 @@ function MarksGrid({
         </div>
       </div>
 
+      <div className="flex justify-end">
+        <ExportButton
+          filename="marksheet"
+          headers={[
+            'Roll No',
+            'Student ID',
+            'Name',
+            `Marks (of ${sheet.fullMarks})`,
+            'Grade',
+            'Remarks',
+          ]}
+          rows={rows.map((r) => [
+            r.rollNo,
+            r.studentId,
+            `${r.firstName} ${r.lastName ?? ''}`.trim(),
+            r.marksObtained,
+            calculateGrade(sheet.fullMarks, r.marksObtained),
+            r.remark,
+          ])}
+        />
+      </div>
+
       <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <Table>
-          <TableHeader>
+        <Table containerClassName="max-h-[36rem]">
+          <TableHeader sticky>
             <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
               <TableHead className="w-16 text-xs font-bold">Roll #</TableHead>
               <TableHead className="text-xs font-bold">Student Name</TableHead>
@@ -244,13 +269,49 @@ function MarksGrid({
 
 export const TeacherResults: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [examId, setExamId] = useState(searchParams.get('examId') ?? '');
+  const [pickedExamId, setExamId] = useState(searchParams.get('examId') ?? '');
   const [subjectId, setSubjectId] = useState(searchParams.get('subjectId') ?? '');
+  // `null` = untouched: fall back to the deep-linked exam's session/class, else current session.
+  const [pickedSession, setPickedSession] = useState<string | null>(null);
+  const [pickedClass, setPickedClass] = useState<string | null>(null);
+  const [pickedSection, setPickedSection] = useState('');
+  const sessionOptions = useSessionOptions();
 
   const { data: exams, isLoading: examsLoading } = useQuery({
     queryKey: qk.teacher.exams(),
     queryFn: () => teacherService.getExams(),
   });
+
+  // Session → Class → Section → Exam, all derived from this teacher's own exam list.
+  const linkedExam = exams?.find((ex) => ex.id === pickedExamId);
+  const session = pickedSession ?? linkedExam?.session ?? getCurrentSessionYear();
+  const sessionExams = useMemo(
+    () => (exams ?? []).filter((ex) => ex.session === session),
+    [exams, session],
+  );
+  const classOptions = useMemo(
+    () => [...new Set(sessionExams.map((ex) => ex.className))].sort(compareClassName),
+    [sessionExams],
+  );
+  const className = pickedClass ?? linkedExam?.className ?? '';
+  const sectionOptions = useMemo(
+    () =>
+      [
+        ...new Set(sessionExams.filter((ex) => ex.className === className).map((ex) => ex.section)),
+      ].sort(),
+    [sessionExams, className],
+  );
+  const section =
+    pickedSection ||
+    (sectionOptions.length === 1
+      ? sectionOptions[0]
+      : linkedExam?.className === className
+        ? linkedExam.section
+        : '');
+  const examOptions = sessionExams.filter(
+    (ex) => (!className || ex.className === className) && (!section || ex.section === section),
+  );
+  const examId = examOptions.some((ex) => ex.id === pickedExamId) ? pickedExamId : '';
 
   const { data: examDetail, isLoading: examDetailLoading } = useQuery({
     queryKey: qk.teacher.examDetail(examId),
@@ -281,6 +342,24 @@ export const TeacherResults: React.FC = () => {
     setSearchParams(id ? { examId: id } : {});
   };
 
+  const handleSessionChange = (value: string) => {
+    setPickedSession(value);
+    setPickedClass('');
+    setPickedSection('');
+    handleExamChange('');
+  };
+
+  const handleClassChange = (value: string) => {
+    setPickedClass(value);
+    setPickedSection('');
+    handleExamChange('');
+  };
+
+  const handleSectionChange = (value: string) => {
+    setPickedSection(value);
+    handleExamChange('');
+  };
+
   const handleSubjectChange = (id: string) => {
     setSubjectId(id);
     setSearchParams(examId ? { examId, subjectId: id } : {});
@@ -307,35 +386,84 @@ export const TeacherResults: React.FC = () => {
 
       {/* Selectors */}
       <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardContent className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-2">
-          <div>
-            <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">
-              Examination
-            </span>
+        <CardContent className="flex flex-wrap items-end gap-3 p-4">
+          <label>
+            <span className={FILTER_LABEL_CLASS}>Session</span>
             <select
-              value={examId}
-              onChange={(e) => handleExamChange(e.target.value)}
-              disabled={examsLoading}
-              className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
+              value={session}
+              onChange={(e) => handleSessionChange(e.target.value)}
+              className={FILTER_SELECT_CLASS}
             >
-              <option value="">{examsLoading ? 'Loading…' : 'Select an examination'}</option>
-              {(exams ?? []).map((ex) => (
-                <option key={ex.id} value={ex.id}>
-                  {ex.title} — Class {ex.className}-{ex.section}
+              {sessionOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
                 </option>
               ))}
             </select>
-          </div>
+          </label>
+          <label>
+            <span className={FILTER_LABEL_CLASS}>Class</span>
+            <select
+              value={className}
+              onChange={(e) => handleClassChange(e.target.value)}
+              disabled={examsLoading || classOptions.length === 0}
+              className={FILTER_SELECT_CLASS}
+            >
+              <option value="">{classOptions.length ? 'All classes' : 'No classes'}</option>
+              {classOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  Class {opt}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span className={FILTER_LABEL_CLASS}>Section</span>
+            <select
+              value={section}
+              onChange={(e) => handleSectionChange(e.target.value)}
+              disabled={!className}
+              className={FILTER_SELECT_CLASS}
+            >
+              <option value="">All sections</option>
+              {sectionOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  Section {opt}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="min-w-56 flex-1">
+            <span className={FILTER_LABEL_CLASS}>Examination</span>
+            <select
+              value={examId}
+              onChange={(e) => handleExamChange(e.target.value)}
+              disabled={examsLoading || examOptions.length === 0}
+              className={`${FILTER_SELECT_CLASS} w-full`}
+            >
+              <option value="">
+                {examsLoading
+                  ? 'Loading…'
+                  : examOptions.length
+                    ? 'Select an examination'
+                    : 'No exams in this session'}
+              </option>
+              {examOptions.map((ex) => (
+                <option key={ex.id} value={ex.id}>
+                  {ex.title}
+                  {section ? '' : ` — Class ${ex.className}-${ex.section}`}
+                </option>
+              ))}
+            </select>
+          </label>
 
-          <div>
-            <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">
-              Subject
-            </span>
+          <label className="min-w-56 flex-1">
+            <span className={FILTER_LABEL_CLASS}>Subject</span>
             <select
               value={subjectId}
               onChange={(e) => handleSubjectChange(e.target.value)}
               disabled={!examId || examDetailLoading}
-              className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
+              className={`${FILTER_SELECT_CLASS} w-full`}
             >
               <option value="">
                 {!examId
@@ -350,7 +478,7 @@ export const TeacherResults: React.FC = () => {
                 </option>
               ))}
             </select>
-          </div>
+          </label>
         </CardContent>
       </Card>
 

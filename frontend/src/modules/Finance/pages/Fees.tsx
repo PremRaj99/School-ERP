@@ -22,11 +22,15 @@ import {
   MAX_PAGE_SIZE,
   type StudentFeeRecord,
   type TxnStatus,
+  type UpdateStatusBody,
 } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import { PiPlus, PiSparkle, PiTrash } from 'react-icons/pi';
+import { PiPlus, PiPrinter, PiSparkle, PiTrash } from 'react-icons/pi';
+import { FeeDueHint } from '@/components/finance/FeeDueHint';
+import { FeeReceiptDialog } from '@/components/finance/FeeReceipt';
+import { RecordPaymentDialog, type PaymentTarget } from '@/components/finance/RecordPaymentDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const STATUS_OPTIONS: { value: TxnStatus; label: string }[] = [
@@ -93,12 +97,17 @@ export const FinanceFees: React.FC = () => {
     onError: (err) => toast.error(getErrorMessage(err)),
   });
 
+  const [paymentTarget, setPaymentTarget] = useState<PaymentTarget | null>(null);
+  const [receiptFeeId, setReceiptFeeId] = useState<string | null>(null);
+
   const statusMutation = useMutation({
-    mutationFn: ({ feeId, status }: { feeId: string; status: TxnStatus }) =>
-      financeService.updateStudentFeeStatus(feeId, status),
-    onSuccess: () => {
-      toast.success('Status updated');
+    mutationFn: ({ feeId, body }: { feeId: string; body: UpdateStatusBody }) =>
+      financeService.updateStudentFeeStatus(feeId, body),
+    onSuccess: (fee, { body }) => {
+      toast.success(fee.receiptNo ? `Payment recorded · ${fee.receiptNo}` : 'Status updated');
       invalidate();
+      setPaymentTarget(null);
+      if (fee.status === 'Paid' && body.paymentMode) setReceiptFeeId(fee.id);
     },
     onError: (err) => toast.error(getErrorMessage(err)),
   });
@@ -145,7 +154,10 @@ export const FinanceFees: React.FC = () => {
       accessorKey: 'finalAmount',
       header: 'Amount',
       cell: ({ row }) => (
-        <span className="text-xs font-bold">₹{row.original.finalAmount.toLocaleString()}</span>
+        <div>
+          <span className="text-xs font-bold">₹{row.original.finalAmount.toLocaleString()}</span>
+          <FeeDueHint {...row.original} />
+        </div>
       ),
     },
     {
@@ -154,9 +166,21 @@ export const FinanceFees: React.FC = () => {
       cell: ({ row }) => (
         <NativeSelect
           value={row.original.status}
-          onChange={(e) =>
-            statusMutation.mutate({ feeId: row.original.id, status: e.target.value as TxnStatus })
-          }
+          onChange={(e) => {
+            const status = e.target.value as TxnStatus;
+            const fee = row.original;
+            if (status === 'Paid') {
+              setPaymentTarget({
+                feeId: fee.id,
+                studentName: `${fee.firstName} ${fee.lastName ?? ''}`.trim(),
+                month: fee.month,
+                amount: fee.finalAmount,
+                lateFine: fee.lateFine,
+              });
+            } else {
+              statusMutation.mutate({ feeId: fee.id, body: { status } });
+            }
+          }}
           className={`h-7 w-28 text-[11px] ${STATUS_STYLES[row.original.status] ?? ''}`}
         >
           {STATUS_OPTIONS.map((opt) => (
@@ -173,18 +197,34 @@ export const FinanceFees: React.FC = () => {
       enableSorting: false,
       enableHiding: false,
       cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950"
-          onClick={(e) => {
-            e.stopPropagation();
-            setDeleteTarget(row.original);
-          }}
-          title="Delete"
-        >
-          <PiTrash className="h-3.5 w-3.5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          {row.original.status === 'Paid' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-primary hover:bg-primary/10 h-7 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                setReceiptFeeId(row.original.id);
+              }}
+            >
+              <PiPrinter className="mr-1 h-3.5 w-3.5" />
+              Receipt
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteTarget(row.original);
+            }}
+            title="Delete"
+          >
+            <PiTrash className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       ),
     },
   ];
@@ -352,6 +392,24 @@ export const FinanceFees: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <RecordPaymentDialog
+        target={paymentTarget}
+        onClose={() => setPaymentTarget(null)}
+        pending={statusMutation.isPending}
+        onConfirm={(payment) =>
+          paymentTarget &&
+          statusMutation.mutate({
+            feeId: paymentTarget.feeId,
+            body: { status: 'Paid', ...payment },
+          })
+        }
+      />
+      <FeeReceiptDialog
+        feeId={receiptFeeId}
+        onClose={() => setReceiptFeeId(null)}
+        queryKey={qk.finance.fee(receiptFeeId ?? '')}
+        load={financeService.getStudentFeeById}
+      />
     </div>
   );
 };

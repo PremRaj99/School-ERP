@@ -11,29 +11,74 @@ Admin → Student Attendance:
 
 Status markers: `[ ]` todo · `[~]` in progress · `[x]` done.
 
+Progress notes (2026-10-11):
+- A2 is partial. Options are newest-first and labelled "(Current)". The minimum year stays
+  hardcoded, because fetching `/admin/class` would 403 for the Finance role.
+- B2 done. The Finance page's session selector scopes both ledgers, the monthly-status views and
+  the summary strip. Finance analytics used to sum salary, expenses and the category split across
+  all time; they are now limited to the session too.
+- B8 done. Teacher → Results now filters Session → Class → Section → Exam, and Analytics →
+  Academics uses the shared filter bar. The teacher exam list now returns `session`.
+- B11 done. `<SessionMonthPicker>` replaces every raw `<input type="month">`. It also fixes the
+  UTC `toISOString()` "current month" being one month behind just after midnight on the 1st.
+- B9 done. Analytics → Finance keeps the session at the top, and the Fee Defaulters list has its
+  own Class/Section/Month filters, a total due, CSV export and a sticky header.
+- B15 done. `<Table containerClassName>` with `<TableHeader sticky>` keeps headings visible.
+  - Applied to: All Classes, Class Summary, the Daily Register (sticky header and first column),
+    the Analytics heatmap, Chronic Absentees, Fee Defaulters and the marks-entry sheet.
+  - Finance ledgers are paginated at 10 rows, so they were left as they are.
+- B16 done. `<ExportButton>` adds CSV + Print to the three attendance views (the register exports
+  P/A/L/H per day), fee defaulters, chronic absentees, the marksheet and the class list.
+  - `DataTable` pages already had CSV.
+  - The `@media print` rules hide the sidebar, header, filters and buttons, and expand scroll
+    tables to print every row.
+  - Known gap: Finance "Monthly Status" CSV exports only the current server page.
+- C4 done. Each paper already had its own date; this adds optional `startTime`/`endTime`
+  (`HH:MM`) on `ExamSubject`.
+  - Paper dates must fall within the exam's dates, checked in the contract and in the date pickers.
+  - Moving the exam's dates is blocked while any paper would end up outside them.
+  - `PUT /admin/exam/:examId/schedule` plus an "Edit Date Sheet" dialog on Admin → Exam detail
+    let you re-date and re-time papers.
+  - Students see the date sheet on their upcoming exams, with past papers struck through and
+    today's paper highlighted.
+  - An exam that's already under way now counts as upcoming instead of past.
+- C3 done. `Notice.classIds` is set from a class picker in Admin → Notices; empty means every
+  class.
+  - Students see only notices for their class, on the list, the detail view and the dashboard.
+  - A Teacher-only notice ignores classes.
+  - `shared/helpers/notice.ts` is now the single mapper for every notice response.
+- C2 done. `backend/src/shared/helpers/holidays.ts` treats Sundays and calendar HOLIDAY events as
+  non-working days:
+  - Marking attendance on one returns a 400 that names the holiday. This covers teacher class
+    attendance and admin faculty attendance; editing an existing record is still allowed.
+  - Days marked earlier on a date that's now a holiday are left out of every attendance %.
+  - The Daily Register shows these days as "H". The marking screens show a holiday state, and the
+    personal attendance calendars tint holidays.
+- C1 done. `prisma db push` ran on 2026-10-11, so the calendar now allows more than one event per day.
+
 ---
 
 ## Part A — Shared building blocks (do first; everything below reuses them)
 
-- [ ] **A1. One session helper.**
+- [x] **A1. One session helper.**
   - `getCurrentSessionYear()` is copy-pasted into `Admin/pages/Academic.tsx` and
     `Admin/pages/StudentAttendance.tsx`. Analytics doesn't use it at all (see B1).
   - Move it into `lib/session.ts` alongside `sessionOfDate()`, `sessionMonths()` and `monthRange()`.
-- [ ] **A2. `useSessionOptions()` improvements.** File: `hooks/options/useAdminOptions.ts`.
+- [~] **A2. `useSessionOptions()` improvements.** File: `hooks/options/useAdminOptions.ts`.
   - Mark the current session as `"2026-2027 (Current)"`.
   - Return options newest-first.
   - Export `currentSession` so callers can default to it, instead of picking an array index.
   - Replace the hardcoded `minStartYear = 2023` with the oldest session among existing classes.
-- [ ] **A3. Session-aware class/section options.**
+- [x] **A3. Session-aware class/section options.**
   - `useClassNameOptions()` and `useSectionOptions()` currently ignore session. Picking "Class 5"
     lists sections from every year.
   - Add an optional `session` argument.
   - Hide `isArchived` classes by default.
-- [ ] **A4. Proper class ordering.**
+- [x] **A4. Proper class ordering.**
   - Class names sort as plain strings today, giving `1, 10, 11, 2, …, LKG, Nursery`.
   - Add a shared `compareClassName()` that sorts Nursery → LKG → UKG → 1 → 12, and use it in every
     class list and dropdown.
-- [ ] **A5. `<ClassFilterBar>` component.**
+- [x] **A5. `<ClassFilterBar>` component.**
   - A reusable Session → Class → Section (→ Month) filter row:
     - session defaults to current;
     - changing session resets class and section;
@@ -45,50 +90,50 @@ Status markers: `[ ]` todo · `[~]` in progress · `[x]` done.
 ## Part B — Same UX issues found on other pages
 
 ### Wrong or hardcoded session
-- [ ] **B1. Analytics → Overview and Finance default to the wrong session.**
+- [x] **B1. Analytics → Overview and Finance default to the wrong session.**
   - `AnalyticsOverviewTab.tsx:29` and `AnalyticsFinanceTab.tsx:45` do
     `useState(() => sessionOptions[1]?.value)`.
   - With options starting at 2023, index 1 is **2024-2025**, not the current **2026-2027**.
   - Fix: default to `currentSession` (A2).
-- [ ] **B2. Finance header badge is hardcoded.**
+- [x] **B2. Finance header badge is hardcoded.**
   - `Admin/pages/Finance.tsx:678` reads `Session 2025-2026`.
   - Fix: add a session selector (default current) that scopes the fee and salary tabs, and show
     the chosen session in the badge.
-- [ ] **B3. Bulk Import template hardcodes the example session.**
+- [x] **B3. Bulk Import template hardcodes the example session.**
   - `BulkImportStudentsDialog.tsx:163` uses `'2025-2026'`.
   - Fix: use the current session instead.
 
 ### Combined or misordered selectors
-- [ ] **B4. Teacher → Class Attendance uses one combined picker.**
+- [x] **B4. Teacher → Class Attendance uses one combined picker.**
   - `Teacher/pages/Attendance.tsx:290` stores a single `"className|section"` key.
   - Split it into Class → Section, limited to the teacher's own classes from their timetable.
-- [ ] **B5. Admin → Students filter order and default.**
+- [x] **B5. Admin → Students filter order and default.**
   - The filters are Class → Section → Session, and session defaults to "All".
   - Reorder to Session → Class → Section with session defaulting to current (keep an "All
     sessions" option).
   - Make the class list depend on the chosen session.
-- [ ] **B6. Admin → Classes has no session filter.**
+- [x] **B6. Admin → Classes has no session filter.**
   - Every year's classes show in one list.
   - Add a session selector (default current) and an "Show archived" toggle.
   - **Bug:** `studentCountByClass` is keyed by `className-section` with no session. Students from
     last year's 5-A are counted in this year's 5-A, and this also affects the delete-guard count.
     Key it by `classId` instead.
-- [ ] **B7. Admin → Exams has only free-text search.**
+- [x] **B7. Admin → Exams has only free-text search.**
   - Add Session → Class → Section filters (an exam already belongs to a class, and the class has a
     session).
   - The header badge counts filtered schedules. Label it accordingly.
-- [ ] **B8. Teacher → Results and Admin → Analytics → Academics exam pickers.**
+- [x] **B8. Teacher → Results and Admin → Analytics → Academics exam pickers.**
   - Both are one long "Title — Class X-Y" list across all years.
   - Add a session filter (default current), then class → exam.
-- [ ] **B9. Analytics → Fee defaulters and dues lists.**
+- [x] **B9. Analytics → Fee defaulters and dues lists.**
   - These show `className-section` text with no filter.
   - Add the shared filter bar (A5).
 
 ### From/To where a month is meant
-- [ ] **B10. Analytics → Attendance still uses From/To dates.**
+- [x] **B10. Analytics → Attendance still uses From/To dates.**
   - `AnalyticsAttendanceTab.tsx:56-57`.
   - Switch to Session → Month (default current month), with an optional "Whole session" choice.
-- [ ] **B11. Month pickers aren't bounded to a session.**
+- [x] **B11. Month pickers aren't bounded to a session.**
   - Affected: Student → Attendance, Teacher → My Attendance, Analytics → Staff, Teacher detail
     salary month.
   - They use a raw `<input type="month">` that allows any month.
@@ -96,19 +141,19 @@ Status markers: `[ ]` todo · `[~]` in progress · `[x]` done.
     pick months outside the academic year.
 
 ### Tabs, empty states, consistency
-- [ ] **B12. Finance header "Collect Fee" button shows on every tab.**
+- [x] **B12. Finance header "Collect Fee" button shows on every tab.**
   - It appears on the Teacher Salary, Expenses and Activity Log tabs too.
   - Make the Finance tabs controlled, and show the action matching each tab: Collect Fee / Pay
     Honorarium / Add Expense / none.
-- [ ] **B13. Subjects "Add Subject" button.**
+- [x] **B13. Subjects "Add Subject" button.**
   - On the "By Class" tab this should be "Assign Subject to Class", or hidden.
-- [ ] **B14. Student and Teacher timetable pages.**
+- [x] **B14. Student and Teacher timetable pages.**
   - Apply the same "default blank grid" fix done for Admin → Timetable, so an empty day/period
     shows as a free slot rather than "No timetable".
-- [ ] **B15. Tables are hard to compare.**
+- [x] **B15. Tables are hard to compare.**
   - Use sticky headers and a sticky first column for wide tables: Finance ledgers, the Analytics
     heatmap, and Results entry. This is already done in the Daily Register.
-- [ ] **B16. Export buttons.**
+- [x] **B16. Export buttons.**
   - Add CSV/Excel/PDF export, plus print-friendly CSS, to:
     - the attendance views (all three tabs);
     - fee dues;
@@ -118,19 +163,19 @@ Status markers: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 ## Part C — Data-model issues that block good UX
 
-- [ ] **C1. Only one calendar event per day.**
+- [x] **C1. Only one calendar event per day.**
   - `AcademicCalendar.date` is `@unique` in `schema.prisma`.
   - Two events on the same day (for example "Holiday" plus "PTM") fail to save.
   - Drop the unique constraint.
   - Optionally add `endDate` (multi-day holidays and exam weeks) and `description`.
-- [ ] **C2. Holidays aren't connected to attendance.**
+- [x] **C2. Holidays aren't connected to attendance.**
   - Calendar `HOLIDAY` days and Sundays should show as "H" in the Daily Register.
   - They should also be blocked from attendance marking.
   - They should be excluded from "working days" when calculating attendance %.
-- [ ] **C3. Notices have no class/section targeting.**
+- [x] **C3. Notices have no class/section targeting.**
   - `Notice` only has `targetRole`.
   - Add optional `classIds[]` so a notice can go to "Class 8 only".
-- [ ] **C4. No exam per-subject timetable.**
+- [x] **C4. No exam per-subject timetable.**
   - Exams have only `dateFrom`/`dateTo`.
   - Add a per-subject date and time (date sheet), and show it to students.
 
@@ -141,13 +186,24 @@ Status markers: `[ ]` todo · `[~]` in progress · `[x]` done.
 Roughly in priority order for an Indian K-12 school.
 
 ### High value / builds on what exists
-1. **Report cards (PDF).**
+1. **[x] Report cards (PDF).** — done: `GET /admin/exam/:examId/report-cards` + `GET /student/report-card/:examId`
+   (shared `backend/src/shared/helpers/reportCard.ts`), admin page `/admin/exams/:examId/report-cards`
+   (print all / one, tabulation CSV), student result page now shows the same card. Class-teacher remarks are a
+   blank line on the printout until D10 (class teacher) exists.
    - Term-wise marksheet per student, generated from `ExamResult`.
    - Grade scale, rank in class, attendance %, class-teacher remarks, principal signature.
    - Bulk-print for a whole class.
-2. **Fee receipts and reminders.**
-   - Printable/PDF receipt with a receipt number on every collection.
-   - Due-date and late-fine rules.
+2. **[~] Fee receipts and reminders.**
+   - [x] Printable/PDF receipt with a receipt number on every collection. Done: marking a fee Paid asks
+     for the payment mode (+ UPI id / cheque no.) and assigns `RCT/<FY>/<serial>` from a `Counter`
+     collection (`backend/src/shared/helpers/receiptNo.ts`), kept if the fee is ever un-paid and re-paid.
+     Shared `components/finance/FeeReceipt.tsx` (breakdown, amount in words) on the admin ledger, Monthly
+     Status, Finance-role fees page and the student's Fees page. Needs `npx prisma db push` (Counter's
+     unique index). Fees paid before this show `OLD/<id>` instead of a number.
+   - [x] Due-date and late-fine rules. Done: `FeeSettings` (due day; no fine / flat / per-day with cap) edited
+     from Finance → "Fee Rules" (Admin only; Finance role can read). Every fee list shows the due date or
+     "Overdue · +₹X fine"; Record Payment pre-fills the fine (editable / waivable) and saves it as a
+     "Late Fine" breakdown line, so it's on the receipt. Shared maths in `contracts/src/admin/feeSettings.ts`.
    - Concessions and scholarships (sibling or staff-ward discount).
    - A defaulters list with SMS/WhatsApp/email reminders.
 3. **Online fee payment.**
@@ -190,7 +246,8 @@ Roughly in priority order for an Indian K-12 school.
 15. **Audit log beyond finance.**
     - `FinanceAuditLog` exists.
     - Extend logging to student edits, mark changes after publish, and attendance edits.
-16. **Role-based route guards in the frontend.**
+16. **[x] Role-based route guards in the frontend.** — already done: `RequireRole` in
+    `components/layout/route-wrappers.tsx` redirects logged-out users to login and wrong roles to their home.
     - CLAUDE.md notes that `*RouteWrapper` doesn't check auth or role.
     - This is a security/UX gap: a student can open `/admin/...` URLs and only gets API errors.
 17. **Dashboard "today" widgets.**

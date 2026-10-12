@@ -129,7 +129,9 @@ export function DateField<TValues extends FieldValues>({
   description,
   disabled,
   className,
-}: BaseFieldProps<TValues>) {
+  min,
+  max,
+}: BaseFieldProps<TValues> & { min?: string; max?: string }) {
   return (
     <Controller
       control={control}
@@ -145,11 +147,53 @@ export function DateField<TValues extends FieldValues>({
           <Input
             id={name}
             type="date"
+            min={min || undefined}
+            max={max || undefined}
             disabled={disabled}
             className={className}
             aria-invalid={!!fieldState.error}
             {...field}
             value={field.value ?? ''}
+          />
+        </FieldShell>
+      )}
+    />
+  );
+}
+
+/** `HH:MM` 24-hour time; clearing it stores `undefined` (an optional field), not `''`. */
+export function TimeField<TValues extends FieldValues>({
+  control,
+  name,
+  label,
+  required,
+  description,
+  disabled,
+  className,
+}: BaseFieldProps<TValues>) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <FieldShell
+          htmlFor={name}
+          label={label}
+          required={required}
+          description={description}
+          error={fieldState.error}
+        >
+          <Input
+            id={name}
+            type="time"
+            disabled={disabled}
+            className={className}
+            aria-invalid={!!fieldState.error}
+            name={field.name}
+            ref={field.ref}
+            onBlur={field.onBlur}
+            value={field.value ?? ''}
+            onChange={(e) => field.onChange(e.target.value || undefined)}
           />
         </FieldShell>
       )}

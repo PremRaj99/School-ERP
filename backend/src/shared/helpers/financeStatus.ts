@@ -7,9 +7,10 @@ import type {
   MonthlyStatusFilter,
   MonthlyStatusSummary,
   PersonMonthEntry,
+  PaymentMode,
   PersonSummaryTotals,
 } from '@schoolerp/contracts';
-import { toISODate } from './isoDate';
+import { fromISOMonth, toISODate } from './isoDate';
 
 type TxnStatus = 'Paid' | 'Pending' | 'Failed';
 
@@ -36,6 +37,24 @@ export const paidOnFor = (txn: {
   return toISODate(txn.paidAt ?? txn.createdAt);
 };
 
+/** A fee's receipt fields (`FeeReceiptFields`) — all null unless it's currently Paid. */
+export const receiptFieldsFor = (txn: {
+  status: TxnStatus;
+  paidAt: Date | null;
+  createdAt: Date;
+  receiptNo: string | null;
+  paymentMode: PaymentMode | null;
+  paymentRef: string | null;
+}) => {
+  const paid = txn.status === 'Paid';
+  return {
+    receiptNo: paid ? txn.receiptNo : null,
+    paidOn: paidOnFor(txn),
+    paymentMode: paid ? txn.paymentMode : null,
+    paymentRef: paid ? txn.paymentRef : null,
+  };
+};
+
 /** "2025-2026" -> ["2025-04", ..., "2026-03"] (sessions run April -> March). */
 export const sessionMonths = (session: string): string[] => {
   const startYear = Number(session.split('-')[0]);
@@ -44,6 +63,12 @@ export const sessionMonths = (session: string): string[] => {
     const year = startYear + (3 + i >= 12 ? 1 : 0);
     return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
   });
+};
+
+/** Prisma `month` range for a whole session: April of its first year → March of its second. */
+export const sessionMonthRange = (session: string): { gte: Date; lte: Date } => {
+  const months = sessionMonths(session);
+  return { gte: fromISOMonth(months[0]!), lte: fromISOMonth(months[11]!) };
 };
 
 export const matchesStatusFilter = (

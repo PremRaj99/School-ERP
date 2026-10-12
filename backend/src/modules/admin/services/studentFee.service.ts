@@ -11,9 +11,10 @@ import type {
   StudentFeeSummary,
   StudentMonthlyStatusQuery,
   StudentMonthlyStatusRow,
+  UpdateStatusBody,
   UpdateStudentFeeBody,
 } from '@schoolerp/contracts';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@schoolerp/contracts';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, LATE_FINE_FEE_TYPE } from '@schoolerp/contracts';
 import {
   fromISOMonth,
   monthStartEndFromISO,
@@ -27,10 +28,14 @@ import {
   paginate,
   paidAtForStatus,
   paidOnFor,
+  receiptFieldsFor,
   sessionMonths,
+  sessionMonthRange,
   summarizeMonth,
   summarizePerson,
 } from '@/shared/helpers/financeStatus';
+import { nextReceiptNo } from '@/shared/helpers/receiptNo';
+import { dueFieldsFor, getFeeSettings } from '@/shared/helpers/feeSettings';
 import { FinanceAuditLogService } from './financeAuditLog.service';
 
 interface Actor {
@@ -55,7 +60,6 @@ export class AdminStudentFeeService {
     const classFilter = {
       ...(filters.className ? { className: filters.className } : {}),
       ...(filters.section ? { section: filters.section } : {}),
-      ...(filters.session ? { session: filters.session } : {}),
     };
 
     const studentFilter = {
@@ -74,7 +78,11 @@ export class AdminStudentFeeService {
 
     const where = {
       student: studentFilter,
-      ...(filters.month ? { month: fromISOMonth(filters.month) } : {}),
+      ...(filters.month
+        ? { month: fromISOMonth(filters.month) }
+        : filters.session
+          ? { month: sessionMonthRange(filters.session) }
+          : {}),
       ...(filters.status ? { transaction: { status: filters.status } } : {}),
     };
 
@@ -85,7 +93,7 @@ export class AdminStudentFeeService {
           ? { transaction: { createdAt: sortDir } }
           : { month: sortDir };
 
-    const [studentFees, total] = await Promise.all([
+    const [studentFees, total, settings] = await Promise.all([
       prisma.studentFee.findMany({
         where,
         include: {
@@ -105,6 +113,7 @@ export class AdminStudentFeeService {
         take: pageSize,
       }),
       prisma.studentFee.count({ where }),
+      getFeeSettings(),
     ]);
 
     return {
@@ -121,6 +130,8 @@ export class AdminStudentFeeService {
         finalAmount: fee.transaction.finalAmount,
         status: fee.transaction.status,
         paidAt: toISODate(fee.transaction.createdAt),
+        ...receiptFieldsFor(fee.transaction),
+        ...dueFieldsFor(settings, toISOMonth(fee.month), fee.transaction.status),
       })),
       page,
       pageSize,
@@ -165,7 +176,7 @@ export class AdminStudentFeeService {
       class: { select: { className: true, section: true } },
     } as const;
 
-    const [rosterStudents, fees] = await Promise.all([
+    const [rosterStudents, fees, settings] = await Promise.all([
       prisma.student.findMany({
         where: {
           ...ACTIVE_STUDENT_STATUS_FILTER,
@@ -181,6 +192,7 @@ export class AdminStudentFeeService {
         },
         include: { transaction: true, student: { select: studentSelect } },
       }),
+      getFeeSettings(),
     ]);
 
     const feeByStudent = new Map(fees.map((f) => [f.studentId, f]));
@@ -205,6 +217,7 @@ export class AdminStudentFeeService {
         title: fee?.transaction.title ?? null,
         amount: fee?.transaction.finalAmount ?? null,
         paidOn: fee ? paidOnFor(fee.transaction) : null,
+        lateFine: fee ? dueFieldsFor(settings, query.month, fee.transaction.status).lateFine : 0,
       };
     });
 
@@ -321,6 +334,8 @@ export class AdminStudentFeeService {
       finalAmount: fee.transaction.finalAmount,
       status: fee.transaction.status,
       paidAt: toISODate(fee.transaction.createdAt),
+      ...receiptFieldsFor(fee.transaction),
+      ...dueFieldsFor(await getFeeSettings(), toISOMonth(fee.month), fee.transaction.status),
       feeBreakdown: fee.feeBreakdown.map((b) => ({ feeType: b.feeType, amount: b.amount })),
     };
   }
@@ -453,9 +468,14 @@ export class AdminStudentFeeService {
     return after;
   }
 
+  /**
+   * Marking a fee Paid records how it was paid and gives it a receipt number — the first time only;
+   * a fee moved off Paid and back keeps its original number. Moving off Paid clears the payment
+   * mode/reference (the receipt number stays reserved).
+   */
   static async updateStudentFeeStatus(
     feeId: string,
-    status: 'Paid' | 'Pending' | 'Failed',
+    { status, paymentMode, paymentRef, lateFine }: UpdateStatusBody,
     actor?: Actor,
   ): Promise<StudentFeeRecord> {
     const fee = await prisma.studentFee.findUnique({ where: { id: feeId } });
@@ -467,9 +487,42 @@ export class AdminStudentFeeService {
     const beforeStatus = beforeDetail.status;
 
     const txn = await prisma.transaction.findUnique({ where: { id: fee.transactionId } });
-    await prisma.transaction.update({
-      where: { id: fee.transactionId },
-      data: { status, paidAt: txn ? paidAtForStatus(status, txn) : null },
+    if (!txn) {
+      throw new NotFoundError();
+    }
+    const paidAt = paidAtForStatus(status, txn);
+    const payment =
+      status === 'Paid'
+        ? {
+            // Re-saving an already-Paid fee without a mode keeps what was recorded.
+            paymentMode: paymentMode ?? txn.paymentMode,
+            paymentRef: paymentRef || (paymentMode ? null : txn.paymentRef),
+            receiptNo: txn.receiptNo ?? (await nextReceiptNo(paidAt ?? new Date())),
+          }
+        : { paymentMode: null, paymentRef: null };
+    await prisma.$transaction(async (tx) => {
+      let finalAmount = txn.finalAmount;
+      // A late fine collected with the payment becomes its own breakdown line (replacing one from
+      // an earlier Paid -> unpaid -> Paid round), so the receipt and totals include it.
+      if (status === 'Paid' && lateFine !== undefined) {
+        const oldFines = await tx.feeBreakdown.findMany({
+          where: { studentFeeId: feeId, feeType: LATE_FINE_FEE_TYPE },
+        });
+        finalAmount -= oldFines.reduce((sum, f) => sum + f.amount, 0);
+        await tx.feeBreakdown.deleteMany({
+          where: { studentFeeId: feeId, feeType: LATE_FINE_FEE_TYPE },
+        });
+        if (lateFine > 0) {
+          await tx.feeBreakdown.create({
+            data: { studentFeeId: feeId, feeType: LATE_FINE_FEE_TYPE, amount: lateFine },
+          });
+          finalAmount += lateFine;
+        }
+      }
+      await tx.transaction.update({
+        where: { id: fee.transactionId },
+        data: { status, paidAt, finalAmount, ...payment },
+      });
     });
 
     const {
@@ -486,7 +539,7 @@ export class AdminStudentFeeService {
         actorId: actor.id,
         actorUsername: actor.username,
         before: { status: beforeStatus },
-        after: { status },
+        after: { status, ...payment, ...(lateFine !== undefined ? { lateFine } : {}) },
       });
     }
 

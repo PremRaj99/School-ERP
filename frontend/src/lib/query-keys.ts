@@ -32,6 +32,7 @@ export const qk = {
     exams: (query?: Record<string, unknown>) =>
       query ? (['admin', 'exams', query] as const) : (['admin', 'exams'] as const),
     exam: (examId: string) => ['admin', 'exams', 'detail', examId] as const,
+    examReportCards: (examId: string) => ['admin', 'exams', 'report-cards', examId] as const,
     notices: (query?: Record<string, unknown>) =>
       query ? (['admin', 'notices', query] as const) : (['admin', 'notices'] as const),
     notice: (noticeId: string) => ['admin', 'notices', 'detail', noticeId] as const,
@@ -41,6 +42,8 @@ export const qk = {
       query
         ? (['admin', 'contact-messages', query] as const)
         : (['admin', 'contact-messages'] as const),
+    studentFee: (feeId: string) => ['admin', 'studentFees', 'detail', feeId] as const,
+    feeSettings: () => ['admin', 'feeSettings'] as const,
     studentFees: (query?: Record<string, unknown>) =>
       query ? (['admin', 'student-fees', query] as const) : (['admin', 'student-fees'] as const),
     studentFeeMonthlyStatus: (query: Record<string, unknown>) =>
@@ -85,6 +88,7 @@ export const qk = {
     subjects: () => ['student', 'subjects'] as const,
     exams: () => ['student', 'exams'] as const,
     result: (examId: string) => ['student', 'result', examId] as const,
+    reportCard: (examId: string) => ['student', 'report-card', examId] as const,
     notices: () => ['student', 'notices'] as const,
     notice: (noticeId: string) => ['student', 'notices', noticeId] as const,
     timetable: () => ['student', 'timetable'] as const,
@@ -97,6 +101,7 @@ export const qk = {
     fees: (query?: Record<string, unknown>) =>
       query ? (['finance', 'fees', query] as const) : (['finance', 'fees'] as const),
     fee: (feeId: string) => ['finance', 'fees', 'detail', feeId] as const,
+    feeSettings: () => ['finance', 'feeSettings'] as const,
     salaries: (query?: Record<string, unknown>) =>
       query ? (['finance', 'salaries', query] as const) : (['finance', 'salaries'] as const),
     salary: (salaryId: string) => ['finance', 'salaries', 'detail', salaryId] as const,

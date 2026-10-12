@@ -4,7 +4,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { ErrorState } from '@/components/data-table';
 import { teacherService } from '@/lib/services/teacher.service';
 import { qk } from '@/lib/query-keys';
@@ -116,67 +115,66 @@ export const TeacherTimetable: React.FC = () => {
       </div>
 
       {/* Weekly Grid */}
-      {grid.size === 0 ? (
-        <Empty className="rounded-md border p-8">
-          <EmptyMedia illustration="timetable" illustrationSize={120} />
-          <EmptyTitle>No periods scheduled</EmptyTitle>
-          <EmptyDescription>You have no timetable slots assigned yet.</EmptyDescription>
-        </Empty>
-      ) : (
-        <Card className="overflow-x-auto border border-slate-200/80 bg-white/90 p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-          <table className="w-full min-w-[720px] border-separate border-spacing-1">
-            <thead>
-              <tr>
-                <th className="w-16 text-left text-[11px] font-bold text-slate-500">Period</th>
-                {WEEKDAYS.map((day) => (
-                  <th
-                    key={day}
-                    className={`text-center text-[11px] font-bold ${
-                      day === TODAY_WEEKDAY ? 'text-primary' : 'text-slate-500 dark:text-zinc-400'
-                    }`}
-                  >
-                    {WEEKDAY_LABELS[day]}
-                    {day === TODAY_WEEKDAY && <span className="ml-1">•</span>}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {PERIODS.map((period) => (
-                <tr key={period}>
-                  <td className="text-muted-foreground text-center text-[11px] font-bold">
-                    P{period}
-                  </td>
-                  {WEEKDAYS.map((day) => {
-                    const cell = grid.get(`${day}-${period}`);
-                    const isToday = day === TODAY_WEEKDAY;
-                    return (
-                      <td key={day} className="p-0">
-                        {cell ? (
-                          <div
-                            className={`rounded-md border p-2 text-center text-[10px] leading-tight ${
-                              isToday
-                                ? 'border-primary/40 bg-primary/10'
-                                : 'border-slate-200/80 bg-slate-50/60 dark:border-zinc-800 dark:bg-zinc-800/40'
-                            }`}
-                          >
-                            <div className="font-bold text-slate-900 dark:text-white">
-                              {cell.className}-{cell.section}
-                            </div>
-                            <div className="text-primary">{cell.subjectCode}</div>
-                          </div>
-                        ) : (
-                          <div className="h-11 rounded-md border border-dashed border-slate-200/60 dark:border-zinc-800/60" />
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
+      {grid.size === 0 && (
+        <p className="text-muted-foreground rounded-md border border-dashed px-3 py-2 text-xs">
+          You have no periods assigned yet — every slot below is free.
+        </p>
       )}
+      <Card className="overflow-x-auto border border-slate-200/80 bg-white/90 p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+        <table className="w-full min-w-[720px] border-separate border-spacing-1">
+          <thead>
+            <tr>
+              <th className="w-16 text-left text-[11px] font-bold text-slate-500">Period</th>
+              {WEEKDAYS.map((day) => (
+                <th
+                  key={day}
+                  className={`text-center text-[11px] font-bold ${
+                    day === TODAY_WEEKDAY ? 'text-primary' : 'text-slate-500 dark:text-zinc-400'
+                  }`}
+                >
+                  {WEEKDAY_LABELS[day]}
+                  {day === TODAY_WEEKDAY && <span className="ml-1">•</span>}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {PERIODS.map((period) => (
+              <tr key={period}>
+                <td className="text-muted-foreground text-center text-[11px] font-bold">
+                  P{period}
+                </td>
+                {WEEKDAYS.map((day) => {
+                  const cell = grid.get(`${day}-${period}`);
+                  const isToday = day === TODAY_WEEKDAY;
+                  return (
+                    <td key={day} className="p-0">
+                      {cell ? (
+                        <div
+                          className={`rounded-md border p-2 text-center text-[10px] leading-tight ${
+                            isToday
+                              ? 'border-primary/40 bg-primary/10'
+                              : 'border-slate-200/80 bg-slate-50/60 dark:border-zinc-800 dark:bg-zinc-800/40'
+                          }`}
+                        >
+                          <div className="font-bold text-slate-900 dark:text-white">
+                            {cell.className}-{cell.section}
+                          </div>
+                          <div className="text-primary">{cell.subjectCode}</div>
+                        </div>
+                      ) : (
+                        <div className="text-muted-foreground/60 flex h-11 items-center justify-center rounded-md border border-dashed border-slate-200/60 text-[10px] dark:border-zinc-800/60">
+                          Free
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
 
       {/* My Classes */}
       <div>

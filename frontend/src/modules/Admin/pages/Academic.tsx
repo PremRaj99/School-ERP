@@ -36,23 +36,10 @@ import {
   PiWarning,
 } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { compareClassName, getCurrentSessionYear, sessionOfDate } from '@/lib/session';
 
 const WEEKDAYS: WeekDay[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8];
-
-/** Mirrors the backend's `getCurrentSessionYear()` — a session starts in April. */
-function getCurrentSessionYear() {
-  const now = new Date();
-  const start = now.getMonth() + 1 >= 4 ? now.getFullYear() : now.getFullYear() - 1;
-  return `${start}-${start + 1}`;
-}
-
-/** The academic session an ISO `YYYY-MM-DD` date falls in — same April-start rule as above. */
-function sessionOfDate(isoDate: string) {
-  const [year, month] = isoDate.split('-').map(Number);
-  const start = month >= 4 ? year : year - 1;
-  return `${start}-${start + 1}`;
-}
 
 /** Today as ISO `YYYY-MM-DD` in local time. */
 function todayIso() {
@@ -143,8 +130,6 @@ export const AdminAcademic: React.FC = () => {
     return Array.from(keys.values());
   }, [classes, classSchedules]);
 
-  const byNumeric = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
-
   const ttSessionOptions = useMemo(() => {
     const all = new Set(allClassSections.map((c) => c.session));
     all.add(getCurrentSessionYear());
@@ -153,7 +138,7 @@ export const AdminAcademic: React.FC = () => {
 
   const classNameOptions = Array.from(
     new Set(allClassSections.filter((c) => c.session === ttSession).map((c) => c.className)),
-  ).sort(byNumeric);
+  ).sort(compareClassName);
   const activeClassName =
     ttClassName && classNameOptions.includes(ttClassName) ? ttClassName : classNameOptions[0];
 
@@ -163,7 +148,7 @@ export const AdminAcademic: React.FC = () => {
         .filter((c) => c.session === ttSession && c.className === activeClassName)
         .map((c) => c.section),
     ),
-  ).sort(byNumeric);
+  ).sort();
   const activeSection =
     ttSection && sectionOptions.includes(ttSection) ? ttSection : sectionOptions[0];
 

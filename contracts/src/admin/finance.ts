@@ -26,6 +26,34 @@ export const FeeBreakdownItem = z.object({
 });
 export type FeeBreakdownItem = z.infer<typeof FeeBreakdownItem>;
 
+/** How a payment was received — recorded when a fee or honorarium is marked Paid. */
+export const PaymentModeEnum = z.enum(['Cash', 'UPI', 'Cheque', 'BankTransfer', 'Card', 'Online']);
+export type PaymentMode = z.infer<typeof PaymentModeEnum>;
+
+/**
+ * Receipt fields on a fee. `receiptNo` is assigned the first time the fee is marked Paid
+ * (`RCT/<financial year>/<serial>`) and kept if it's ever moved off Paid and back, so a number is
+ * never reused or skipped. Fees paid before receipt numbers existed have `receiptNo: null`.
+ */
+export const FeeReceiptFields = z.object({
+  receiptNo: z.string().nullable(),
+  /** Actual payment date (`paidAt`, or `createdAt` for a legacy Paid fee); null unless Paid. */
+  paidOn: ISODate.nullable(),
+  paymentMode: PaymentModeEnum.nullable(),
+  paymentRef: z.string().nullable(),
+});
+export type FeeReceiptFields = z.infer<typeof FeeReceiptFields>;
+
+/**
+ * Due date and late fine on a fee (see `admin/feeSettings.ts`). `lateFine` is the fine owed as of
+ * today on an unpaid fee — 0 once it's paid (a fine actually charged is a "Late Fine" breakdown line).
+ */
+export const FeeDueFields = z.object({
+  dueDate: ISODate,
+  lateFine: z.number(),
+});
+export type FeeDueFields = z.infer<typeof FeeDueFields>;
+
 export const StudentFeeRecord = z.object({
   id: ObjectId,
   studentId: StudentId,
@@ -42,6 +70,8 @@ export const StudentFeeRecord = z.object({
   // real payment date now lives in `Transaction.paidAt` and is exposed as `paidOn` on the
   // monthly-status / summary responses below.
   paidAt: ISODate,
+  ...FeeReceiptFields.shape,
+  ...FeeDueFields.shape,
 });
 export type StudentFeeRecord = z.infer<typeof StudentFeeRecord>;
 
@@ -55,6 +85,7 @@ export const StudentFeeListQuery = PageQuery.extend({
   studentId: StudentId.optional(),
   className: ClassName.optional(),
   section: Section.optional(),
+  /** Fees whose month falls in this session (April -> March), whatever class the student is in now. */
   session: Session.optional(),
   month: ISOMonth.optional(),
   status: TxnStatusEnum.optional(),
@@ -82,7 +113,18 @@ export const UpdateStudentFeeBody = z.object({
 });
 export type UpdateStudentFeeBody = z.infer<typeof UpdateStudentFeeBody>;
 
-export const UpdateStatusBody = z.object({ status: TxnStatusEnum });
+export const UpdateStatusBody = z.object({
+  status: TxnStatusEnum,
+  /** Only used when `status` is `Paid`. */
+  paymentMode: PaymentModeEnum.optional(),
+  /** UPI transaction id, cheque number, bank reference, ... */
+  paymentRef: z.string().trim().max(60, 'Reference must be at most 60 characters.').optional(),
+  /**
+   * Fee only, when marking Paid: the late fine collected with it (pre-filled from the fee rules,
+   * editable, 0 = waived). Added to the fee as a "Late Fine" line, so it shows on the receipt.
+   */
+  lateFine: z.number().min(0, 'Fine cannot be negative.').optional(),
+});
 export type UpdateStatusBody = z.infer<typeof UpdateStatusBody>;
 
 export const DeleteFeeResponse = z.object({ id: ObjectId });
@@ -165,6 +207,8 @@ export const StudentMonthlyStatusRow = z.object({
   title: z.string().nullable(),
   amount: z.number().nullable(),
   paidOn: ISODate.nullable(),
+  /** Fine owed as of today on an unpaid fee for this month; 0 otherwise. */
+  lateFine: z.number(),
 });
 export type StudentMonthlyStatusRow = z.infer<typeof StudentMonthlyStatusRow>;
 
@@ -302,6 +346,8 @@ export type TeacherSalaryRecord = z.infer<typeof TeacherSalaryRecord>;
 
 export const TeacherSalaryListQuery = PageQuery.extend({
   teacherId: TeacherId.optional(),
+  /** Salaries whose month falls in this session (April -> March). */
+  session: Session.optional(),
   month: ISOMonth.optional(),
   status: TxnStatusEnum.optional(),
   sortBy: z.enum(['month', 'finalAmount', 'paidAt']).optional(),

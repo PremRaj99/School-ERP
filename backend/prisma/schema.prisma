@@ -58,8 +58,8 @@ model Student {
   class             Class               @relation(fields: [classId], references: [id], onDelete: Restrict)
   classId           String              @db.ObjectId
   rollNo            Int
-  appId             String?             @unique
-  penNumber         String?             @unique
+  appId             String?
+  penNumber         String?
   profilePhoto      String              @default("https://cdn-icons-png.flaticon.com/512/2886/2886011.png")
   studentAttendance StudentAttendance[]
   studentFees       StudentFee[]
@@ -181,11 +181,11 @@ model TeacherSalary {
 }
 
 model Transaction {
-  id            String         @id @default(auto()) @map("_id") @db.ObjectId
-  title         String
-  finalAmount   Float
-  status        TxnStatus
-  category      TxnCategory
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  finalAmount     Float
+  status          TxnStatus
+  category        TxnCategory
   // P4 (ALIGNMENT_PLAN.md) — a free-text sub-label for a manually-logged expense (books,
   // whiteboards, sports kit, ...), so the Finance/Admin "log an expense" form isn't limited to
   // `TxnCategory`'s small fixed enum. `category` stays `Other` for every expense that carries one
@@ -196,21 +196,44 @@ model Transaction {
   // When the transaction was actually marked `Paid` (set on the Pending/Failed -> Paid transition,
   // cleared when it moves back off Paid). Nullable with no backfill: a pre-existing Paid
   // transaction has no `paidAt`, and readers fall back to `createdAt` for those.
-  paidAt        DateTime?
-  createdAt     DateTime       @default(now())
-  studentFee    StudentFee?
-  teacherSalary TeacherSalary?
+  paidAt          DateTime?
+  // D2 — receipt number, assigned the first time a fee is marked Paid ("RCT/2026-27/00042"; see
+  // shared/helpers/receiptNo.ts) and kept from then on. Null on legacy Paid fees and non-fee rows.
+  receiptNo       String?
+  paymentMode     PaymentMode?
+  // UPI transaction id / cheque number / bank reference.
+  paymentRef      String?
+  createdAt       DateTime       @default(now())
+  studentFee      StudentFee?
+  teacherSalary   TeacherSalary?
+}
+
+// D2 — school-wide fee rules (a single document; absent = DEFAULT_FEE_SETTINGS in contracts).
+model FeeSettings {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  dueDay         Int
+  lateFineType   LateFineType
+  lateFineAmount Float
+  lateFineCap    Float?
+  updatedAt      DateTime     @updatedAt
+}
+
+// Named sequences (receipt numbers: key "receipt:2026-27"). `seq` is the last number handed out.
+model Counter {
+  id  String @id @default(auto()) @map("_id") @db.ObjectId
+  key String @unique
+  seq Int
 }
 
 model FinanceAuditLog {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  action        String   // "CREATE" | "UPDATE" | "UPDATE_STATUS" | "DELETE"
-  entityType    String   // "StudentFee" | "TeacherSalary" | "Transaction"
-  entityId      String   // The ID of the record being modified
+  action        String // "CREATE" | "UPDATE" | "UPDATE_STATUS" | "DELETE"
+  entityType    String // "StudentFee" | "TeacherSalary" | "Transaction"
+  entityId      String // The ID of the record being modified
   actorId       String   @db.ObjectId
   actorUsername String
-  before        Json?    // Snapshot before the change (null for CREATE)
-  after         Json?    // Snapshot after the change (null for DELETE)
+  before        Json? // Snapshot before the change (null for CREATE)
+  after         Json? // Snapshot after the change (null for DELETE)
   note          String?
   createdAt     DateTime @default(now())
 
@@ -240,6 +263,9 @@ model ExamSubject {
   teacherId   String       @db.ObjectId
   teacher     Teacher      @relation(fields: [teacherId], references: [id], onDelete: NoAction)
   date        DateTime
+  // Paper timing for the date sheet, "HH:MM" 24-hour; null = not set yet.
+  startTime   String?
+  endTime     String?
   isMarked    Boolean      @default(false)
   examResults ExamResult[]
 
@@ -287,6 +313,8 @@ model Notice {
   description String?
   fileUrl     String?
   targetRole  TargetRole
+  // Students of only these classes see it; empty = every class. Ignored for Teacher-only notices.
+  classIds    String[]   @db.ObjectId
   date        DateTime   @default(now())
   expiryDate  DateTime?
 }
@@ -294,8 +322,11 @@ model Notice {
 model AcademicCalendar {
   id       String                   @id @default(auto()) @map("_id") @db.ObjectId
   title    String
-  date     DateTime                 @unique @db.Date
+  // Not unique — a day can hold several events (e.g. a holiday and a PTM notice).
+  date     DateTime                 @db.Date
   category AcademicCalendarCategory
+
+  @@index([date])
 }
 
 enum AcademicCalendarCategory {
@@ -324,6 +355,21 @@ enum TxnStatus {
   Paid
   Pending
   Failed
+}
+
+enum PaymentMode {
+  Cash
+  UPI
+  Cheque
+  BankTransfer
+  Card
+  Online
+}
+
+enum LateFineType {
+  None
+  Flat
+  PerDay
 }
 
 enum TxnCategory {

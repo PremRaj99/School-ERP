@@ -1,14 +1,15 @@
 import { z } from 'zod';
 import { defineContract } from '../envelope';
-import { ISODate, ISOMonth, ObjectId, Session } from '../primitives';
+import { ISODate, ISOMonth, ObjectId, Session, SubjectCode, TimeOfDay } from '../primitives';
 import { AttendanceStatusEnum } from '../enums';
 import { StudentRecord } from '../admin/student';
 import { SubjectRecord } from '../admin/subject';
 import { NoticeRecord, NoticeSummary } from '../admin/notice';
 import { ClassSchedule } from '../admin/timetable';
 import { CalendarEventRecord } from '../admin/academicCalendar';
-import { FeeBreakdownItem } from '../admin/finance';
+import { FeeBreakdownItem, FeeDueFields, FeeReceiptFields } from '../admin/finance';
 import { TxnStatusEnum } from '../enums';
+import { ReportCardSet } from '../reportCard';
 
 // ---- Profile / dashboard ----------------------------------------------------
 
@@ -44,12 +45,25 @@ export type StudentAttendanceDay = z.infer<typeof StudentAttendanceDay>;
 
 // ---- Exams / results ------------------------------------------------------
 
+/** One paper on an exam's date sheet. */
+export const StudentExamPaper = z.object({
+  subjectName: z.string(),
+  subjectCode: SubjectCode,
+  date: ISODate,
+  startTime: TimeOfDay.nullable(),
+  endTime: TimeOfDay.nullable(),
+  fullMarks: z.number(),
+});
+export type StudentExamPaper = z.infer<typeof StudentExamPaper>;
+
 export const StudentExamSummary = z.object({
   id: ObjectId,
   title: z.string(),
   dateFrom: ISODate,
   dateTo: ISODate.nullable(),
   isResultDecleared: z.boolean(),
+  /** The date sheet, in paper order (date, then start time). */
+  papers: z.array(StudentExamPaper),
 });
 export type StudentExamSummary = z.infer<typeof StudentExamSummary>;
 
@@ -88,10 +102,14 @@ export const MyFeeRecord = z.object({
   // Same caveat as the admin finance contracts — `Transaction.createdAt`, not a real payment date
   // yet (ALIGNMENT_PLAN.md 2D/D3).
   paidAt: ISODate,
+  ...FeeReceiptFields.shape,
+  ...FeeDueFields.shape,
 });
 export type MyFeeRecord = z.infer<typeof MyFeeRecord>;
 
 export const MyFeeDetail = MyFeeRecord.extend({
+  studentId: StudentRecord.shape.studentId,
+  title: z.string(),
   className: z.string(),
   section: z.string(),
   session: Session,
@@ -174,6 +192,13 @@ export const studentContract = defineContract({
     path: '/student/result/:examId',
     params: z.object({ examId: ObjectId }),
     response: StudentResult,
+  },
+  reportCard: {
+    method: 'GET',
+    path: '/student/report-card/:examId',
+    params: z.object({ examId: ObjectId }),
+    response: ReportCardSet,
+    summary: "The student's own report card (students[] has one entry), for a declared exam.",
   },
   notices: {
     method: 'GET',

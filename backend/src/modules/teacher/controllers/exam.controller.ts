@@ -19,6 +19,7 @@ export const getExam = defineRoute(teacherContract.exams, async ({ req }) => {
 
   return exams.map((e) => ({
     id: e.id,
+    session: e.class.session,
     className: e.class.className,
     section: e.class.section,
     dateFrom: toISODate(e.dateFrom),
@@ -44,6 +45,7 @@ export const getExamSubject = defineRoute(teacherContract.examDetail, async ({ p
 
   return {
     id: exam.id,
+    session: exam.class.session,
     className: exam.class.className,
     section: exam.class.section,
     dateFrom: toISODate(exam.dateFrom),
@@ -60,6 +62,8 @@ export const getExamSubject = defineRoute(teacherContract.examDetail, async ({ p
       subjectName: s.subject.subjectName,
       subjectCode: s.subject.subjectCode,
       date: toISODate(s.date),
+      startTime: s.startTime ?? null,
+      endTime: s.endTime ?? null,
       fullMarks: s.fullMarks,
       isMarked: s.isMarked,
     })),

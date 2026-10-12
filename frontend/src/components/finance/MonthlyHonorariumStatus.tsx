@@ -11,7 +11,6 @@ import type {
 import { MAX_PAGE_SIZE } from '@schoolerp/contracts';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { DataTable, ErrorState } from '@/components/data-table';
 import { adminService } from '@/lib/services/admin.service';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -19,9 +18,13 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { isoToDisplayDate } from '@/lib/date';
 import { MonthlyStatusBadge, MonthlySummaryCards, StatusFilterChips } from './monthlyStatus';
-import { currentISOMonth, formatMonth, formatRupees } from '@/lib/finance-format';
+import { SessionMonthPicker } from '@/components/filters';
+import { defaultMonth } from '@/lib/session';
+import { formatMonth, formatRupees } from '@/lib/finance-format';
 
 interface Props {
+  /** The Finance page's session — the month picker stays inside it. */
+  session: string;
   onOpenSummary: (teacherId: string) => void;
 }
 
@@ -29,9 +32,9 @@ interface Props {
  * "Who has / hasn't been paid this month" view for staff honorarium: every teacher on the roster
  * for the chosen month, including those with no honorarium record generated yet.
  */
-export const MonthlyHonorariumStatus: React.FC<Props> = ({ onOpenSummary }) => {
+export const MonthlyHonorariumStatus: React.FC<Props> = ({ session, onOpenSummary }) => {
   const queryClient = useQueryClient();
-  const [month, setMonth] = useState(currentISOMonth);
+  const [month, setMonth] = useState(() => defaultMonth(session));
   const [status, setStatus] = useState<MonthlyStatusFilter | ''>('Unpaid');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
@@ -219,15 +222,7 @@ export const MonthlyHonorariumStatus: React.FC<Props> = ({ onOpenSummary }) => {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-2">
-        <label className="text-muted-foreground flex flex-col gap-1 text-[11px] font-semibold">
-          Month
-          <Input
-            type="month"
-            value={month}
-            onChange={(e) => e.target.value && setMonth(e.target.value)}
-            className="h-9 w-40 text-xs"
-          />
-        </label>
+        <SessionMonthPicker value={month} onChange={setMonth} session={session} />
         <Button
           size="sm"
           variant="outline"

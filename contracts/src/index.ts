@@ -15,11 +15,14 @@ export * from './admin/timetable';
 export * from './admin/contact';
 export * from './admin/teacherAttendance';
 export * from './admin/finance';
+export * from './admin/feeSettings';
 export * from './admin/exam';
 export * from './admin/dashboard';
 export * from './admin/analytics';
 export * from './admin/studentAttendance';
 export * from './admin/promotion';
+
+export * from './reportCard';
 
 export * from './student';
 export * from './teacher';

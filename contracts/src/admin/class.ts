@@ -11,6 +11,8 @@ export const ClassRecord = z.object({
   // default, no backfill needed). Set once every active student has been promoted out via
   // `POST /admin/academic/promote`.
   isArchived: z.boolean(),
+  // Active students currently in this class — only filled in by the list endpoint.
+  studentCount: z.number().int().nonnegative().optional(),
 });
 export type ClassRecord = z.infer<typeof ClassRecord>;
 

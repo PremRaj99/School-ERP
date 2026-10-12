@@ -15,6 +15,12 @@ import type {
   SubjectRecord,
 } from '@schoolerp/contracts';
 import { monthStartEndFromISO, toISODate, toISOMonth } from '@/shared/helpers/isoDate';
+import {
+  NOTICE_SUMMARY_SELECT,
+  reachesClass,
+  toNoticeRecord,
+  toNoticeSummaries,
+} from '@/shared/helpers/notice';
 
 export class StudentService {
   static async getStudentProfile(userId: string): Promise<StudentRecord> {
@@ -124,7 +130,22 @@ export class StudentService {
 
     const exams = await prisma.exam.findMany({
       where: { classId: student.classId },
-      select: { id: true, title: true, dateFrom: true, dateTo: true, isResultDecleared: true },
+      select: {
+        id: true,
+        title: true,
+        dateFrom: true,
+        dateTo: true,
+        isResultDecleared: true,
+        examSubjects: {
+          select: {
+            date: true,
+            startTime: true,
+            endTime: true,
+            fullMarks: true,
+            subject: { select: { subjectName: true, subjectCode: true } },
+          },
+        },
+      },
     });
 
     return exams.map((e) => ({
@@ -133,40 +154,56 @@ export class StudentService {
       dateFrom: toISODate(e.dateFrom),
       dateTo: e.dateTo ? toISODate(e.dateTo) : null,
       isResultDecleared: e.isResultDecleared,
+      papers: e.examSubjects
+        .map((s) => ({
+          subjectName: s.subject.subjectName,
+          subjectCode: s.subject.subjectCode,
+          date: toISODate(s.date),
+          startTime: s.startTime ?? null,
+          endTime: s.endTime ?? null,
+          fullMarks: s.fullMarks,
+        }))
+        .sort(
+          (a, b) =>
+            a.date.localeCompare(b.date) ||
+            (a.startTime ?? '99').localeCompare(b.startTime ?? '99'),
+        ),
     }));
   }
 
-  static async getNotices() {
+  /** The class a student's notices are filtered by (`null` if they have none). */
+  private static async classIdOf(userId: string): Promise<string | null> {
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: { classId: true },
+    });
+    if (!student) {
+      throw new NotFoundError();
+    }
+    return student.classId ?? null;
+  }
+
+  // Class targeting is filtered in JS rather than in the query: older notices have no `classIds`
+  // field at all, and a missing list doesn't match Prisma's `isEmpty` on MongoDB.
+  static async getNotices(userId: string) {
+    const classId = await StudentService.classIdOf(userId);
     const notices = await prisma.notice.findMany({
       where: { targetRole: { in: ['Student', 'All'] } },
-      select: { id: true, title: true, date: true, targetRole: true, expiryDate: true },
+      select: NOTICE_SUMMARY_SELECT,
     });
-    return notices.map((n) => ({
-      id: n.id,
-      title: n.title,
-      date: toISODate(n.date),
-      targetRole: n.targetRole,
-      expiryDate: n.expiryDate ? toISODate(n.expiryDate) : null,
-    }));
+    return toNoticeSummaries(notices.filter((n) => reachesClass(n, classId)));
   }
 
-  static async getNoticeDetail(noticeId: string) {
+  static async getNoticeDetail(userId: string, noticeId: string) {
+    const classId = await StudentService.classIdOf(userId);
     const notice = await prisma.notice.findFirst({
       where: { id: noticeId, targetRole: { in: ['Student', 'All'] } },
     });
 
-    if (!notice) {
+    if (!notice || !reachesClass(notice, classId)) {
       throw new NotFoundError();
     }
-    return {
-      id: notice.id,
-      title: notice.title,
-      description: notice.description,
-      fileUrl: notice.fileUrl,
-      targetRole: notice.targetRole,
-      date: toISODate(notice.date),
-      expiryDate: notice.expiryDate ? toISODate(notice.expiryDate) : null,
-    };
+    return toNoticeRecord(notice);
   }
 
   static async getTimetables(userId: string) {
@@ -236,8 +273,7 @@ export class StudentService {
       prisma.notice.findMany({
         where: { targetRole: { in: ['Student', 'All'] } },
         orderBy: { date: 'desc' },
-        take: 5,
-        select: { id: true, title: true, date: true, targetRole: true, expiryDate: true },
+        select: NOTICE_SUMMARY_SELECT,
       }),
       prisma.transaction.aggregate({
         where: { status: 'Pending', studentFee: { studentId: student.id } },
@@ -268,13 +304,9 @@ export class StudentService {
         dateFrom: toISODate(e.dateFrom),
         dateTo: e.dateTo ? toISODate(e.dateTo) : null,
       })),
-      recentNotices: recentNotices.map((n) => ({
-        id: n.id,
-        title: n.title,
-        date: toISODate(n.date),
-        targetRole: n.targetRole,
-        expiryDate: n.expiryDate ? toISODate(n.expiryDate) : null,
-      })),
+      recentNotices: await toNoticeSummaries(
+        recentNotices.filter((n) => reachesClass(n, student.classId ?? null)).slice(0, 5),
+      ),
       pendingFees: {
         count: pendingFees._count._all,
         totalAmount: pendingFees._sum.finalAmount ?? 0,

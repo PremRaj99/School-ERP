@@ -17,6 +17,8 @@ import {
   type TransactionListQuery,
   type TransactionRecord,
   type UpdateTransactionBody,
+  type UpdateStatusBody,
+  financeFeeSettingsContract,
 } from '@schoolerp/contracts';
 import { api } from '../api/typed-client';
 
@@ -34,8 +36,10 @@ export const financeService = {
   getStudentFeeById: (feeId: string) =>
     api(financeStudentFeeContract.detail, { params: { feeId } }),
   createStudentFee: (body: CreateStudentFeeBody) => api(financeStudentFeeContract.create, { body }),
-  updateStudentFeeStatus: (feeId: string, status: StudentFeeRecord['status']) =>
-    api(financeStudentFeeContract.updateStatus, { params: { feeId }, body: { status } }),
+  getFeeSettings: () => api(financeFeeSettingsContract.get),
+  /** Marking Paid can carry the payment mode/reference; the response then has a receipt number. */
+  updateStudentFeeStatus: (feeId: string, body: UpdateStatusBody): Promise<StudentFeeRecord> =>
+    api(financeStudentFeeContract.updateStatus, { params: { feeId }, body }),
   deleteStudentFee: (feeId: string): Promise<{ id: string }> =>
     api(financeStudentFeeContract.remove, { params: { feeId } }),
 

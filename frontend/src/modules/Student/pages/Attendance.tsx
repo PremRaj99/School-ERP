@@ -8,8 +8,9 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { PiFire } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
-
-const currentMonthString = () => new Date().toISOString().slice(0, 7);
+import { SessionMonthPicker } from '@/components/filters';
+import { holidayOn } from '@/lib/holidays';
+import { currentMonth } from '@/lib/session';
 
 const ATTENDANCE_DAY_STYLES: Record<string, string> = {
   Present: 'bg-emerald-500 text-white',
@@ -18,11 +19,16 @@ const ATTENDANCE_DAY_STYLES: Record<string, string> = {
 };
 
 export const StudentAttendance: React.FC = () => {
-  const [month, setMonth] = useState(currentMonthString);
+  const [month, setMonth] = useState(currentMonth);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: qk.student.attendance(month),
     queryFn: () => studentService.getAttendance(month),
+  });
+
+  const { data: calendar } = useQuery({
+    queryKey: qk.student.calendar(),
+    queryFn: () => studentService.getCalendar(),
   });
 
   const statusByDate = useMemo(() => {
@@ -77,12 +83,7 @@ export const StudentAttendance: React.FC = () => {
             Minimum 75% overall attendance is required to sit for final examinations.
           </p>
         </div>
-        <input
-          type="month"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
-        />
+        <SessionMonthPicker value={month} onChange={setMonth} noFuture />
       </div>
 
       {/* Summary Cards */}
@@ -143,15 +144,18 @@ export const StudentAttendance: React.FC = () => {
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
               const dateStr = `${month}-${String(day).padStart(2, '0')}`;
               const status = statusByDate.get(dateStr);
+              const holiday = holidayOn(dateStr, calendar);
               return (
                 <div
                   key={day}
                   className={`flex h-9 items-center justify-center rounded-md text-[11px] font-semibold ${
                     status
                       ? ATTENDANCE_DAY_STYLES[status]
-                      : 'bg-slate-100 text-slate-400 dark:bg-zinc-800 dark:text-zinc-600'
+                      : holiday
+                        ? 'bg-rose-50 text-rose-400 dark:bg-rose-950/30 dark:text-rose-500'
+                        : 'bg-slate-100 text-slate-400 dark:bg-zinc-800 dark:text-zinc-600'
                   }`}
-                  title={status ?? 'No record'}
+                  title={status ?? (holiday ? `Holiday — ${holiday}` : 'No record')}
                 >
                   {day}
                 </div>

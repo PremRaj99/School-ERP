@@ -1,4 +1,5 @@
 import { adminExamContract } from '@schoolerp/contracts';
+import { buildReportCards } from '@/shared/helpers/reportCard';
 import { defineRoute } from '@/core/http/defineRoute';
 import { AdminExamService } from '../services/exam.service';
 
@@ -28,3 +29,14 @@ export const updateExamResultStatus = defineRoute(
     return AdminExamService.setResultDeclaration(params.examId, body.isResultDecleared);
   },
 );
+
+export const updateExamSchedule = defineRoute(
+  adminExamContract.updateSchedule,
+  async ({ params, body }) => {
+    return AdminExamService.updateSchedule(params.examId, body);
+  },
+);
+
+export const getExamReportCards = defineRoute(adminExamContract.reportCards, async ({ params }) => {
+  return buildReportCards(params.examId);
+});

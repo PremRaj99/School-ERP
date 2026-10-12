@@ -2,6 +2,7 @@ import prisma from '@/core/db';
 import { getTodayDate } from '../helpers';
 import type { AdminDashboard } from '@schoolerp/contracts';
 import { toISODate } from '@/shared/helpers/isoDate';
+import { NOTICE_SUMMARY_SELECT, toNoticeSummaries } from '@/shared/helpers/notice';
 
 export class AdminDashboardService {
   static async getDashboard(): Promise<AdminDashboard> {
@@ -42,7 +43,7 @@ export class AdminDashboardService {
       prisma.notice.findMany({
         orderBy: { date: 'desc' },
         take: 5,
-        select: { id: true, title: true, date: true, targetRole: true, expiryDate: true },
+        select: NOTICE_SUMMARY_SELECT,
       }),
       prisma.transaction.aggregate({
         where: { category: 'Fee', status: 'Pending' },
@@ -83,13 +84,7 @@ export class AdminDashboardService {
         dateFrom: toISODate(exam.dateFrom),
         dateTo: exam.dateTo ? toISODate(exam.dateTo) : null,
       })),
-      recentNotices: recentNotices.map((n) => ({
-        id: n.id,
-        title: n.title,
-        date: toISODate(n.date),
-        targetRole: n.targetRole,
-        expiryDate: n.expiryDate ? toISODate(n.expiryDate) : null,
-      })),
+      recentNotices: await toNoticeSummaries(recentNotices),
       finance: {
         pendingStudentFees: {
           count: pendingFees._count._all,

@@ -6,6 +6,7 @@ import { getStudentsForFinance, getTeachersForFinance } from '../controllers/dir
 import { financeStudentFeeRouter } from './studentFee.route';
 import { financeTeacherSalaryRouter } from './teacherSalary.route';
 import { financeExpenseRouter } from './expense.route';
+import { getFinanceFeeSettings } from '@/modules/admin/controllers/feeSettings.controller';
 
 const financeRouter = express.Router();
 
@@ -16,6 +17,7 @@ financeRouter.get('/dashboard', getFinanceDashboard);
 financeRouter.get('/analytics', getFinanceAnalytics);
 financeRouter.get('/student', getStudentsForFinance);
 financeRouter.get('/teacher', getTeachersForFinance);
+financeRouter.get('/settings', getFinanceFeeSettings);
 
 financeRouter.use('/fee', financeStudentFeeRouter);
 financeRouter.use('/salary', financeTeacherSalaryRouter);

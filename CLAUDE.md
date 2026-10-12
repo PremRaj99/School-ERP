@@ -168,10 +168,9 @@ check a module's service layer for which one a given endpoint expects.
 
 Feature-first layout under `frontend/src/modules/<Role>/pages/*.tsx` (Admin/Auth/Student/Teacher/Home/
 Contact), routed in `frontend/src/routes/index.tsx` via `react-router-dom`'s `createBrowserRouter`, each
-role's routes nested under a `*RouteWrapper` (`components/layout/route-wrappers.tsx`). **These wrappers
-currently do not check auth or role at all** — they just render `<AppLayout role="...">` — despite the name
-suggesting otherwise; this is a known gap (ALIGNMENT_PLAN.md Part 0.5/A1, Part 3.1), not something to build
-on. Shared primitives live in `components/ui/` (shadcn/ui components — see `components.json`) and
+role's routes nested under a `*RouteWrapper` (`components/layout/route-wrappers.tsx`). Each wrapper goes
+through `RequireRole`, which waits for the auth store to hydrate, redirects a logged-out visitor to
+`/auth/login?next=...`, and sends a wrong-role user to their own home page. Shared primitives live in `components/ui/` (shadcn/ui components — see `components.json`) and
 `components/layout/`. Path alias `@` → `frontend/src` (`vite.config.ts`).
 
 - API calls go through `lib/api.ts`'s `apiClient` (axios, `withCredentials: true`, baseURL from

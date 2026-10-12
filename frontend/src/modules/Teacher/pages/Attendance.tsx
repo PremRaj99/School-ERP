@@ -19,12 +19,13 @@ import { teacherService } from '@/lib/services/teacher.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { dateToIsoDate } from '@/lib/date';
+import { compareClassName, sessionOfDate, currentMonth } from '@/lib/session';
+import { holidayOn } from '@/lib/holidays';
 import type { ClassAttendanceStudentRow } from '@schoolerp/contracts';
 import { toast } from 'sonner';
 import { PiCheckCircle, PiFloppyDisk, PiCalendarCheck } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
-const currentMonthString = () => new Date().toISOString().slice(0, 7);
+import { SessionMonthPicker } from '@/components/filters';
 
 const ATTENDANCE_DAY_STYLES: Record<string, string> = {
   Present: 'bg-emerald-500 text-white',
@@ -35,11 +36,16 @@ const ATTENDANCE_DAY_STYLES: Record<string, string> = {
 // ---- Tab 1: My Attendance --------------------------------------------------
 
 function MyAttendanceTab() {
-  const [month, setMonth] = useState(currentMonthString);
+  const [month, setMonth] = useState(currentMonth);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: qk.teacher.myAttendance(month),
     queryFn: () => teacherService.getOwnAttendance(month),
+  });
+
+  const { data: calendar } = useQuery({
+    queryKey: qk.teacher.calendar(),
+    queryFn: () => teacherService.getCalendar(),
   });
 
   const statusByDate = useMemo(() => {
@@ -70,12 +76,7 @@ function MyAttendanceTab() {
             Leave: {leave}
           </div>
         </div>
-        <input
-          type="month"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
-        />
+        <SessionMonthPicker value={month} onChange={setMonth} noFuture />
       </div>
 
       {isLoading ? (
@@ -96,15 +97,18 @@ function MyAttendanceTab() {
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
               const dateStr = `${month}-${String(day).padStart(2, '0')}`;
               const status = statusByDate.get(dateStr);
+              const holiday = holidayOn(dateStr, calendar);
               return (
                 <div
                   key={day}
                   className={`flex h-9 items-center justify-center rounded-md text-[11px] font-semibold ${
                     status
                       ? ATTENDANCE_DAY_STYLES[status]
-                      : 'bg-slate-100 text-slate-400 dark:bg-zinc-800 dark:text-zinc-600'
+                      : holiday
+                        ? 'bg-rose-50 text-rose-400 dark:bg-rose-950/30 dark:text-rose-500'
+                        : 'bg-slate-100 text-slate-400 dark:bg-zinc-800 dark:text-zinc-600'
                   }`}
-                  title={status ?? 'No record'}
+                  title={status ?? (holiday ? `Holiday — ${holiday}` : 'No record')}
                 >
                   {day}
                 </div>
@@ -287,26 +291,49 @@ function ClassAttendanceTab() {
   const [searchParams] = useSearchParams();
   // Deep-link support: `/teacher/attendance?class=<className>|<section>` (used by the Timetable
   // page's "My Classes" cards) preselects a class. Read once at mount — no effect needed.
-  const [classKey, setClassKey] = useState(() => searchParams.get('class') ?? ''); // "className|section"
-  const [date, setDate] = useState(() => dateToIsoDate(new Date()));
+  const [className, setClassName] = useState(() => searchParams.get('class')?.split('|')[0] ?? '');
+  const [pickedSection, setSection] = useState(
+    () => searchParams.get('class')?.split('|')[1] ?? '',
+  );
+  const today = dateToIsoDate(new Date());
+  const [date, setDate] = useState(today);
+
+  const { data: calendar } = useQuery({
+    queryKey: qk.teacher.calendar(),
+    queryFn: () => teacherService.getCalendar(),
+  });
+  const holiday = holidayOn(date, calendar);
 
   const { data: classSchedules, isLoading: schedulesLoading } = useQuery({
     queryKey: qk.teacher.timetable(),
     queryFn: () => teacherService.getTimetable(),
   });
 
-  const classOptions = useMemo(
-    () => (classSchedules ?? []).map((c) => ({ className: c.className, section: c.section })),
-    [classSchedules],
-  );
+  // Only this session's classes — the timetable can still hold last year's slots.
+  const currentClasses = useMemo(() => {
+    const session = sessionOfDate(date);
+    return (classSchedules ?? []).filter((c) => c.session === session);
+  }, [classSchedules, date]);
 
-  const [className, section] = classKey ? classKey.split('|') : ['', ''];
+  const classNameOptions = useMemo(
+    () => Array.from(new Set(currentClasses.map((c) => c.className))).sort(compareClassName),
+    [currentClasses],
+  );
+  const sectionOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(currentClasses.filter((c) => c.className === className).map((c) => c.section)),
+      ).sort(),
+    [currentClasses, className],
+  );
+  // A class with only one section (the usual case) needs no second pick.
+  const section = pickedSection || (sectionOptions.length === 1 ? sectionOptions[0] : '');
   const month = date.slice(0, 7);
 
   const { data: monthList, isLoading: listLoading } = useQuery({
     queryKey: qk.teacher.classAttendanceList(month),
     queryFn: () => teacherService.getClassAttendanceList(month),
-    enabled: !!className,
+    enabled: !!className && !!section,
   });
 
   const existingRecord = monthList?.find(
@@ -322,7 +349,7 @@ function ClassAttendanceTab() {
   const { data: roster, isLoading: rosterLoading } = useQuery({
     queryKey: qk.teacher.classRoster(className, section),
     queryFn: () => teacherService.getClassRoster(className, section),
-    enabled: !!className && !existingRecord && !listLoading,
+    enabled: !!className && !!section && !existingRecord && !listLoading,
   });
 
   const isLoadingRoster = listLoading || (existingRecord ? detailLoading : rosterLoading);
@@ -331,25 +358,52 @@ function ClassAttendanceTab() {
   return (
     <div className="space-y-4">
       <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardContent className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-2">
-          <div>
+        <CardContent className="grid grid-cols-1 items-center gap-4 p-4 sm:grid-cols-3">
+          <label>
             <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">
-              Class & Section
+              Class
             </span>
             <select
-              value={classKey}
-              onChange={(e) => setClassKey(e.target.value)}
+              value={className}
+              onChange={(e) => {
+                setClassName(e.target.value);
+                setSection('');
+              }}
               disabled={schedulesLoading}
               className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
             >
-              <option value="">{schedulesLoading ? 'Loading…' : 'Select a class you teach'}</option>
-              {classOptions.map((c) => (
-                <option key={`${c.className}|${c.section}`} value={`${c.className}|${c.section}`}>
-                  Class {c.className}-{c.section}
+              <option value="">
+                {schedulesLoading
+                  ? 'Loading…'
+                  : classNameOptions.length === 0
+                    ? 'No classes this session'
+                    : 'Select a class you teach'}
+              </option>
+              {classNameOptions.map((name) => (
+                <option key={name} value={name}>
+                  Class {name}
                 </option>
               ))}
             </select>
-          </div>
+          </label>
+          <label>
+            <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">
+              Section
+            </span>
+            <select
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+              disabled={!className}
+              className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              <option value="">Select section…</option>
+              {sectionOptions.map((sec) => (
+                <option key={sec} value={sec}>
+                  Section {sec}
+                </option>
+              ))}
+            </select>
+          </label>
           <div>
             <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">
               Attendance Date
@@ -357,6 +411,7 @@ function ClassAttendanceTab() {
             <input
               type="date"
               value={date}
+              max={today}
               onChange={(e) => setDate(e.target.value)}
               className="border-input h-9 w-full rounded-md border bg-transparent px-2.5 text-xs font-semibold"
             />
@@ -364,12 +419,20 @@ function ClassAttendanceTab() {
         </CardContent>
       </Card>
 
-      {!className ? (
+      {!className || !section ? (
         <Empty className="rounded-md border p-8">
           <EmptyMedia illustration="studentAttendance" illustrationSize={120} />
-          <EmptyTitle>Pick a class</EmptyTitle>
+          <EmptyTitle>{className ? 'Pick a section' : 'Pick a class'}</EmptyTitle>
           <EmptyDescription>
             Select one of your classes and a date to mark attendance.
+          </EmptyDescription>
+        </Empty>
+      ) : holiday && !existingRecord ? (
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="calendar" illustrationSize={120} />
+          <EmptyTitle>Holiday — {holiday}</EmptyTitle>
+          <EmptyDescription>
+            Attendance isn't taken on holidays or Sundays. Pick another date.
           </EmptyDescription>
         </Empty>
       ) : isLoadingRoster ? (

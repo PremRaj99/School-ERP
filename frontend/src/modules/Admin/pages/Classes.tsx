@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,7 +19,10 @@ import {
 } from '@/components/ui/dialog';
 import { SelectField, SessionField } from '@/components/form';
 import { adminService } from '@/lib/services/admin.service';
-import { CreateClassBody, MAX_PAGE_SIZE, type ClassRecord } from '@schoolerp/contracts';
+import { CreateClassBody, type ClassRecord } from '@schoolerp/contracts';
+import { compareClassSection, getCurrentSessionYear } from '@/lib/session';
+import { useSessionOptions } from '@/hooks/options/useAdminOptions';
+import { FILTER_SELECT_CLASS } from '@/components/filters';
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
@@ -34,6 +37,7 @@ import {
   PiEye,
 } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ExportButton } from '@/components/filters';
 
 const GRADE_OPTIONS = [
   { value: 'Nursery', label: 'Nursery' },
@@ -60,7 +64,11 @@ export const AdminClasses: React.FC = () => {
     id: string;
     className: string;
     section: string;
+    studentCount: number;
   } | null>(null);
+  const [sessionFilter, setSessionFilter] = useState(getCurrentSessionYear);
+  const [showArchived, setShowArchived] = useState(false);
+  const sessionOptions = useSessionOptions();
 
   const [editingClass, setEditingClass] = useState<ClassRecord | null>(null);
 
@@ -95,26 +103,9 @@ export const AdminClasses: React.FC = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: qk.admin.classes(),
-    queryFn: () => adminService.getClasses(),
+    queryKey: qk.admin.classes(showArchived ? { includeArchived: true } : undefined),
+    queryFn: () => adminService.getClasses(showArchived ? { includeArchived: true } : undefined),
   });
-
-  // pageSize: MAX_PAGE_SIZE — counting enrolled students across every class needs the full roster,
-  // not one page of the (now server-paginated, ALIGNMENT_PLAN.md 2C/P1) list endpoint.
-  const { data: studentsResponse } = useQuery({
-    queryKey: qk.admin.students({ pageSize: MAX_PAGE_SIZE }),
-    queryFn: () => adminService.getStudents({ pageSize: MAX_PAGE_SIZE }),
-  });
-  const studentsList = studentsResponse?.data;
-
-  const studentCountByClass = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const s of studentsList ?? []) {
-      const key = `${s.className}-${s.section}`;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return counts;
-  }, [studentsList]);
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateClassBody) => adminService.createClass(payload),
@@ -150,15 +141,20 @@ export const AdminClasses: React.FC = () => {
   const onSubmit: SubmitHandler<CreateClassBody> = (values) => createMutation.mutate(values);
   const onEditSubmit: SubmitHandler<CreateClassBody> = (values) => updateMutation.mutate(values);
 
-  const filteredClasses = (classesList ?? []).filter((c) =>
-    `Class ${c.className}-${c.section} ${c.session}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase()),
-  );
+  const filteredClasses = (classesList ?? [])
+    .filter((c) => !sessionFilter || c.session === sessionFilter)
+    .filter((c) =>
+      `Class ${c.className}-${c.section} ${c.session}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()),
+    )
+    .sort(
+      (a, b) =>
+        // Newest session first when showing every session, then school order within it.
+        (sessionFilter ? 0 : b.session.localeCompare(a.session)) || compareClassSection(a, b),
+    );
 
-  const deleteTargetStudentCount = deleteTarget
-    ? (studentCountByClass.get(`${deleteTarget.className}-${deleteTarget.section}`) ?? 0)
-    : 0;
+  const deleteTargetStudentCount = deleteTarget?.studentCount ?? 0;
 
   return (
     <div className="space-y-6">
@@ -168,7 +164,7 @@ export const AdminClasses: React.FC = () => {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold tracking-tight">Classes & Sections</h1>
             <Badge variant="outline" className="text-xs">
-              {filteredClasses.length} Active Sections
+              {filteredClasses.length} {showArchived ? '' : 'Active '}Sections
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
@@ -190,13 +186,47 @@ export const AdminClasses: React.FC = () => {
 
       {/* Search Bar */}
 
-      <div className="relative w-full">
-        <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-        <Input
-          placeholder="Search class sections (e.g. Class 10-A, 2025-2026)..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-9 pl-9 text-xs"
+      <div className="flex flex-wrap items-center gap-3">
+        <select
+          aria-label="Session"
+          value={sessionFilter}
+          onChange={(e) => setSessionFilter(e.target.value)}
+          className={FILTER_SELECT_CLASS}
+        >
+          <option value="">All sessions</option>
+          {sessionOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <div className="relative min-w-48 flex-1">
+          <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+          <Input
+            placeholder="Search class sections (e.g. Class 10-A)..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="h-9 pl-9 text-xs"
+          />
+        </div>
+        <label className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
+          <input
+            type="checkbox"
+            checked={showArchived}
+            onChange={(e) => setShowArchived(e.target.checked)}
+          />
+          Show archived
+        </label>
+        <ExportButton
+          filename={`classes-${sessionFilter || 'all-sessions'}`}
+          headers={['Session', 'Class', 'Section', 'Students', 'Archived']}
+          rows={filteredClasses.map((c) => [
+            c.session,
+            c.className,
+            c.section,
+            c.studentCount ?? 0,
+            c.isArchived ? 'Yes' : 'No',
+          ])}
         />
       </div>
 
@@ -212,11 +242,13 @@ export const AdminClasses: React.FC = () => {
       ) : filteredClasses.length === 0 ? (
         <Empty className="rounded-md border p-8">
           <EmptyMedia illustration="users" illustrationSize={120} />
-          <EmptyTitle>No class sections yet</EmptyTitle>
+          <EmptyTitle>
+            {sessionFilter ? `No class sections in ${sessionFilter}` : 'No class sections yet'}
+          </EmptyTitle>
           <EmptyDescription>
             {searchTerm
               ? 'No class sections match your search.'
-              : 'Add the first class section to get started.'}
+              : 'Add a class section to get started.'}
           </EmptyDescription>
           {!searchTerm && (
             <Button size="sm" className="mt-1 text-xs" onClick={() => setIsCreateOpen(true)}>
@@ -229,7 +261,7 @@ export const AdminClasses: React.FC = () => {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {filteredClasses.map((cls, idx) => {
             const classId = cls.id || `class-${idx}`;
-            const enrolled = studentCountByClass.get(`${cls.className}-${cls.section}`) ?? 0;
+            const enrolled = cls.studentCount ?? 0;
             return (
               <Card
                 key={classId}
@@ -239,7 +271,14 @@ export const AdminClasses: React.FC = () => {
                 <div className="bg-primary h-2 w-full" />
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground font-mono text-xs">{cls.session}</span>
+                    <span className="text-muted-foreground font-mono text-xs">
+                      {cls.session}
+                      {cls.isArchived && (
+                        <Badge variant="outline" className="ml-2 text-[10px]">
+                          Archived
+                        </Badge>
+                      )}
+                    </span>
                     <Badge
                       variant="secondary"
                       className="bg-muted text-muted-foreground text-[10px] font-semibold"
@@ -301,6 +340,7 @@ export const AdminClasses: React.FC = () => {
                           id: classId,
                           className: cls.className,
                           section: cls.section,
+                          studentCount: enrolled,
                         });
                       }}
                     >

@@ -8,7 +8,8 @@ import type {
   UpdateNoticeBody,
 } from '@schoolerp/contracts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@schoolerp/contracts';
-import { fromISODate, toISODate } from '@/shared/helpers/isoDate';
+import { fromISODate } from '@/shared/helpers/isoDate';
+import { NOTICE_SUMMARY_SELECT, toNoticeRecord, toNoticeSummaries } from '@/shared/helpers/notice';
 
 interface PaginatedNotices {
   data: NoticeSummary[];
@@ -18,23 +19,9 @@ interface PaginatedNotices {
   totalPages: number;
 }
 
-const toNoticeRecord = (notice: {
-  id: string;
-  title: string;
-  description: string | null;
-  fileUrl: string | null;
-  targetRole: 'Student' | 'Teacher' | 'All';
-  date: Date;
-  expiryDate: Date | null;
-}): NoticeRecord => ({
-  id: notice.id,
-  title: notice.title,
-  description: notice.description,
-  fileUrl: notice.fileUrl,
-  targetRole: notice.targetRole,
-  date: toISODate(notice.date),
-  expiryDate: notice.expiryDate ? toISODate(notice.expiryDate) : null,
-});
+/** A Teacher-only notice has no class audience — drop any classes sent with one. */
+const classIdsFor = (targetRole: string, classIds: string[] | undefined) =>
+  targetRole === 'Teacher' ? [] : [...new Set(classIds ?? [])];
 
 export class AdminNoticeService {
   static async getNotices(query: NoticeListQuery): Promise<PaginatedNotices> {
@@ -57,7 +44,7 @@ export class AdminNoticeService {
     const [notices, total] = await Promise.all([
       prisma.notice.findMany({
         where,
-        select: { id: true, title: true, date: true, targetRole: true, expiryDate: true },
+        select: NOTICE_SUMMARY_SELECT,
         orderBy,
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -66,13 +53,7 @@ export class AdminNoticeService {
     ]);
 
     return {
-      data: notices.map((n) => ({
-        id: n.id,
-        title: n.title,
-        date: toISODate(n.date),
-        targetRole: n.targetRole,
-        expiryDate: n.expiryDate ? toISODate(n.expiryDate) : null,
-      })),
+      data: await toNoticeSummaries(notices),
       page,
       pageSize,
       total,
@@ -92,6 +73,7 @@ export class AdminNoticeService {
     const notice = await prisma.notice.create({
       data: {
         targetRole: data.targetRole,
+        classIds: classIdsFor(data.targetRole, data.classIds),
         date: fromISODate(data.date),
         title: data.title,
         description: data.description,
@@ -103,6 +85,14 @@ export class AdminNoticeService {
   }
 
   static async updateNotice(noticeId: string, data: UpdateNoticeBody): Promise<NoticeRecord> {
+    const existing = await prisma.notice.findUnique({
+      where: { id: noticeId },
+      select: { targetRole: true, classIds: true },
+    });
+    if (!existing) {
+      throw new NotFoundError();
+    }
+    const targetRole = data.targetRole ?? existing.targetRole;
     try {
       const notice = await prisma.notice.update({
         where: { id: noticeId },
@@ -111,6 +101,9 @@ export class AdminNoticeService {
           ...(data.description !== undefined ? { description: data.description } : {}),
           ...(data.fileUrl !== undefined ? { fileUrl: data.fileUrl } : {}),
           ...(data.targetRole !== undefined ? { targetRole: data.targetRole } : {}),
+          ...(data.classIds !== undefined || targetRole === 'Teacher'
+            ? { classIds: classIdsFor(targetRole, data.classIds ?? existing.classIds) }
+            : {}),
           ...(data.date !== undefined ? { date: fromISODate(data.date) } : {}),
           ...(data.expiryDate !== undefined ? { expiryDate: fromISODate(data.expiryDate) } : {}),
         },

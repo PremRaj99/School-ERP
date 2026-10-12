@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { MAX_PAGE_SIZE } from '@schoolerp/contracts';
 import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
+import { compareClassName, getCurrentSessionYear, sessionList } from '@/lib/session';
 
 /**
  * Every `<select>`/combobox in the admin portal should be fed from one of these instead of a
@@ -26,45 +27,48 @@ function useAdminClasses() {
   });
 }
 
-/** Distinct class names across every class-section-session the school has. */
-export function useClassNameOptions(): Option[] {
+/**
+ * Distinct class names, in school order (Nursery, LKG, UKG, 1 … 12). Pass `session` to only list
+ * classes that exist in that session — without it, every session's classes are merged, so "Class
+ * 5" would offer sections from previous years too. Archived classes are never listed (the list
+ * endpoint leaves them out by default).
+ */
+export function useClassNameOptions(session?: string): Option[] {
   const { data } = useAdminClasses();
   return useMemo(() => {
-    const names = Array.from(new Set((data ?? []).map((c) => c.className)));
-    return names.sort().map((name) => ({ value: name, label: `Class ${name}` }));
-  }, [data]);
+    const scoped = (data ?? []).filter((c) => !session || c.session === session);
+    const names = Array.from(new Set(scoped.map((c) => c.className)));
+    return names.sort(compareClassName).map((name) => ({ value: name, label: `Class ${name}` }));
+  }, [data, session]);
 }
 
-/** Sections that exist for `className` — empty (not "all sections") until a class is chosen. */
-export function useSectionOptions(className: string | undefined): Option[] {
+/** Sections that exist for `className` (in `session`, when given) — empty until a class is chosen. */
+export function useSectionOptions(className: string | undefined, session?: string): Option[] {
   const { data } = useAdminClasses();
   return useMemo(() => {
     if (!className) return [];
-    const sections = (data ?? []).filter((c) => c.className === className).map((c) => c.section);
+    const sections = (data ?? [])
+      .filter((c) => c.className === className && (!session || c.session === session))
+      .map((c) => c.section);
     return Array.from(new Set(sections))
       .sort()
       .map((section) => ({ value: section, label: `Section ${section}` }));
-  }, [data, className]);
+  }, [data, className, session]);
 }
 
 /**
- * Academic sessions, generated the same way the backend's `getCurrentSessionYear()` does (a
- * session starts in April) — not fetched, since picking a *new* session (e.g. for next year's
- * intake) is a normal, valid choice that no existing `Class` row would have yet.
+ * Academic sessions, newest first, with the current one labelled "(Current)". Generated the same
+ * way the backend's `getCurrentSessionYear()` does (a session starts in April) — not fetched,
+ * since picking a *new* session (e.g. for next year's intake) is a normal, valid choice that no
+ * existing `Class` row would have yet. Default a picker to `getCurrentSessionYear()` from
+ * `lib/session.ts`, never to an index into this list.
  */
 export function useSessionOptions(): Option[] {
   return useMemo(() => {
-    const now = new Date();
-    const currentStartYear = now.getMonth() + 1 >= 4 ? now.getFullYear() : now.getFullYear() - 1;
-    const minStartYear = 2023;
-    const maxStartYear = Math.max(currentStartYear + 1, 2026);
-    const startYears: number[] = [];
-    for (let year = minStartYear; year <= maxStartYear; year++) {
-      startYears.push(year);
-    }
-    return startYears.map((year) => ({
-      value: `${year}-${year + 1}`,
-      label: `${year}-${year + 1}`,
+    const current = getCurrentSessionYear();
+    return sessionList().map((value) => ({
+      value,
+      label: value === current ? `${value} (Current)` : value,
     }));
   }, []);
 }

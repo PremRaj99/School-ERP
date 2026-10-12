@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm, useFieldArray, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { ColumnDef, SortingState } from '@tanstack/react-table';
@@ -23,10 +23,12 @@ import {
   PersonFinanceSummaryDialog,
   type SummaryTarget,
 } from '@/components/finance/PersonFinanceSummaryDialog';
-import { SCHOOL_NAME } from '@/lib/finance-format';
-import { printElement } from '@/lib/print';
+import { FeeDueHint } from '@/components/finance/FeeDueHint';
+import { FeeRulesDialog } from '@/components/finance/FeeRulesDialog';
+import { FeeReceiptDialog } from '@/components/finance/FeeReceipt';
+import { RecordPaymentDialog, type PaymentTarget } from '@/components/finance/RecordPaymentDialog';
 import { adminService } from '@/lib/services/admin.service';
-import { useStudentOptions } from '@/hooks/options/useAdminOptions';
+import { useSessionOptions, useStudentOptions } from '@/hooks/options/useAdminOptions';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import {
   CreateStudentFeeBody,
@@ -37,9 +39,12 @@ import {
   type TeacherSalaryRecord,
   type FinanceAuditLogRecord,
   type TxnStatus,
+  type UpdateStatusBody,
 } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
+import { getCurrentSessionYear } from '@/lib/session';
+import { FILTER_SELECT_CLASS } from '@/components/filters';
 import { toast } from 'sonner';
 import {
   PiCreditCard,
@@ -47,6 +52,7 @@ import {
   PiPrinter,
   PiSparkle,
   PiReceipt,
+  PiGear,
   PiTrash,
   PiPencilSimple,
   PiClockCounterClockwise,
@@ -75,10 +81,14 @@ const emptyFeeDefaults: CreateStudentFeeBody = {
 
 export const AdminFinance: React.FC = () => {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState('studentFees');
+  // Scopes both ledgers, the monthly-status views and the summary strip.
+  const [session, setSession] = useState(getCurrentSessionYear);
+  const sessionOptions = useSessionOptions();
   const [isCollectFeeOpen, setIsCollectFeeOpen] = useState(false);
-  const [selectedReceipt, setSelectedReceipt] = useState<StudentFeeRecord | null>(null);
-  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
-  const receiptRef = useRef<HTMLDivElement>(null);
+  const [receiptFeeId, setReceiptFeeId] = useState<string | null>(null);
+  const [isFeeRulesOpen, setIsFeeRulesOpen] = useState(false);
+  const [paymentTarget, setPaymentTarget] = useState<PaymentTarget | null>(null);
 
   // Monthly status ("who has / hasn't paid") vs. the full record ledger, per tab.
   const [feeView, setFeeView] = useState<'monthly' | 'ledger'>('monthly');
@@ -110,10 +120,10 @@ export const AdminFinance: React.FC = () => {
 
   useEffect(() => {
     queueMicrotask(() => setFeePageIndex(0));
-  }, [debouncedFeeSearch, feeStatusFilter]);
+  }, [debouncedFeeSearch, feeStatusFilter, session]);
   useEffect(() => {
     queueMicrotask(() => setSalaryPageIndex(0));
-  }, [debouncedSalarySearch, salaryStatusFilter]);
+  }, [debouncedSalarySearch, salaryStatusFilter, session]);
 
   const studentOptions = useStudentOptions();
 
@@ -170,6 +180,7 @@ export const AdminFinance: React.FC = () => {
   const feeListQuery = {
     page: feePageIndex + 1,
     pageSize: 10,
+    session,
     q: debouncedFeeSearch || undefined,
     status: (feeStatusFilter || undefined) as TxnStatus | undefined,
     sortBy: feeSort ? SORT_FIELD_BY_COLUMN_ID[feeSort.id] : undefined,
@@ -180,6 +191,7 @@ export const AdminFinance: React.FC = () => {
   const salaryListQuery = {
     page: salaryPageIndex + 1,
     pageSize: 10,
+    session,
     q: debouncedSalarySearch || undefined,
     status: (salaryStatusFilter || undefined) as TxnStatus | undefined,
     sortBy: salarySort ? SORT_FIELD_BY_COLUMN_ID[salarySort.id] : undefined,
@@ -215,8 +227,8 @@ export const AdminFinance: React.FC = () => {
   // a page of paginated rows (ALIGNMENT_PLAN.md 2C/P1 broke the old "sum the loaded array" approach
   // the moment this list stopped returning everything in one response).
   const { data: financeAnalytics } = useQuery({
-    queryKey: qk.admin.analyticsFinance(),
-    queryFn: () => adminService.getAnalyticsFinance(),
+    queryKey: qk.admin.analyticsFinance(session),
+    queryFn: () => adminService.getAnalyticsFinance(session),
   });
   const feesRealized = (financeAnalytics?.monthly ?? []).reduce((sum, m) => sum + m.collected, 0);
   const feesPending = (financeAnalytics?.monthly ?? []).reduce((sum, m) => sum + m.pending, 0);
@@ -268,10 +280,13 @@ export const AdminFinance: React.FC = () => {
   });
 
   const updateFeeStatusMutation = useMutation({
-    mutationFn: ({ feeId, status }: { feeId: string; status: TxnStatus }) =>
-      adminService.updateStudentFeeStatus(feeId, status),
-    onSuccess: () => {
-      toast.success('Fee status updated!');
+    mutationFn: ({ feeId, body }: { feeId: string; body: UpdateStatusBody }) =>
+      adminService.updateStudentFeeStatus(feeId, body),
+    onSuccess: (fee, { body }) => {
+      toast.success(fee.receiptNo ? `Payment recorded · ${fee.receiptNo}` : 'Fee status updated!');
+      setPaymentTarget(null);
+      // Straight to the receipt after collecting a payment — the usual next step at the counter.
+      if (fee.status === 'Paid' && body.paymentMode) setReceiptFeeId(fee.id);
       queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
       queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
@@ -319,11 +334,6 @@ export const AdminFinance: React.FC = () => {
 
   const onCollectSubmit: SubmitHandler<CreateStudentFeeBody> = (values) => {
     collectFeeMutation.mutate(values);
-  };
-
-  const openReceiptModal = (fee: StudentFeeRecord) => {
-    setSelectedReceipt(fee);
-    setIsReceiptOpen(true);
   };
 
   const openEditFeeModal = async (fee: StudentFeeRecord) => {
@@ -378,7 +388,10 @@ export const AdminFinance: React.FC = () => {
       accessorKey: 'finalAmount',
       header: 'Total Amount',
       cell: ({ row }) => (
-        <span className="text-xs font-bold">₹{row.original.finalAmount.toLocaleString()}</span>
+        <div>
+          <span className="text-xs font-bold">₹{row.original.finalAmount.toLocaleString()}</span>
+          <FeeDueHint {...row.original} />
+        </div>
       ),
     },
     {
@@ -391,9 +404,20 @@ export const AdminFinance: React.FC = () => {
         return (
           <NativeSelect
             value={fee.status}
-            onChange={(e) =>
-              updateFeeStatusMutation.mutate({ feeId: fee.id, status: e.target.value as TxnStatus })
-            }
+            onChange={(e) => {
+              const status = e.target.value as TxnStatus;
+              if (status === 'Paid') {
+                setPaymentTarget({
+                  feeId: fee.id,
+                  studentName: `${fee.firstName} ${fee.lastName ?? ''}`.trim(),
+                  month: fee.month,
+                  amount: fee.finalAmount,
+                  lateFine: fee.lateFine,
+                });
+              } else {
+                updateFeeStatusMutation.mutate({ feeId: fee.id, body: { status } });
+              }
+            }}
             disabled={updateFeeStatusMutation.isPending}
             className={`h-7 w-28 text-[11px] font-semibold ${
               isPaid
@@ -457,7 +481,7 @@ export const AdminFinance: React.FC = () => {
                 className="text-primary hover:bg-primary/10 h-7 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
-                  openReceiptModal(fee);
+                  setReceiptFeeId(fee.id);
                 }}
               >
                 <PiPrinter className="mr-1 h-3.5 w-3.5" />
@@ -674,22 +698,46 @@ export const AdminFinance: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold tracking-tight">Finance & Fee Ledger</h1>
-            <Badge variant="outline" className="text-xs">
-              Session 2025-2026
-            </Badge>
+            <label>
+              <span className="sr-only">Session</span>
+              <select
+                value={session}
+                onChange={(e) => setSession(e.target.value)}
+                className={FILTER_SELECT_CLASS}
+              >
+                {sessionOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    Session {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
             Fee collections, payment receipts, and staff honorarium disbursements.
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsCollectFeeOpen(true)}
-          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
-        >
-          <PiPlus className="h-3.5 w-3.5" />
-          <span>Collect Student Fee</span>
-        </Button>
+        {/* Each other tab carries its own actions (Expenses has its own Add button). */}
+        {activeTab === 'studentFees' && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsFeeRulesOpen(true)}
+              className="h-9 gap-1.5 text-xs"
+            >
+              <PiGear className="h-3.5 w-3.5" />
+              <span>Fee Rules</span>
+            </Button>
+            <Button
+              onClick={() => setIsCollectFeeOpen(true)}
+              className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
+            >
+              <PiPlus className="h-3.5 w-3.5" />
+              <span>Collect Student Fee</span>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Summary Metrics */}
@@ -735,7 +783,7 @@ export const AdminFinance: React.FC = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="studentFees" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="h-10 rounded-md border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
           <TabsTrigger value="studentFees" className="rounded-md px-4 text-xs font-semibold">
             <PiReceipt className="mr-1.5 h-3.5 w-3.5" />
@@ -765,6 +813,8 @@ export const AdminFinance: React.FC = () => {
           />
           {feeView === 'monthly' ? (
             <MonthlyFeeStatus
+              key={session}
+              session={session}
               onCreateInvoice={openCollectFor}
               onOpenSummary={(studentId) => setSummaryTarget({ kind: 'student', studentId })}
             />
@@ -836,6 +886,8 @@ export const AdminFinance: React.FC = () => {
           />
           {salaryView === 'monthly' ? (
             <MonthlyHonorariumStatus
+              key={session}
+              session={session}
               onOpenSummary={(teacherId) => setSummaryTarget({ kind: 'teacher', teacherId })}
             />
           ) : salariesErrored ? (
@@ -1047,80 +1099,25 @@ export const AdminFinance: React.FC = () => {
 
       <PersonFinanceSummaryDialog target={summaryTarget} onClose={() => setSummaryTarget(null)} />
 
-      {/* Official Payment Receipt Modal */}
-      <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
-        <DialogContent className="sm:max-w-lg lg:max-w-xl">
-          {selectedReceipt && (
-            <div className="space-y-4 pt-2">
-              <div
-                ref={receiptRef}
-                className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-5 text-xs dark:border-zinc-700 dark:bg-zinc-800/60"
-              >
-                <div className="flex items-center justify-between border-b pb-3">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                      {SCHOOL_NAME}
-                    </h3>
-                    <p className="text-muted-foreground text-[10px]">Official Fee Receipt</p>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className="border-emerald-500/30 text-[9px] text-emerald-600"
-                  >
-                    PAID
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                  <div>
-                    <span className="text-muted-foreground text-[10px]">Student ID:</span>
-                    <p className="font-mono font-bold">{selectedReceipt.studentId}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-[10px]">Receipt #:</span>
-                    <p className="font-mono font-bold">{selectedReceipt.id}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-[10px]">Month:</span>
-                    <p className="font-semibold">{selectedReceipt.month}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-[10px]">Payment Date:</span>
-                    <p className="font-semibold">{selectedReceipt.paidAt}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1 border-t pt-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{selectedReceipt.title}:</span>
-                    <span className="font-semibold">
-                      ₹{selectedReceipt.finalAmount.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between border-t pt-2 text-sm font-bold text-slate-900 dark:text-white">
-                    <span>Total Paid:</span>
-                    <span className="text-emerald-600 dark:text-emerald-400">
-                      ₹{selectedReceipt.finalAmount.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  className="bg-primary hover:bg-primary/90 w-full text-xs text-white"
-                  onClick={() =>
-                    printElement(receiptRef.current, `Fee receipt - ${selectedReceipt.studentId}`)
-                  }
-                >
-                  <PiPrinter className="mr-1.5 h-3.5 w-3.5" />
-                  <span>Print Receipt</span>
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <FeeRulesDialog open={isFeeRulesOpen} onClose={() => setIsFeeRulesOpen(false)} />
+      <RecordPaymentDialog
+        target={paymentTarget}
+        onClose={() => setPaymentTarget(null)}
+        pending={updateFeeStatusMutation.isPending}
+        onConfirm={(payment) =>
+          paymentTarget &&
+          updateFeeStatusMutation.mutate({
+            feeId: paymentTarget.feeId,
+            body: { status: 'Paid', ...payment },
+          })
+        }
+      />
+      <FeeReceiptDialog
+        feeId={receiptFeeId}
+        onClose={() => setReceiptFeeId(null)}
+        queryKey={qk.admin.studentFee(receiptFeeId ?? '')}
+        load={adminService.getStudentFeeById}
+      />
 
       {/* Edit Fee Modal */}
       <Dialog

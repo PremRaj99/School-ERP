@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { PiCheckCircle, PiPlus, PiReceipt } from 'react-icons/pi';
+import { PiCheckCircle, PiPlus, PiPrinter, PiReceipt } from 'react-icons/pi';
 import type {
   MonthlyStatusFilter,
   StudentMonthlyStatusQuery,
   StudentMonthlyStatusRow,
+  UpdateStatusBody,
 } from '@schoolerp/contracts';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { DataTable, ErrorState } from '@/components/data-table';
 import { adminService } from '@/lib/services/admin.service';
 import { useClassNameOptions, useSectionOptions } from '@/hooks/options/useAdminOptions';
@@ -19,9 +19,16 @@ import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { isoToDisplayDate } from '@/lib/date';
 import { MonthlyStatusBadge, MonthlySummaryCards, StatusFilterChips } from './monthlyStatus';
-import { currentISOMonth, formatMonth, formatRupees, selectClass } from '@/lib/finance-format';
+import { SessionMonthPicker } from '@/components/filters';
+import { FeeReceiptDialog } from './FeeReceipt';
+import { FeeDueHint } from './FeeDueHint';
+import { RecordPaymentDialog, type PaymentTarget } from './RecordPaymentDialog';
+import { defaultMonth } from '@/lib/session';
+import { formatMonth, formatRupees, selectClass } from '@/lib/finance-format';
 
 interface Props {
+  /** The Finance page's session — the month picker stays inside it. */
+  session: string;
   /** Opens the page's Collect Fee dialog prefilled for this student and month. */
   onCreateInvoice: (studentId: string, month: string) => void;
   onOpenSummary: (studentId: string) => void;
@@ -31,9 +38,9 @@ interface Props {
  * "Who has / hasn't paid this month" view: every student on the roster for the chosen month with
  * their fee status, including students with no fee record generated yet.
  */
-export const MonthlyFeeStatus: React.FC<Props> = ({ onCreateInvoice, onOpenSummary }) => {
+export const MonthlyFeeStatus: React.FC<Props> = ({ session, onCreateInvoice, onOpenSummary }) => {
   const queryClient = useQueryClient();
-  const [month, setMonth] = useState(currentISOMonth);
+  const [month, setMonth] = useState(() => defaultMonth(session));
   const [className, setClassName] = useState('');
   const [section, setSection] = useState('');
   const [status, setStatus] = useState<MonthlyStatusFilter | ''>('Unpaid');
@@ -41,8 +48,8 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ onCreateInvoice, onOpenSumma
   const debouncedSearch = useDebouncedValue(search);
   const [pageIndex, setPageIndex] = useState(0);
 
-  const classOptions = useClassNameOptions();
-  const sectionOptions = useSectionOptions(className || undefined);
+  const classOptions = useClassNameOptions(session);
+  const sectionOptions = useSectionOptions(className || undefined, session);
 
   useEffect(() => {
     queueMicrotask(() => setPageIndex(0));
@@ -54,6 +61,7 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ onCreateInvoice, onOpenSumma
     pageSize: 15,
     className: className || undefined,
     section: section || undefined,
+    session,
     status: status || undefined,
     q: debouncedSearch || undefined,
   };
@@ -65,10 +73,21 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ onCreateInvoice, onOpenSumma
     placeholderData: (prev) => prev,
   });
 
+  const [paymentTarget, setPaymentTarget] = useState<PaymentTarget | null>(null);
+  const [receiptFeeId, setReceiptFeeId] = useState<string | null>(null);
+
   const markPaid = useMutation({
-    mutationFn: (feeId: string) => adminService.updateStudentFeeStatus(feeId, 'Paid'),
-    onSuccess: () => {
-      toast.success('Marked as paid.');
+    mutationFn: ({
+      feeId,
+      payment,
+    }: {
+      feeId: string;
+      payment: Omit<UpdateStatusBody, 'status'>;
+    }) => adminService.updateStudentFeeStatus(feeId, { status: 'Paid', ...payment }),
+    onSuccess: (fee) => {
+      toast.success(fee.receiptNo ? `Payment recorded · ${fee.receiptNo}` : 'Marked as paid.');
+      setPaymentTarget(null);
+      setReceiptFeeId(fee.id);
       queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
       queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
@@ -117,9 +136,10 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ onCreateInvoice, onOpenSumma
       header: 'Amount',
       enableSorting: false,
       cell: ({ row }) => (
-        <span className="text-xs font-bold tabular-nums">
+        <div className="text-xs font-bold tabular-nums">
           {row.original.amount != null ? formatRupees(row.original.amount) : '—'}
-        </span>
+          <FeeDueHint status={row.original.status} lateFine={row.original.lateFine} />
+        </div>
       ),
     },
     {
@@ -163,11 +183,29 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ onCreateInvoice, onOpenSumma
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-900/30"
-                disabled={markPaid.isPending}
-                onClick={() => markPaid.mutate(s.feeId!)}
+                onClick={() =>
+                  setPaymentTarget({
+                    feeId: s.feeId!,
+                    studentName: `${s.firstName} ${s.lastName ?? ''}`.trim(),
+                    month,
+                    amount: s.amount ?? 0,
+                    lateFine: s.lateFine,
+                  })
+                }
               >
                 <PiCheckCircle className="mr-1 h-3.5 w-3.5" />
                 Mark paid
+              </Button>
+            )}
+            {s.status === 'Paid' && s.feeId && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary hover:bg-primary/10 h-7 text-xs"
+                onClick={() => setReceiptFeeId(s.feeId)}
+              >
+                <PiPrinter className="mr-1 h-3.5 w-3.5" />
+                Receipt
               </Button>
             )}
             <Button
@@ -188,15 +226,7 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ onCreateInvoice, onOpenSumma
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-2">
-        <label className="text-muted-foreground flex flex-col gap-1 text-[11px] font-semibold">
-          Month
-          <Input
-            type="month"
-            value={month}
-            onChange={(e) => e.target.value && setMonth(e.target.value)}
-            className="h-9 w-40 text-xs"
-          />
-        </label>
+        <SessionMonthPicker value={month} onChange={setMonth} session={session} />
         <label className="text-muted-foreground flex flex-col gap-1 text-[11px] font-semibold">
           Class
           <select
@@ -272,6 +302,21 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ onCreateInvoice, onOpenSumma
           />
         </Card>
       )}
+
+      <RecordPaymentDialog
+        target={paymentTarget}
+        onClose={() => setPaymentTarget(null)}
+        pending={markPaid.isPending}
+        onConfirm={(payment) =>
+          paymentTarget && markPaid.mutate({ feeId: paymentTarget.feeId, payment })
+        }
+      />
+      <FeeReceiptDialog
+        feeId={receiptFeeId}
+        onClose={() => setReceiptFeeId(null)}
+        queryKey={qk.admin.studentFee(receiptFeeId ?? '')}
+        load={adminService.getStudentFeeById}
+      />
     </div>
   );
 };

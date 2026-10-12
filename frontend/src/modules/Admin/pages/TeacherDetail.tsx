@@ -42,6 +42,8 @@ import {
 } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ResetPasswordDialog } from './ResetPasswordDialog';
+import { SessionMonthPicker } from '@/components/filters';
+import { currentMonth } from '@/lib/session';
 
 const STATUS_STYLES: Record<string, string> = {
   Paid: 'border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300',
@@ -57,14 +59,12 @@ const ATTENDANCE_STYLES: Record<string, string> = {
   Leave: 'border-amber-500/30 bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300',
 };
 
-const currentMonthString = () => new Date().toISOString().slice(0, 7);
-
 export const AdminTeacherDetail: React.FC = () => {
   const { teacherId = '' } = useParams<{ teacherId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [month, setMonth] = useState(currentMonthString);
+  const [month, setMonth] = useState(currentMonth);
   const [resetResult, setResetResult] = useState<{
     username: string;
     temporaryPassword: string;
@@ -303,12 +303,7 @@ export const AdminTeacherDetail: React.FC = () => {
                 {attendanceSummary.leave} leave (of {attendanceSummary.total} marked days)
               </CardDescription>
             </div>
-            <input
-              type="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              className="border-input h-8 rounded-md border bg-transparent px-2 text-xs font-semibold"
-            />
+            <SessionMonthPicker value={month} onChange={setMonth} noFuture compact />
           </CardHeader>
           {attendanceLoading ? (
             <div className="space-y-1.5 p-4">

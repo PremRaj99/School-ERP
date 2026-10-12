@@ -58,6 +58,7 @@ import {
   type TransactionRecord,
   type UpdateClassBody,
   type UpdateExamBody,
+  type UpdateExamScheduleBody,
   type UpdateNoticeBody,
   type UpdateStudentBody,
   type UpdateStudentFeeBody,
@@ -67,6 +68,9 @@ import {
   type UpdateTeacherSalaryBody,
   type UpdateTimeTableBody,
   type UpdateTransactionBody,
+  type UpdateStatusBody,
+  adminFeeSettingsContract,
+  type FeeSettings,
 } from '@schoolerp/contracts';
 import { api } from '../api/typed-client';
 
@@ -126,6 +130,10 @@ export const adminService = {
   // Exams
   getExams: (query?: ExamListQuery) => api(adminExamContract.list, { query: query ?? {} }),
   getExamById: (examId: string) => api(adminExamContract.detail, { params: { examId } }),
+  getExamReportCards: (examId: string) =>
+    api(adminExamContract.reportCards, { params: { examId } }),
+  updateExamSchedule: (examId: string, body: UpdateExamScheduleBody) =>
+    api(adminExamContract.updateSchedule, { params: { examId }, body }),
   createExam: (body: CreateExamBody): Promise<ExamRecord[]> =>
     api(adminExamContract.create, { body }),
   updateExam: (examId: string, body: UpdateExamBody): Promise<ExamRecord> =>
@@ -162,11 +170,11 @@ export const adminService = {
   createStudentFee: (body: CreateStudentFeeBody) => api(adminStudentFeeContract.create, { body }),
   updateStudentFee: (feeId: string, body: UpdateStudentFeeBody) =>
     api(adminStudentFeeContract.update, { params: { feeId }, body }),
-  updateStudentFeeStatus: (
-    feeId: string,
-    status: StudentFeeRecord['status'],
-  ): Promise<StudentFeeRecord> =>
-    api(adminStudentFeeContract.updateStatus, { params: { feeId }, body: { status } }),
+  getFeeSettings: () => api(adminFeeSettingsContract.get),
+  updateFeeSettings: (body: FeeSettings) => api(adminFeeSettingsContract.update, { body }),
+  /** Marking Paid can carry the payment mode/reference; the response then has a receipt number. */
+  updateStudentFeeStatus: (feeId: string, body: UpdateStatusBody): Promise<StudentFeeRecord> =>
+    api(adminStudentFeeContract.updateStatus, { params: { feeId }, body }),
   deleteStudentFee: (feeId: string): Promise<{ id: string }> =>
     api(adminStudentFeeContract.remove, { params: { feeId } }),
   getStudentFeeMonthlyStatus: (query: StudentMonthlyStatusQuery) =>

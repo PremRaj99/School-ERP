@@ -33,6 +33,7 @@ import AdminStudentDetail from '@/modules/Admin/pages/StudentDetail';
 import AdminTeacherDetail from '@/modules/Admin/pages/TeacherDetail';
 import AdminClassDetail from '@/modules/Admin/pages/ClassDetail';
 import AdminExamDetail from '@/modules/Admin/pages/ExamDetail';
+import AdminExamReportCards from '@/modules/Admin/pages/ExamReportCards';
 import AdminSettings from '@/modules/Admin/pages/Settings';
 
 // Student Module Pages
@@ -104,6 +105,7 @@ export const router = createBrowserRouter([
       { path: 'subjects', element: <AdminSubjects /> },
       { path: 'exams', element: <AdminExams /> },
       { path: 'exams/:examId', element: <AdminExamDetail /> },
+      { path: 'exams/:examId/report-cards', element: <AdminExamReportCards /> },
       { path: 'notices', element: <AdminNotices /> },
       { path: 'academic', element: <AdminAcademic /> },
       { path: 'finance', element: <AdminFinance /> },

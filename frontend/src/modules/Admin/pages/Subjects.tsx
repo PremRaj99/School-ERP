@@ -32,10 +32,12 @@ import {
   PiGitBranch,
   PiChalkboard,
 } from 'react-icons/pi';
+import { compareClassName } from '@/lib/session';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const AdminSubjects: React.FC = () => {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<SubjectRecord | null>(null);
@@ -140,19 +142,21 @@ export const AdminSubjects: React.FC = () => {
           </p>
         </div>
 
-        <Button
-          onClick={() => {
-            setFormData({ subjectName: '' });
-            setIsCreateOpen(true);
-          }}
-          className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
-        >
-          <PiPlus className="h-3.5 w-3.5" />
-          <span>Add Subject</span>
-        </Button>
+        {activeTab === 'all' && (
+          <Button
+            onClick={() => {
+              setFormData({ subjectName: '' });
+              setIsCreateOpen(true);
+            }}
+            className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
+          >
+            <PiPlus className="h-3.5 w-3.5" />
+            <span>Add Subject</span>
+          </Button>
+        )}
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="h-10 rounded-md border border-slate-200 bg-slate-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/80">
           <TabsTrigger value="all" className="rounded-md px-4 text-xs font-semibold">
             <PiListBullets className="mr-1.5 h-3.5 w-3.5" />
@@ -288,28 +292,30 @@ export const AdminSubjects: React.FC = () => {
                       No subjects are assigned to a class yet.
                     </p>
                   ) : (
-                    groupedSubjects?.assignedSubjects.map((group) => (
-                      <div
-                        key={group.className}
-                        className="rounded-md border border-slate-100 p-3 dark:border-zinc-800"
-                      >
-                        <Badge variant="secondary" className="mb-2 text-[10px] font-semibold">
-                          Class {group.className}
-                        </Badge>
-                        <div className="flex flex-wrap gap-1.5">
-                          {group.subjects.map((s) => (
-                            <Badge
-                              key={s.subjectCode}
-                              variant="outline"
-                              className="text-[10px] font-medium"
-                            >
-                              <PiBookOpen className="text-primary mr-1 h-2.5 w-2.5" />
-                              {s.subjectName}
-                            </Badge>
-                          ))}
+                    [...(groupedSubjects?.assignedSubjects ?? [])]
+                      .sort((a, b) => compareClassName(a.className, b.className))
+                      .map((group) => (
+                        <div
+                          key={group.className}
+                          className="rounded-md border border-slate-100 p-3 dark:border-zinc-800"
+                        >
+                          <Badge variant="secondary" className="mb-2 text-[10px] font-semibold">
+                            Class {group.className}
+                          </Badge>
+                          <div className="flex flex-wrap gap-1.5">
+                            {group.subjects.map((s) => (
+                              <Badge
+                                key={s.subjectCode}
+                                variant="outline"
+                                className="text-[10px] font-medium"
+                              >
+                                <PiBookOpen className="text-primary mr-1 h-2.5 w-2.5" />
+                                {s.subjectName}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      ))
                   )}
                 </CardContent>
               </Card>

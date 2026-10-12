@@ -41,10 +41,14 @@ export const AdminStudentAttendanceReport = z.object({
   from: ISODate,
   to: ISODate,
   /** Count of distinct dates within [from, to] where this class's attendance was actually marked
-   * (`ClassAttendance.isMarked`) — the denominator for every row's `attendancePercent`. */
+   * (`ClassAttendance.isMarked`) — the denominator for every row's `attendancePercent`. A day
+   * marked on what is now a holiday is left out. */
   totalMarkedDays: z.number().int(),
   /** The marked dates themselves (date-ascending) — the columns of a daily register. */
   markedDates: z.array(ISODate),
+  /** Non-working days in [from, to] (Sundays and calendar HOLIDAY events), date-ascending — a
+   * daily register shows these as "H". */
+  holidays: z.array(z.object({ date: ISODate, title: z.string() })),
   students: z.array(StudentAttendanceSummaryRow),
 });
 export type AdminStudentAttendanceReport = z.infer<typeof AdminStudentAttendanceReport>;
@@ -61,7 +65,7 @@ export const ClassAttendanceSummaryRow = z.object({
   className: ClassName,
   section: Section,
   studentCount: z.number().int(),
-  /** Distinct dates in the range where this class's attendance was marked. */
+  /** Distinct non-holiday dates in the range where this class's attendance was marked. */
   totalMarkedDays: z.number().int(),
   presentCount: z.number().int(),
   absentCount: z.number().int(),

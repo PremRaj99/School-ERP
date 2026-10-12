@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
-import { TextField, DateField, NumberField, SelectField } from '@/components/form';
+import { TextField, DateField, NumberField, SelectField, TimeField } from '@/components/form';
 import {
   useClassNameOptions,
   useSectionOptions,
@@ -271,6 +271,8 @@ export function ExamWizardSheet({
                   className={group.className}
                   section={group.section}
                   subjectOptions={subjectOptions}
+                  dateFrom={watchedDateFrom}
+                  dateTo={watchedDateTo}
                 />
               ))}
             </div>
@@ -301,7 +303,10 @@ export function ExamWizardSheet({
                               s.subjectCode}
                           </span>
                           <span>
-                            {s.date} · {s.fullMarks} marks
+                            {s.date}
+                            {s.startTime &&
+                              ` ${s.startTime}${s.endTime ? `–${s.endTime}` : ''}`} · {s.fullMarks}{' '}
+                            marks
                           </span>
                         </li>
                       ))}
@@ -361,12 +366,17 @@ function ExamGroupSubjects({
   className,
   section,
   subjectOptions,
+  dateFrom,
+  dateTo,
 }: {
   control: Control<CreateExamBody>;
   groupIndex: number;
   className: string;
   section: string;
   subjectOptions: { value: string; label: string }[];
+  /** The exam window — paper dates are limited to it. */
+  dateFrom: string;
+  dateTo: string;
 }) {
   const { fields, append, remove } = useFieldArray({
     control,
@@ -388,7 +398,7 @@ function ExamGroupSubjects({
             size="sm"
             variant="outline"
             className="h-7 text-xs"
-            onClick={() => append({ subjectCode: '', date: '', fullMarks: 100 })}
+            onClick={() => append({ subjectCode: '', date: dateFrom, fullMarks: 100 })}
           >
             <PiPlus className="mr-1 h-3 w-3" />
             Add Subject
@@ -402,8 +412,8 @@ function ExamGroupSubjects({
         ) : (
           <div className="space-y-2">
             {fields.map((field, subjectIndex) => (
-              <div key={field.id} className="flex items-end gap-2">
-                <div className="flex-2">
+              <div key={field.id} className="flex flex-wrap items-end gap-2">
+                <div className="min-w-40 flex-2">
                   <SelectField
                     control={control}
                     name={`exams.${groupIndex}.subjects.${subjectIndex}.subjectCode`}
@@ -411,14 +421,30 @@ function ExamGroupSubjects({
                     options={subjectOptions}
                   />
                 </div>
-                <div className="flex-1">
+                <div className="w-36">
                   <DateField
                     control={control}
                     name={`exams.${groupIndex}.subjects.${subjectIndex}.date`}
                     label="Date"
+                    min={dateFrom}
+                    max={dateTo}
                   />
                 </div>
-                <div className="flex-1">
+                <div className="w-28">
+                  <TimeField
+                    control={control}
+                    name={`exams.${groupIndex}.subjects.${subjectIndex}.startTime`}
+                    label="Starts"
+                  />
+                </div>
+                <div className="w-28">
+                  <TimeField
+                    control={control}
+                    name={`exams.${groupIndex}.subjects.${subjectIndex}.endTime`}
+                    label="Ends"
+                  />
+                </div>
+                <div className="w-24">
                   <NumberField
                     control={control}
                     name={`exams.${groupIndex}.subjects.${subjectIndex}.fullMarks`}

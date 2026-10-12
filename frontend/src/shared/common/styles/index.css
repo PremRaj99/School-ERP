@@ -200,3 +200,35 @@
 .animate-pulse-subtle {
   animation: pulse-subtle 4s ease-in-out infinite;
 }
+
+/*
+ * Print: just the page content. App chrome (sidebar, top bar), anything marked
+ * `data-print-hide` (filter bars, buttons) is dropped, and capped-height scroll tables expand so
+ * every row prints — not only the ones visible on screen.
+ */
+@media print {
+  aside,
+  header,
+  [data-print-hide] {
+    display: none !important;
+  }
+  .lg\:pl-64 {
+    padding-left: 0 !important;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  [data-slot='table-container'] {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  thead {
+    position: static !important;
+    box-shadow: none !important;
+  }
+  tr {
+    break-inside: avoid;
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,72 +16,14 @@ import { ErrorState } from '@/components/data-table';
 import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import { dateToIsoDate, isoToDisplayDate } from '@/lib/date';
+import { isoToDisplayDate } from '@/lib/date';
+import { compareClassSection, monthDays, monthLabel, monthRange } from '@/lib/session';
+import { ExportButton } from '@/components/filters';
+import { ClassFilterBar } from '@/components/filters';
+import { useClassFilter } from '@/hooks/useClassFilter';
 import type { AdminStudentAttendanceReport, AttendanceStatus } from '@schoolerp/contracts';
 import { PiCalendarBlank, PiChalkboard, PiUsers } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
-
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
-/** Mirrors the backend's `getCurrentSessionYear()` — a session runs April to March. */
-function getCurrentSessionYear(): string {
-  const now = new Date();
-  const start = now.getMonth() + 1 >= 4 ? now.getFullYear() : now.getFullYear() - 1;
-  return `${start}-${start + 1}`;
-}
-
-/** The 12 months of a `YYYY-YYYY` session as `YYYY-MM`, April first. */
-function sessionMonths(session: string): string[] {
-  const start = Number(session.slice(0, 4));
-  return Array.from({ length: 12 }, (_, i) => {
-    const monthIndex = (3 + i) % 12;
-    const year = i < 9 ? start : start + 1;
-    return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
-  });
-}
-
-function monthLabel(ym: string): string {
-  const [year, month] = ym.split('-').map(Number);
-  return `${MONTH_NAMES[month - 1]} ${year}`;
-}
-
-/** First and last day of a `YYYY-MM` month as ISO dates. */
-function monthRange(ym: string): { from: string; to: string } {
-  const [year, month] = ym.split('-').map(Number);
-  return {
-    from: dateToIsoDate(new Date(year, month - 1, 1)),
-    to: dateToIsoDate(new Date(year, month, 0)),
-  };
-}
-
-/** Every ISO date of a `YYYY-MM` month. */
-function monthDays(ym: string): string[] {
-  const [year, month] = ym.split('-').map(Number);
-  const count = new Date(year, month, 0).getDate();
-  return Array.from({ length: count }, (_, i) => dateToIsoDate(new Date(year, month - 1, i + 1)));
-}
-
-/** The current month if it falls inside `session`, otherwise the session's first month. */
-function defaultMonth(session: string): string {
-  const months = sessionMonths(session);
-  const current = dateToIsoDate(new Date()).slice(0, 7);
-  return months.includes(current) ? current : months[0];
-}
-
-const byNumeric = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
 
 function percentBadgeClass(pct: number): string {
   if (pct >= 90)
@@ -106,9 +48,6 @@ const STATUS_CELL: Record<AttendanceStatus, { label: string; className: string }
   },
 };
 
-const SELECT_CLASS =
-  'h-9 min-w-32 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900';
-const LABEL_CLASS = 'text-muted-foreground mb-1 block text-[11px] font-semibold';
 const CARD_CLASS =
   'overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90';
 
@@ -124,32 +63,8 @@ type View = 'all' | 'daily' | 'class';
  */
 export const AdminStudentAttendance: React.FC = () => {
   const [view, setView] = useState<View>('all');
-  const [session, setSession] = useState(getCurrentSessionYear);
-  const [className, setClassName] = useState('');
-  const [section, setSection] = useState('');
-  const [month, setMonth] = useState(() => defaultMonth(getCurrentSessionYear()));
-
-  const { data: classesList, isLoading: classesLoading } = useQuery({
-    queryKey: qk.admin.classes(),
-    queryFn: () => adminService.getClasses(),
-  });
-
-  const sessionOptions = useMemo(() => {
-    const all = new Set((classesList ?? []).map((c) => c.session));
-    all.add(getCurrentSessionYear());
-    return Array.from(all).sort().reverse();
-  }, [classesList]);
-
-  const sessionClasses = (classesList ?? []).filter((c) => c.session === session);
-  const classNameOptions = Array.from(new Set(sessionClasses.map((c) => c.className))).sort(
-    byNumeric,
-  );
-  const sectionOptions = Array.from(
-    new Set(sessionClasses.filter((c) => c.className === className).map((c) => c.section)),
-  ).sort(byNumeric);
-
-  const classId =
-    sessionClasses.find((c) => c.className === className && c.section === section)?.id ?? '';
+  const filter = useClassFilter();
+  const { session, month, classId } = filter;
   const { from, to } = monthRange(month);
 
   const reportQuery = useQuery({
@@ -165,8 +80,7 @@ export const AdminStudentAttendance: React.FC = () => {
   });
 
   const openClass = (name: string, sec: string) => {
-    setClassName(name);
-    setSection(sec);
+    filter.selectClass(name, sec);
     setView('class');
   };
 
@@ -200,86 +114,7 @@ export const AdminStudentAttendance: React.FC = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Filters — narrowed in order: session → class → section → month */}
-        <div className="flex flex-wrap items-end gap-3 pt-4">
-          <div>
-            <span className={LABEL_CLASS}>Session</span>
-            <select
-              value={session}
-              onChange={(e) => {
-                setSession(e.target.value);
-                setClassName('');
-                setSection('');
-                setMonth(defaultMonth(e.target.value));
-              }}
-              className={SELECT_CLASS}
-            >
-              {sessionOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                  {opt === getCurrentSessionYear() ? ' (Current)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-          {view !== 'all' && (
-            <>
-              <div>
-                <span className={LABEL_CLASS}>Class</span>
-                <select
-                  value={className}
-                  onChange={(e) => {
-                    setClassName(e.target.value);
-                    setSection('');
-                  }}
-                  disabled={classesLoading || classNameOptions.length === 0}
-                  className={SELECT_CLASS}
-                >
-                  <option value="">
-                    {classNameOptions.length === 0 && !classesLoading
-                      ? 'No classes'
-                      : 'Select class…'}
-                  </option>
-                  {classNameOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      Class {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <span className={LABEL_CLASS}>Section</span>
-                <select
-                  value={section}
-                  onChange={(e) => setSection(e.target.value)}
-                  disabled={!className}
-                  className={SELECT_CLASS}
-                >
-                  <option value="">Select section…</option>
-                  {sectionOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      Section {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
-          )}
-          <div>
-            <span className={LABEL_CLASS}>Month</span>
-            <select
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              className={SELECT_CLASS}
-            >
-              {sessionMonths(session).map((opt) => (
-                <option key={opt} value={opt}>
-                  {monthLabel(opt)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <ClassFilterBar filter={filter} showClass={view !== 'all'} showMonth className="pt-4" />
 
         {/* View 1 — every class in the session */}
         <TabsContent value="all" className="pt-4 focus:outline-hidden">
@@ -303,12 +138,39 @@ export const AdminStudentAttendance: React.FC = () => {
                   <PiChalkboard className="text-primary h-4 w-4" />
                   All Classes · {monthLabel(month)}
                 </CardTitle>
-                <CardDescription className="text-xs">
-                  Session {session} · click a class to see its students.
-                </CardDescription>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <CardDescription className="text-xs">
+                    Session {session} · click a class to see its students.
+                  </CardDescription>
+                  <ExportButton
+                    filename={`attendance-all-classes-${month}`}
+                    headers={[
+                      'Class',
+                      'Section',
+                      'Students',
+                      'Marked Days',
+                      'Present',
+                      'Absent',
+                      'Leave',
+                      'Attendance %',
+                    ]}
+                    rows={[...summaryQuery.data.classes]
+                      .sort(compareClassSection)
+                      .map((c) => [
+                        c.className,
+                        c.section,
+                        c.studentCount,
+                        c.totalMarkedDays,
+                        c.presentCount,
+                        c.absentCount,
+                        c.leaveCount,
+                        c.totalMarkedDays === 0 ? '' : c.attendancePercent,
+                      ])}
+                  />
+                </div>
               </CardHeader>
-              <Table>
-                <TableHeader>
+              <Table containerClassName="max-h-[32rem]">
+                <TableHeader sticky>
                   <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
                     <TableHead className="text-xs font-bold">Class</TableHead>
                     <TableHead className="text-xs font-bold">Students</TableHead>
@@ -320,7 +182,7 @@ export const AdminStudentAttendance: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {summaryQuery.data.classes.map((c) => (
+                  {[...summaryQuery.data.classes].sort(compareClassSection).map((c) => (
                     <TableRow
                       key={c.classId}
                       onClick={() => openClass(c.className, c.section)}
@@ -393,9 +255,19 @@ export const AdminStudentAttendance: React.FC = () => {
                         {report.totalMarkedDays === 1 ? '' : 's'}
                       </CardDescription>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {report.students.length} student{report.students.length === 1 ? '' : 's'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {report.students.length} student{report.students.length === 1 ? '' : 's'}
+                      </Badge>
+                      {report.totalMarkedDays > 0 && (
+                        <ExportButton
+                          filename={`attendance-${report.className}-${report.section}-${month}-${tab === 'daily' ? 'register' : 'summary'}`}
+                          {...(tab === 'daily'
+                            ? registerExport(report, month)
+                            : summaryExport(report))}
+                        />
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
 
@@ -422,9 +294,49 @@ export const AdminStudentAttendance: React.FC = () => {
   );
 };
 
+/** CSV for the Class Summary view — one row per student. */
+function summaryExport(report: AdminStudentAttendanceReport) {
+  return {
+    headers: ['Roll No', 'Student ID', 'Name', 'Present', 'Absent', 'Leave', 'Attendance %'],
+    rows: report.students.map((s) => [
+      s.rollNo,
+      s.studentId,
+      `${s.firstName} ${s.lastName ?? ''}`.trim(),
+      s.presentCount,
+      s.absentCount,
+      s.leaveCount,
+      s.attendancePercent,
+    ]),
+  };
+}
+
+/** CSV for the Daily Register — the same grid as on screen: P/A/L, H for holidays, blank. */
+function registerExport(report: AdminStudentAttendanceReport, month: string) {
+  const days = monthDays(month);
+  const holidays = new Set(report.holidays.map((h) => h.date));
+  return {
+    headers: ['Roll No', 'Name', ...days.map((d) => d.slice(8)), 'P', 'A', 'L'],
+    rows: report.students.map((s) => {
+      const statusByDate = new Map(s.daily.map((d) => [d.date, d.status]));
+      return [
+        s.rollNo,
+        `${s.firstName} ${s.lastName ?? ''}`.trim(),
+        ...days.map((d) => {
+          if (holidays.has(d)) return 'H';
+          const status = statusByDate.get(d);
+          return status ? STATUS_CELL[status].label : '';
+        }),
+        s.presentCount,
+        s.absentCount,
+        s.leaveCount,
+      ];
+    }),
+  };
+}
+
 const ClassSummaryTable: React.FC<{ report: AdminStudentAttendanceReport }> = ({ report }) => (
-  <Table>
-    <TableHeader>
+  <Table containerClassName="max-h-[32rem]">
+    <TableHeader sticky>
       <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
         <TableHead className="text-xs font-bold">Roll No</TableHead>
         <TableHead className="text-xs font-bold">Name</TableHead>
@@ -471,23 +383,27 @@ const DailyRegister: React.FC<{ report: AdminStudentAttendanceReport; month: str
 }) => {
   const days = monthDays(month);
   const marked = new Set(report.markedDates);
+  const holidays = new Map(report.holidays.map((h) => [h.date, h.title]));
 
   return (
     <div className="space-y-2 pb-3">
-      <div className="overflow-x-auto">
+      <div className="max-h-[32rem] overflow-auto" data-slot="table-container">
         <table className="w-full border-collapse text-[11px]">
-          <thead>
+          <thead className="sticky top-0 z-20 bg-slate-50 dark:bg-zinc-800">
             <tr className="border-y border-slate-200 bg-slate-50/70 dark:border-zinc-800 dark:bg-zinc-800/50">
-              <th className="sticky left-0 z-10 min-w-40 bg-slate-50 px-3 py-2 text-left font-bold dark:bg-zinc-800">
+              <th className="sticky left-0 z-30 min-w-40 bg-slate-50 px-3 py-2 text-left font-bold dark:bg-zinc-800">
                 Student
               </th>
               {days.map((d) => {
-                const isSunday = new Date(`${d}T00:00:00`).getDay() === 0;
+                const holiday = holidays.get(d);
                 return (
                   <th
                     key={d}
+                    title={holiday}
                     className={`w-7 min-w-7 px-0.5 py-2 text-center font-semibold ${
-                      isSunday ? 'text-rose-500' : 'text-slate-600 dark:text-zinc-400'
+                      holiday
+                        ? 'bg-rose-50/70 text-rose-500 dark:bg-rose-950/20'
+                        : 'text-slate-600 dark:text-zinc-400'
                     }`}
                   >
                     {Number(d.slice(8))}
@@ -509,6 +425,18 @@ const DailyRegister: React.FC<{ report: AdminStudentAttendanceReport; month: str
                     {s.firstName} {s.lastName ?? ''}
                   </td>
                   {days.map((d) => {
+                    const holiday = holidays.get(d);
+                    if (holiday) {
+                      return (
+                        <td
+                          key={d}
+                          title={holiday}
+                          className="bg-rose-50/70 p-0.5 text-center font-bold text-rose-400 dark:bg-rose-950/20"
+                        >
+                          H
+                        </td>
+                      );
+                    }
                     const status = statusByDate.get(d);
                     if (status) {
                       const cell = STATUS_CELL[status];
@@ -551,7 +479,8 @@ const DailyRegister: React.FC<{ report: AdminStudentAttendanceReport; month: str
         </table>
       </div>
       <p className="text-muted-foreground px-3 text-[10px]">
-        P Present · A Absent · L Leave · – marked, no status recorded · · not marked
+        P Present · A Absent · L Leave · H Holiday or Sunday (hover for the reason; not counted) · –
+        marked, no status recorded · · not marked
       </p>
     </div>
   );

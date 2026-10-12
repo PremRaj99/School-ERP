@@ -29,3 +29,13 @@ export const dateToIsoDate = (date: Date): string => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+/** `"09:30"`, `"12:30"` -> `"9:30 AM – 12:30 PM"`; no start time -> `''` (not set yet). */
+export const formatTimeRange = (start: string | null, end: string | null): string => {
+  if (!start) return '';
+  const fmt = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+  };
+  return end ? `${fmt(start)} – ${fmt(end)}` : fmt(start);
+};

@@ -151,3 +151,9 @@ export function paginatedResponse<T extends z.ZodTypeAny>(item: T) {
     totalPages: z.number().int(),
   });
 }
+
+/** 24-hour clock time, `HH:MM` — e.g. an exam paper's start or end. */
+export const TimeOfDay = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Invalid time. Please use HH:MM (24-hour).');
+export type TimeOfDay = z.infer<typeof TimeOfDay>;

@@ -5,6 +5,7 @@ import { defineRoute } from '@/core/http/defineRoute';
 import { resolveTeacherId } from '@/core/middlewares/auth.middleware';
 import { getCurrentSessionYear } from '@/shared';
 import { fromISODate, monthStartEndFromISO, toISODate } from '@/shared/helpers/isoDate';
+import { assertWorkingDay } from '@/shared/helpers/holidays';
 
 const assertTeachesClass = async (teacherId: string, classId: string) => {
   const teachesClass = await prisma.timeTable.findFirst({
@@ -156,6 +157,7 @@ export const createClassAttendance = defineRoute(
       throw new ForbiddenError('You do not teach this class.');
     }
 
+    await assertWorkingDay(body.date);
     const date = fromISODate(body.date);
     let classAttendanceId = '';
 

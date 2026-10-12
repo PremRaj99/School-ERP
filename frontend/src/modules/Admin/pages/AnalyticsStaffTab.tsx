@@ -13,12 +13,12 @@ import { PiUsers, PiClock, PiCheckCircle, PiBookOpen } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import { EmptyChart } from './AnalyticsOverviewTab';
-
-const currentMonthString = () => new Date().toISOString().slice(0, 7);
+import { SessionMonthPicker } from '@/components/filters';
+import { currentMonth } from '@/lib/session';
 
 export function AnalyticsStaffTab() {
   const navigate = useNavigate();
-  const [month, setMonth] = useState(currentMonthString);
+  const [month, setMonth] = useState(currentMonth);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: qk.admin.analyticsStaff(month),
@@ -37,12 +37,7 @@ export function AnalyticsStaffTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <input
-          type="month"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
-        />
+        <SessionMonthPicker value={month} onChange={setMonth} compact />
       </div>
 
       {isLoading ? (

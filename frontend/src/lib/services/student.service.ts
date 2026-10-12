@@ -15,6 +15,7 @@ export const studentService = {
   getExams: () => api(studentContract.exams),
 
   getResult: (examId: string) => api(studentContract.result, { params: { examId } }),
+  getReportCard: (examId: string) => api(studentContract.reportCard, { params: { examId } }),
 
   getNotices: () => api(studentContract.notices),
 

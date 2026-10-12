@@ -9,6 +9,7 @@ import type {
   StudentDailyAttendance,
 } from '@schoolerp/contracts';
 import { fromISODate, toISODate } from '@/shared/helpers/isoDate';
+import { getHolidays } from '@/shared/helpers/holidays';
 import { ACTIVE_STUDENT_STATUS_FILTER } from '../helpers';
 
 interface StatusCounts {
@@ -56,7 +57,8 @@ export class AdminStudentAttendanceService {
       select: { id: true, studentId: true, rollNo: true, firstName: true, lastName: true },
     });
 
-    const [markedDays, attendanceRows] = await Promise.all([
+    const [holidays, markedDays, attendanceRows] = await Promise.all([
+      getHolidays(query.from, query.to),
       prisma.classAttendance.findMany({
         where: { classId: classRecord.id, isMarked: true, date },
         orderBy: { date: 'asc' },
@@ -69,11 +71,15 @@ export class AdminStudentAttendanceService {
       }),
     ]);
 
-    const markedDates = Array.from(new Set(markedDays.map((d) => toISODate(d.date))));
+    // A day marked before it was declared a holiday doesn't count toward anyone's percentage.
+    const markedDates = Array.from(
+      new Set(markedDays.map((d) => toISODate(d.date)).filter((d) => !holidays.has(d))),
+    );
     const totalMarkedDays = markedDates.length;
 
     const byStudent = new Map<string, { counts: StatusCounts; daily: StudentDailyAttendance[] }>();
     for (const row of attendanceRows) {
+      if (holidays.has(toISODate(row.date))) continue;
       const entry = byStudent.get(row.studentId) ?? { counts: emptyCounts(), daily: [] };
       tally(entry.counts, row.status);
       entry.daily.push({ date: toISODate(row.date), status: row.status });
@@ -88,6 +94,9 @@ export class AdminStudentAttendanceService {
       to: query.to,
       totalMarkedDays,
       markedDates,
+      holidays: Array.from(holidays, ([date, title]) => ({ date, title })).sort((a, b) =>
+        a.date.localeCompare(b.date),
+      ),
       students: students.map((student) => {
         const entry = byStudent.get(student.id) ?? { counts: emptyCounts(), daily: [] };
         return {
@@ -117,7 +126,8 @@ export class AdminStudentAttendanceService {
     });
     const classIds = classes.map((c) => c.id);
 
-    const [students, markedDays] = await Promise.all([
+    const [holidays, students, markedDays] = await Promise.all([
+      getHolidays(query.from, query.to),
       prisma.student.findMany({
         where: { classId: { in: classIds }, ...ACTIVE_STUDENT_STATUS_FILTER },
         select: { id: true, classId: true },
@@ -130,7 +140,7 @@ export class AdminStudentAttendanceService {
 
     const attendanceRows = await prisma.studentAttendance.findMany({
       where: { studentId: { in: students.map((s) => s.id) }, date },
-      select: { studentId: true, status: true },
+      select: { studentId: true, status: true, date: true },
     });
 
     const classOfStudent = new Map(students.map((s) => [s.id, s.classId]));
@@ -139,6 +149,7 @@ export class AdminStudentAttendanceService {
 
     const markedDates = new Map<string, Set<string>>();
     for (const d of markedDays) {
+      if (holidays.has(toISODate(d.date))) continue;
       const set = markedDates.get(d.classId) ?? new Set<string>();
       set.add(toISODate(d.date));
       markedDates.set(d.classId, set);
@@ -146,6 +157,7 @@ export class AdminStudentAttendanceService {
 
     const countsByClass = new Map<string, StatusCounts>();
     for (const row of attendanceRows) {
+      if (holidays.has(toISODate(row.date))) continue;
       const classId = classOfStudent.get(row.studentId);
       if (!classId) continue;
       const counts = countsByClass.get(classId) ?? emptyCounts();

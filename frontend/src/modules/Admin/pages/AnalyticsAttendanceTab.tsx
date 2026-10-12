@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,9 +16,11 @@ import { ErrorState } from '@/components/data-table';
 import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import { dateToIsoDate, isoToDisplayDate } from '@/lib/date';
+import { isoToDisplayDate } from '@/lib/date';
+import { compareClassName, monthRange, sessionRange } from '@/lib/session';
+import { useClassFilter } from '@/hooks/useClassFilter';
+import { ClassFilterBar, ExportButton } from '@/components/filters';
 import { ATTENDANCE_STATUS_COLORS, CHART_COLORS, chartTooltipStyle } from '@/lib/charts';
-import { useClassNameOptions } from '@/hooks/options/useAdminOptions';
 import { PiWarning, PiSquaresFour, PiChartPie } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -44,20 +46,12 @@ function heatColor(pct: number): string {
   return `rgba(244, 63, 94, ${0.25 + pct / 100})`;
 }
 
-function monthAgo(): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() - 1);
-  return dateToIsoDate(d);
-}
-
 export function AnalyticsAttendanceTab() {
   const navigate = useNavigate();
-  const classNameOptions = useClassNameOptions();
-  const [from, setFrom] = useState(monthAgo);
-  const [to, setTo] = useState(() => dateToIsoDate(new Date()));
-  const [className, setClassName] = useState('');
-
-  const classFilterValue = className || undefined;
+  // Session → Class → Month; month '' means the whole session.
+  const filter = useClassFilter();
+  const { from, to } = filter.month ? monthRange(filter.month) : sessionRange(filter.session);
+  const classFilterValue = filter.className || undefined;
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: qk.admin.analyticsAttendance(from, to, classFilterValue),
@@ -67,7 +61,11 @@ export function AnalyticsAttendanceTab() {
   const heatmapRows = useMemo(() => {
     const classes = Array.from(
       new Set((data?.classHeatmap ?? []).map((r) => `${r.className}-${r.section}`)),
-    ).sort();
+    ).sort((a, b) => {
+      const [ac, as] = a.split('-');
+      const [bc, bs] = b.split('-');
+      return compareClassName(ac, bc) || as.localeCompare(bs);
+    });
     const map = new Map<string, Record<string, number>>();
     for (const r of data?.classHeatmap ?? []) {
       const key = `${r.className}-${r.section}`;
@@ -94,42 +92,14 @@ export function AnalyticsAttendanceTab() {
     <div className="space-y-4">
       {/* Filters */}
       <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-        <CardContent className="flex flex-wrap items-end gap-3 p-4">
-          <div>
-            <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">From</span>
-            <input
-              type="date"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
-            />
-          </div>
-          <div>
-            <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">To</span>
-            <input
-              type="date"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              className="border-input h-9 rounded-md border bg-transparent px-2.5 text-xs font-semibold"
-            />
-          </div>
-          <div>
-            <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">
-              Class
-            </span>
-            <select
-              value={className}
-              onChange={(e) => setClassName(e.target.value)}
-              className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
-            >
-              <option value="">All classes</option>
-              {classNameOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        <CardContent className="p-4">
+          <ClassFilterBar
+            filter={filter}
+            showSection={false}
+            showMonth
+            allowAllClasses
+            allowWholeSession
+          />
         </CardContent>
       </Card>
 
@@ -243,9 +213,9 @@ export function AnalyticsAttendanceTab() {
                   No attendance recorded in this range.
                 </p>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="max-h-[28rem] overflow-auto" data-slot="table-container">
                   <table className="w-full min-w-[480px] border-separate border-spacing-1 text-xs">
-                    <thead>
+                    <thead className="sticky top-0 z-10 bg-white dark:bg-zinc-900">
                       <tr>
                         <th className="text-left text-[11px] font-bold">Class</th>
                         {WEEKDAYS.map((d) => (
@@ -290,6 +260,19 @@ export function AnalyticsAttendanceTab() {
                 <PiWarning className="h-4 w-4 text-rose-500" />
                 Chronic Absentees (&lt;75%)
               </CardTitle>
+              {data.chronicAbsentees.length > 0 && (
+                <ExportButton
+                  filename={`chronic-absentees-${from}-to-${to}`}
+                  headers={['Student ID', 'Name', 'Class', 'Section', 'Attendance %']}
+                  rows={data.chronicAbsentees.map((s) => [
+                    s.studentId,
+                    `${s.firstName} ${s.lastName ?? ''}`.trim(),
+                    s.className,
+                    s.section,
+                    Math.round(s.attendancePct),
+                  ])}
+                />
+              )}
             </CardHeader>
             {data.chronicAbsentees.length === 0 ? (
               <Empty className="rounded-md border-0 border-t">
@@ -302,8 +285,8 @@ export function AnalyticsAttendanceTab() {
                 </EmptyDescription>
               </Empty>
             ) : (
-              <Table>
-                <TableHeader>
+              <Table containerClassName="max-h-[28rem]">
+                <TableHeader sticky>
                   <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
                     <TableHead className="text-xs font-bold">Student</TableHead>
                     <TableHead className="text-xs font-bold">Class</TableHead>

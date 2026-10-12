@@ -28,11 +28,16 @@ import {
   updateTransaction,
 } from '../controllers/transaction.controller';
 import { getFinanceAuditLogs } from '../controllers/financeAuditLog.controller';
+import { getAdminFeeSettings, updateFeeSettings } from '../controllers/feeSettings.controller';
 
 export const financeRouter = Router();
 
 // Audit log (admin-only, read-only)
 financeRouter.get('/audit-log', getFinanceAuditLogs);
+
+// Fee rules (due day, late fine)
+financeRouter.get('/settings', getAdminFeeSettings);
+financeRouter.put('/settings', updateFeeSettings);
 
 // Student fees
 financeRouter.get('/student-fee', getStudentFees);

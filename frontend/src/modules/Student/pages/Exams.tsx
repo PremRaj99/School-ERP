@@ -8,7 +8,7 @@ import { ErrorState } from '@/components/data-table';
 import { studentService } from '@/lib/services/student.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import { isoToDisplayDate, dateToIsoDate } from '@/lib/date';
+import { isoToDisplayDate, dateToIsoDate, formatTimeRange } from '@/lib/date';
 import { PiMedal, PiCalendar, PiArrowRight, PiCheck } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 
@@ -31,10 +31,10 @@ export const StudentExams: React.FC = () => {
     const list = exams ?? [];
     return {
       upcoming: list
-        .filter((e) => e.dateFrom >= today)
+        .filter((e) => (e.dateTo ?? e.dateFrom) >= today)
         .sort((a, b) => a.dateFrom.localeCompare(b.dateFrom)),
       past: list
-        .filter((e) => e.dateFrom < today)
+        .filter((e) => (e.dateTo ?? e.dateFrom) < today)
         .sort((a, b) => b.dateFrom.localeCompare(a.dateFrom)),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,7 +83,7 @@ export const StudentExams: React.FC = () => {
         {upcoming.length === 0 ? (
           <p className="text-muted-foreground text-xs">No upcoming examinations scheduled.</p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {upcoming.map((exam) => (
               <Card
                 key={exam.id}
@@ -98,6 +98,53 @@ export const StudentExams: React.FC = () => {
                     {exam.dateTo && ` – ${isoToDisplayDate(exam.dateTo)}`}
                   </CardDescription>
                 </CardHeader>
+                {/* Date sheet */}
+                <CardContent className="pt-0">
+                  {exam.papers.length === 0 ? (
+                    <p className="text-muted-foreground text-xs">Date sheet not published yet.</p>
+                  ) : (
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="text-muted-foreground border-b border-slate-200 text-[11px] dark:border-zinc-800">
+                          <th className="py-1.5 font-semibold">Date</th>
+                          <th className="py-1.5 font-semibold">Subject</th>
+                          <th className="py-1.5 font-semibold">Time</th>
+                          <th className="py-1.5 text-right font-semibold">Marks</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80">
+                        {exam.papers.map((paper) => {
+                          const done = paper.date < today;
+                          const isToday = paper.date === today;
+                          return (
+                            <tr
+                              key={paper.subjectCode}
+                              className={
+                                done
+                                  ? 'text-muted-foreground line-through'
+                                  : isToday
+                                    ? 'text-primary font-semibold'
+                                    : ''
+                              }
+                            >
+                              <td className="py-1.5 whitespace-nowrap">
+                                {isoToDisplayDate(paper.date)}
+                                {isToday && (
+                                  <Badge className="ml-1.5 h-4 px-1 text-[9px]">Today</Badge>
+                                )}
+                              </td>
+                              <td className="py-1.5">{paper.subjectName}</td>
+                              <td className="py-1.5 whitespace-nowrap">
+                                {formatTimeRange(paper.startTime, paper.endTime) || '—'}
+                              </td>
+                              <td className="py-1.5 text-right">{paper.fullMarks}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </CardContent>
               </Card>
             ))}
           </div>
@@ -151,7 +198,7 @@ export const StudentExams: React.FC = () => {
                   <CardContent className="pt-0">
                     <span className="text-primary flex items-center gap-1 text-xs font-semibold">
                       <PiCheck className="h-3.5 w-3.5" />
-                      View Marksheet
+                      View Report Card
                       <PiArrowRight className="h-3.5 w-3.5" />
                     </span>
                   </CardContent>

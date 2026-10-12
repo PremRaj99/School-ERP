@@ -42,8 +42,10 @@ export const storeExamData = async (data: CreateExamBody): Promise<ExamRecord[]>
 
       const subjectCodes = subjects.map((s) => s.subjectCode);
       const subjectRecords = await tx.timeTable.findMany({
+        // This class row, not any class with the same name — otherwise a past session's
+        // timetable could supply last year's teacher for the subject.
         where: {
-          class: { className, section },
+          classId: classRecord.id,
           subject: { subjectCode: { in: subjectCodes } },
         },
         select: { subject: true, teacherId: true },
@@ -78,6 +80,8 @@ export const storeExamData = async (data: CreateExamBody): Promise<ExamRecord[]>
             teacherId: subjectInfo.teacherId,
             fullMarks: subjectData.fullMarks,
             date: fromISODate(subjectData.date),
+            startTime: subjectData.startTime ?? null,
+            endTime: subjectData.endTime ?? null,
             isMarked: false,
           },
         });
@@ -88,6 +92,7 @@ export const storeExamData = async (data: CreateExamBody): Promise<ExamRecord[]>
         title: newExam.title,
         className,
         section,
+        session: currentSession,
         dateFrom: toISODate(newExam.dateFrom),
         dateTo: newExam.dateTo ? toISODate(newExam.dateTo) : null,
         isResultDecleared: newExam.isResultDecleared,

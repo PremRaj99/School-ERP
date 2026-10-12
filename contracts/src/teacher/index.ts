@@ -8,6 +8,7 @@ import {
   Section,
   Session,
   SubjectCode,
+  TimeOfDay,
 } from '../primitives';
 import { AttendanceStatusEnum, TxnStatusEnum } from '../enums';
 import { TeacherRecord } from '../admin/teacher';
@@ -116,6 +117,7 @@ export type UpdateClassAttendanceBody = z.infer<typeof UpdateClassAttendanceBody
 
 export const TeacherExamSummary = z.object({
   id: ObjectId,
+  session: Session,
   className: ClassName,
   section: Section,
   dateFrom: ISODate,
@@ -131,6 +133,8 @@ export const TeacherExamSubject = z.object({
   subjectName: z.string(),
   subjectCode: SubjectCode,
   date: ISODate,
+  startTime: TimeOfDay.nullable(),
+  endTime: TimeOfDay.nullable(),
   fullMarks: z.number(),
   isMarked: z.boolean(),
 });

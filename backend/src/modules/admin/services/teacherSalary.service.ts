@@ -26,6 +26,7 @@ import {
   paidAtForStatus,
   paidOnFor,
   sessionMonths,
+  sessionMonthRange,
   summarizeMonth,
   summarizePerson,
 } from '@/shared/helpers/financeStatus';
@@ -67,7 +68,11 @@ export class AdminTeacherSalaryService {
 
     const where = {
       ...(Object.keys(teacherFilter).length > 0 ? { teacher: teacherFilter } : {}),
-      ...(filters.month ? { month: fromISOMonth(filters.month) } : {}),
+      ...(filters.month
+        ? { month: fromISOMonth(filters.month) }
+        : filters.session
+          ? { month: sessionMonthRange(filters.session) }
+          : {}),
       ...(filters.status ? { transaction: { status: filters.status } } : {}),
     };
 

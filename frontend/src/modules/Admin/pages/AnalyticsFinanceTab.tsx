@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,9 @@ import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { CHART_COLORS, chartTooltipStyle } from '@/lib/charts';
-import { useSessionOptions } from '@/hooks/options/useAdminOptions';
+import { useClassFilter } from '@/hooks/useClassFilter';
+import { ClassFilterBar, ExportButton, FILTER_SELECT_CLASS } from '@/components/filters';
+import { compareClassSection, monthLabel } from '@/lib/session';
 import { PiWarningCircle, PiChartPie, PiTrendUp, PiWallet, PiReceipt } from 'react-icons/pi';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -41,14 +43,32 @@ import { EmptyChart } from './AnalyticsOverviewTab';
 
 export function AnalyticsFinanceTab() {
   const navigate = useNavigate();
-  const sessionOptions = useSessionOptions();
-  const [session, setSession] = useState(() => sessionOptions[1]?.value ?? '');
+  // Session scopes the whole tab; class/section/month only narrow the defaulters list.
+  const filter = useClassFilter();
+  const { session } = filter;
+  const [defaulterMonth, setDefaulterMonth] = useState('');
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: qk.admin.analyticsFinance(session),
     queryFn: () => adminService.getAnalyticsFinance(session),
     enabled: !!session,
   });
+
+  const defaulters = useMemo(
+    () =>
+      (data?.defaulters ?? [])
+        .filter(
+          (d) =>
+            (!filter.className || d.className === filter.className) &&
+            (!filter.section || d.section === filter.section) &&
+            (!defaulterMonth || d.month === defaulterMonth),
+        )
+        .sort((a, b) => compareClassSection(a, b) || a.month.localeCompare(b.month)),
+    [data, filter.className, filter.section, defaulterMonth],
+  );
+  const defaulterTotal = defaulters.reduce((sum, d) => sum + d.amount, 0);
+  const defaulterStudents = new Set(defaulters.map((d) => d.studentId)).size;
+  const defaulterMonths = [...new Set((data?.defaulters ?? []).map((d) => d.month))].sort();
 
   const categoryPieData = (data?.categorySplit ?? [])
     .filter((c) => c.amount > 0)
@@ -69,17 +89,7 @@ export function AnalyticsFinanceTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <select
-          value={session}
-          onChange={(e) => setSession(e.target.value)}
-          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
-        >
-          {sessionOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              Session {opt.label}
-            </option>
-          ))}
-        </select>
+        <ClassFilterBar filter={filter} showClass={false} compact />
       </div>
 
       {isLoading ? (
@@ -313,25 +323,65 @@ export function AnalyticsFinanceTab() {
 
           {/* Defaulters */}
           <Card className="overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                <PiWarningCircle className="h-4 w-4 text-rose-500" />
-                Fee Defaulters
-              </CardTitle>
+            <CardHeader className="space-y-3 pb-2">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
+                    <PiWarningCircle className="h-4 w-4 text-rose-500" />
+                    Fee Defaulters
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {defaulterStudents} student{defaulterStudents === 1 ? '' : 's'} ·{' '}
+                    {defaulters.length} unpaid invoice{defaulters.length === 1 ? '' : 's'} · ₹
+                    {defaulterTotal.toLocaleString()} due
+                  </CardDescription>
+                </div>
+                <ExportButton
+                  filename={`fee-defaulters-${session}`}
+                  headers={['Student ID', 'Name', 'Class', 'Section', 'Month', 'Amount']}
+                  rows={defaulters.map((d) => [
+                    d.studentId,
+                    `${d.firstName} ${d.lastName ?? ''}`.trim(),
+                    d.className,
+                    d.section,
+                    d.month,
+                    d.amount,
+                  ])}
+                />
+              </div>
+              <ClassFilterBar filter={filter} allowAllClasses compact showSession={false}>
+                <label>
+                  <span className="sr-only">Month</span>
+                  <select
+                    value={defaulterMonth}
+                    onChange={(e) => setDefaulterMonth(e.target.value)}
+                    className={FILTER_SELECT_CLASS}
+                  >
+                    <option value="">All months</option>
+                    {defaulterMonths.map((m) => (
+                      <option key={m} value={m}>
+                        {monthLabel(m)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </ClassFilterBar>
             </CardHeader>
-            {data.defaulters.length === 0 ? (
+            {defaulters.length === 0 ? (
               <Empty className="rounded-md border-0 border-t">
                 <EmptyMedia variant="icon">
                   <PiWarningCircle className="size-5" />
                 </EmptyMedia>
                 <EmptyTitle>No pending fees</EmptyTitle>
                 <EmptyDescription>
-                  Every raised invoice this session has been paid.
+                  {data.defaulters.length === 0
+                    ? 'Every raised invoice this session has been paid.'
+                    : 'No unpaid invoices match these filters.'}
                 </EmptyDescription>
               </Empty>
             ) : (
-              <Table>
-                <TableHeader>
+              <Table containerClassName="max-h-[28rem]">
+                <TableHeader sticky>
                   <TableRow className="bg-slate-50/70 dark:bg-zinc-800/50">
                     <TableHead className="text-xs font-bold">Student</TableHead>
                     <TableHead className="text-xs font-bold">Class</TableHead>
@@ -340,7 +390,7 @@ export function AnalyticsFinanceTab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.defaulters.map((d, i) => (
+                  {defaulters.map((d, i) => (
                     <TableRow
                       key={`${d.studentId}-${d.month}-${i}`}
                       className="cursor-pointer hover:bg-slate-50/50 dark:hover:bg-zinc-800/30"
@@ -354,7 +404,7 @@ export function AnalyticsFinanceTab() {
                           {d.className}-{d.section}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs">{d.month}</TableCell>
+                      <TableCell className="text-xs">{monthLabel(d.month)}</TableCell>
                       <TableCell className="text-right text-xs font-bold text-rose-600 dark:text-rose-400">
                         ₹{d.amount.toLocaleString()}
                       </TableCell>

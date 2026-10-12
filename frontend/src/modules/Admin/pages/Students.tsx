@@ -18,12 +18,11 @@ import { DataTable, ErrorState, downloadCsv } from '@/components/data-table';
 import { TextField, NumberField, DateField, SelectField, SessionField } from '@/components/form';
 import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
-import {
-  useClassNameOptions,
-  useSectionOptions,
-  useSessionOptions,
-} from '@/hooks/options/useAdminOptions';
+import { useClassNameOptions, useSectionOptions } from '@/hooks/options/useAdminOptions';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useClassFilter } from '@/hooks/useClassFilter';
+import { ClassFilterBar } from '@/components/filters';
+import { getCurrentSessionYear } from '@/lib/session';
 import { CreateStudentBody, type StudentRecord } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { toast } from 'sonner';
@@ -74,7 +73,7 @@ const emptyDefaults: CreateStudentBody = {
   motherAadhar: '',
   className: '',
   section: '',
-  session: '',
+  session: getCurrentSessionYear(),
   dateOfAdmission: new Date().toISOString().slice(0, 10),
   rollNo: '' as unknown as number,
   appId: '',
@@ -141,9 +140,8 @@ export const AdminStudents: React.FC = () => {
   const [formTarget, setFormTarget] = useState<StudentRecord | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [bulkDeleteTargets, setBulkDeleteTargets] = useState<StudentRecord[] | null>(null);
-  const [classFilter, setClassFilter] = useState('');
-  const [sectionFilter, setSectionFilter] = useState('');
-  const [sessionFilter, setSessionFilter] = useState('');
+  const filter = useClassFilter({ allowAllSessions: true });
+  const { className: classFilter, section: sectionFilter, session: sessionFilter } = filter;
   const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebouncedValue(searchInput);
   const [pageIndex, setPageIndex] = useState(0);
@@ -187,11 +185,9 @@ export const AdminStudents: React.FC = () => {
     defaultValues: emptyDefaults,
   });
   const watchedClassName = watch('className');
-  const classNameOptions = useClassNameOptions();
-  const sectionOptions = useSectionOptions(watchedClassName);
-  const filterClassOptions = useClassNameOptions();
-  const filterSectionOptions = useSectionOptions(classFilter || undefined);
-  const sessionOptions = useSessionOptions();
+  const watchedSession = watch('session');
+  const classNameOptions = useClassNameOptions(watchedSession || undefined);
+  const sectionOptions = useSectionOptions(watchedClassName, watchedSession || undefined);
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateStudentBody) => adminService.createStudent(payload),
@@ -478,50 +474,7 @@ export const AdminStudents: React.FC = () => {
               sorting,
               onSortingChange: setSorting,
             }}
-            toolbar={
-              <>
-                <select
-                  value={classFilter}
-                  onChange={(e) => {
-                    setClassFilter(e.target.value);
-                    setSectionFilter('');
-                  }}
-                  className="h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
-                >
-                  <option value="">All Classes</option>
-                  {filterClassOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={sectionFilter}
-                  onChange={(e) => setSectionFilter(e.target.value)}
-                  disabled={!classFilter}
-                  className="h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900"
-                >
-                  <option value="">All Sections</option>
-                  {filterSectionOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={sessionFilter}
-                  onChange={(e) => setSessionFilter(e.target.value)}
-                  className="h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
-                >
-                  <option value="">All Sessions</option>
-                  {sessionOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </>
-            }
+            toolbar={<ClassFilterBar filter={filter} allowAllClasses compact />}
             bulkActions={(selected, clear) => (
               <>
                 <span className="text-xs font-semibold">{selected.length} selected</span>
@@ -601,7 +554,8 @@ export const AdminStudents: React.FC = () => {
               <TextField control={control} name="lastName" label="Last Name" />
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+              <SessionField control={control} name="session" label="Academic Session" required />
               <SelectField
                 control={control}
                 name="className"
@@ -639,7 +593,6 @@ export const AdminStudents: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <SessionField control={control} name="session" label="Academic Session" required />
               <DateField
                 control={control}
                 name="dateOfAdmission"

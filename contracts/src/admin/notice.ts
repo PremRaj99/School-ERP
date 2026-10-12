@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { defineContract } from '../envelope';
-import { ISODate, ObjectId, PageQuery, paginatedResponse } from '../primitives';
+import { ClassName, ISODate, ObjectId, PageQuery, paginatedResponse, Section } from '../primitives';
 import { TargetRoleEnum } from '../enums';
+
+export const NoticeClass = z.object({ id: ObjectId, className: ClassName, section: Section });
+export type NoticeClass = z.infer<typeof NoticeClass>;
 
 export const NoticeRecord = z.object({
   id: ObjectId,
@@ -9,6 +12,8 @@ export const NoticeRecord = z.object({
   description: z.string().nullable(),
   fileUrl: z.string().nullable(),
   targetRole: TargetRoleEnum,
+  /** The classes whose students see this notice; empty = every class. */
+  classes: z.array(NoticeClass),
   date: ISODate,
   expiryDate: ISODate.nullable(),
 });
@@ -24,6 +29,7 @@ export const NoticeSummary = NoticeRecord.pick({
   title: true,
   date: true,
   targetRole: true,
+  classes: true,
   expiryDate: true,
 });
 export type NoticeSummary = z.infer<typeof NoticeSummary>;
@@ -36,6 +42,8 @@ export const CreateNoticeBody = z.object({
   fileUrl: z.string().url('Please provide a valid URL for the file URL.').optional(),
   date: ISODate,
   targetRole: TargetRoleEnum,
+  /** Limit a Student/All notice to these classes' students; omit or `[]` for every class. */
+  classIds: z.array(ObjectId).optional(),
   expiryDate: ISODate.optional(),
 });
 export type CreateNoticeBody = z.infer<typeof CreateNoticeBody>;

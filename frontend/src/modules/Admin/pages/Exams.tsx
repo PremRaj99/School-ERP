@@ -33,12 +33,21 @@ import {
   PiMagnifyingGlass,
   PiCheck,
 } from 'react-icons/pi';
+import { useClassFilter } from '@/hooks/useClassFilter';
+import { ClassFilterBar } from '@/components/filters';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const AdminExams: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const filter = useClassFilter({ allowAllSessions: true });
+  const examQuery = {
+    pageSize: MAX_PAGE_SIZE,
+    session: filter.session || undefined,
+    className: filter.className || undefined,
+    section: filter.section || undefined,
+  };
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [selectedExam, setSelectedExam] = useState<ExamRecord | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -70,8 +79,8 @@ export const AdminExams: React.FC = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: qk.admin.exams({ pageSize: MAX_PAGE_SIZE }),
-    queryFn: () => adminService.getExams({ pageSize: MAX_PAGE_SIZE }),
+    queryKey: qk.admin.exams(examQuery),
+    queryFn: () => adminService.getExams(examQuery),
   });
   const examsList = examsResponse?.data;
 
@@ -133,7 +142,8 @@ export const AdminExams: React.FC = () => {
               Examinations & Result Publishing
             </h1>
             <Badge variant="outline" className="text-xs">
-              {filteredExams.length} Exam Schedules
+              {filteredExams.length} {filteredExams.length === 1 ? 'Exam' : 'Exams'}
+              {filter.session ? ` · ${filter.session}` : ''}
             </Badge>
           </div>
           <p className="text-muted-foreground mt-0.5 text-xs">
@@ -150,16 +160,18 @@ export const AdminExams: React.FC = () => {
         </Button>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative w-full">
-        <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-        <Input
-          placeholder="Search by exam title or class..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-9 pl-9 text-xs"
-        />
-      </div>
+      {/* Filters: session → class → section, then free-text title search */}
+      <ClassFilterBar filter={filter} allowAllClasses compact className="items-center">
+        <div className="relative min-w-48 flex-1">
+          <PiMagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+          <Input
+            placeholder="Search by exam title..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="h-9 pl-9 text-xs"
+          />
+        </div>
+      </ClassFilterBar>
 
       {/* Exam Schedules List */}
       {isLoading ? (
@@ -173,9 +185,13 @@ export const AdminExams: React.FC = () => {
       ) : filteredExams.length === 0 ? (
         <Empty className="rounded-md border p-8">
           <EmptyMedia illustration="exams" illustrationSize={120} />
-          <EmptyTitle>No exams scheduled yet</EmptyTitle>
+          <EmptyTitle>
+            {filter.session ? `No exams in ${filter.session}` : 'No exams scheduled yet'}
+          </EmptyTitle>
           <EmptyDescription>
-            {searchTerm ? 'No exams match your search.' : 'Create the first examination schedule.'}
+            {searchTerm || filter.className
+              ? 'No exams match these filters.'
+              : 'Create an examination schedule to get started.'}
           </EmptyDescription>
           {!searchTerm && (
             <Button size="sm" className="mt-1 text-xs" onClick={() => setIsWizardOpen(true)}>
@@ -210,7 +226,8 @@ export const AdminExams: React.FC = () => {
                       </Badge>
                     </div>
                     <Badge variant="secondary" className="text-[10px]">
-                      Class {exam.className || '10'}-{exam.section || 'A'}
+                      Class {exam.className}-{exam.section}
+                      {filter.session ? '' : ` · ${exam.session}`}
                     </Badge>
                   </div>
 

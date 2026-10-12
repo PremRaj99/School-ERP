@@ -17,6 +17,7 @@ import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
 import { dateToIsoDate } from '@/lib/date';
+import { holidayOn } from '@/lib/holidays';
 import { MAX_PAGE_SIZE, type AttendanceStatus } from '@schoolerp/contracts';
 import { toast } from 'sonner';
 import { PiCalendarCheck, PiUsers, PiUserCheck, PiUserMinus } from 'react-icons/pi';
@@ -60,6 +61,13 @@ export const AdminAttendance: React.FC = () => {
     queryKey: qk.admin.teacherAttendanceByDate(selectedDate),
     queryFn: () => adminService.getTeacherAttendanceDate(selectedDate),
   });
+
+  const { data: calendar } = useQuery({
+    queryKey: qk.admin.calendar(),
+    queryFn: () => adminService.getCalendar(),
+  });
+  const holiday = holidayOn(selectedDate, calendar);
+  const today = dateToIsoDate(new Date());
 
   const markMutation = useMutation({
     mutationFn: () =>
@@ -117,6 +125,7 @@ export const AdminAttendance: React.FC = () => {
           <input
             type="date"
             value={selectedDate}
+            max={today}
             onChange={(e) => {
               setSelectedDate(e.target.value);
               setDraft({});
@@ -126,7 +135,8 @@ export const AdminAttendance: React.FC = () => {
           <Button
             size="sm"
             onClick={() => markMutation.mutate()}
-            disabled={markMutation.isPending || rows.length === 0}
+            disabled={markMutation.isPending || rows.length === 0 || !!holiday}
+            title={holiday ? `Holiday — ${holiday}` : undefined}
             className="bg-primary hover:bg-primary/90 h-9 text-xs text-white"
           >
             <PiCalendarCheck className="mr-1.5 h-3.5 w-3.5" />
@@ -185,6 +195,14 @@ export const AdminAttendance: React.FC = () => {
             refetchAttendance();
           }}
         />
+      ) : holiday && (attendanceData?.teachers.length ?? 0) === 0 ? (
+        <Empty className="rounded-md border p-8">
+          <EmptyMedia illustration="calendar" illustrationSize={120} />
+          <EmptyTitle>Holiday — {holiday}</EmptyTitle>
+          <EmptyDescription>
+            Attendance isn't taken on holidays or Sundays. Pick another date.
+          </EmptyDescription>
+        </Empty>
       ) : rows.length === 0 ? (
         <Empty className="rounded-md border p-8">
           <EmptyMedia illustration="attendance" illustrationSize={120} />

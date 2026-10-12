@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, useWatch, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,10 +16,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { TextField, DateField, SelectField } from '@/components/form';
+import { TextField, DateField, SelectField, MultiSelectField } from '@/components/form';
 import { adminService } from '@/lib/services/admin.service';
 import { CreateNoticeBody, MAX_PAGE_SIZE } from '@schoolerp/contracts';
 import { dateToIsoDate } from '@/lib/date';
+import { compareClassSection, getCurrentSessionYear } from '@/lib/session';
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
@@ -45,8 +46,18 @@ const emptyDefaults: CreateNoticeBody = {
   description: '',
   date: dateToIsoDate(new Date()),
   targetRole: 'All',
+  classIds: [],
   expiryDate: '',
 };
+
+/** "Class 8-A, 8-B" — or the whole school when a notice isn't class-targeted. */
+const classesLabel = (classes: { className: string; section: string }[]) =>
+  classes.length === 0
+    ? null
+    : `Class ${[...classes]
+        .sort(compareClassSection)
+        .map((c) => `${c.className}-${c.section}`)
+        .join(', ')}`;
 
 const isExpired = (expiryDate: string | null): boolean =>
   !!expiryDate && expiryDate < dateToIsoDate(new Date());
@@ -65,6 +76,14 @@ export const AdminNotices: React.FC = () => {
     defaultValues: emptyDefaults,
   });
 
+  const targetRole = useWatch({ control, name: 'targetRole' });
+
+  // Class picker: this session's classes, plus any older ones an edited notice already targets.
+  const { data: allClasses } = useQuery({
+    queryKey: qk.admin.classes(),
+    queryFn: () => adminService.getClasses(),
+  });
+
   // Fetches the full record (list rows omit description/fileUrl) to seed the edit form.
   const { data: editingNotice } = useQuery({
     queryKey: qk.admin.notice(editingNoticeId ?? ''),
@@ -79,6 +98,7 @@ export const AdminNotices: React.FC = () => {
         description: editingNotice.description ?? '',
         date: editingNotice.date,
         targetRole: editingNotice.targetRole,
+        classIds: editingNotice.classes.map((c) => c.id),
         expiryDate: editingNotice.expiryDate ?? '',
       });
     }
@@ -142,6 +162,15 @@ export const AdminNotices: React.FC = () => {
     setIsCreateOpen(false);
     setEditingNoticeId(null);
   };
+
+  const currentSession = getCurrentSessionYear();
+  const classOptions = [
+    ...(allClasses ?? []).filter((c) => c.session === currentSession),
+    ...(editingNotice?.classes ?? []).filter((c) => !allClasses?.some((a) => a.id === c.id)),
+  ]
+    .filter((c, i, list) => list.findIndex((o) => o.id === c.id) === i)
+    .sort(compareClassSection)
+    .map((c) => ({ value: c.id, label: `Class ${c.className}-${c.section}` }));
 
   const onSubmit: SubmitHandler<CreateNoticeBody> = (values) =>
     editingNoticeId ? updateMutation.mutate(values) : createMutation.mutate(values);
@@ -277,6 +306,14 @@ export const AdminNotices: React.FC = () => {
                       >
                         Audience: {notice.targetRole}
                       </Badge>
+                      {notice.targetRole !== 'Teacher' && classesLabel(notice.classes) && (
+                        <Badge
+                          variant="outline"
+                          className="border-primary/30 text-primary text-[10px] font-semibold"
+                        >
+                          {classesLabel(notice.classes)}
+                        </Badge>
+                      )}
                       {notice.expiryDate && (
                         <Badge
                           variant="outline"
@@ -371,6 +408,18 @@ export const AdminNotices: React.FC = () => {
               />
               <DateField control={control} name="expiryDate" label="Expiry Date" />
             </div>
+
+            {targetRole !== 'Teacher' && (
+              <MultiSelectField
+                control={control}
+                name="classIds"
+                label="Classes"
+                description="Leave empty to send it to every class. Teachers always see All notices."
+                options={classOptions}
+                placeholder="Every class"
+                emptyText="No classes this session."
+              />
+            )}
 
             <TextField
               control={control}

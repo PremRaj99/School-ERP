@@ -3,6 +3,7 @@ import { NotFoundError } from '@/core/errors';
 import { studentContract } from '@schoolerp/contracts';
 import { defineRoute } from '@/core/http/defineRoute';
 import { toISODate } from '@/shared/helpers/isoDate';
+import { buildReportCards } from '@/shared/helpers/reportCard';
 
 export const getResult = defineRoute(studentContract.result, async ({ params, user }) => {
   const student = await prisma.student.findUnique({
@@ -72,4 +73,39 @@ export const getResult = defineRoute(studentContract.result, async ({ params, us
       remark: r.remark,
     })),
   };
+});
+
+/**
+ * The student's own report card for a declared exam — either one held for their current class, or
+ * one they have marks in (a past class they've since been promoted out of).
+ */
+export const getReportCard = defineRoute(studentContract.reportCard, async ({ params, user }) => {
+  const student = await prisma.student.findUnique({
+    where: { userId: user!.id },
+    select: { id: true, classId: true },
+  });
+  if (!student) {
+    throw new NotFoundError();
+  }
+
+  const exam = await prisma.exam.findFirst({
+    where: {
+      id: params.examId,
+      isResultDecleared: true,
+      OR: [
+        { classId: student.classId },
+        { examSubjects: { some: { examResults: { some: { studentId: student.id } } } } },
+      ],
+    },
+    select: { id: true },
+  });
+  if (!exam) {
+    throw new NotFoundError();
+  }
+
+  const reportCards = await buildReportCards(exam.id, student.id);
+  if (reportCards.students.length === 0) {
+    throw new NotFoundError();
+  }
+  return reportCards;
 });

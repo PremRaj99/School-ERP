@@ -9,6 +9,7 @@ import {
 import { getCurrentSessionYear } from '@/shared';
 import type { TeacherAnalytics, TeacherDashboard, TeacherRecord } from '@schoolerp/contracts';
 import { toISODate, toISOMonth } from '@/shared/helpers/isoDate';
+import { NOTICE_SUMMARY_SELECT, toNoticeRecord, toNoticeSummaries } from '@/shared/helpers/notice';
 
 const WEEKDAY_BY_JS_DAY = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'] as const;
 
@@ -76,15 +77,9 @@ export class TeacherService {
   static async getNotices() {
     const notices = await prisma.notice.findMany({
       where: { targetRole: { in: ['Teacher', 'All'] } },
-      select: { id: true, title: true, date: true, targetRole: true, expiryDate: true },
+      select: NOTICE_SUMMARY_SELECT,
     });
-    return notices.map((n) => ({
-      id: n.id,
-      title: n.title,
-      date: toISODate(n.date),
-      targetRole: n.targetRole,
-      expiryDate: n.expiryDate ? toISODate(n.expiryDate) : null,
-    }));
+    return toNoticeSummaries(notices);
   }
 
   static async getNoticeDetail(noticeId: string) {
@@ -95,15 +90,7 @@ export class TeacherService {
     if (!notice) {
       throw new NotFoundError();
     }
-    return {
-      id: notice.id,
-      title: notice.title,
-      description: notice.description,
-      fileUrl: notice.fileUrl,
-      targetRole: notice.targetRole,
-      date: toISODate(notice.date),
-      expiryDate: notice.expiryDate ? toISODate(notice.expiryDate) : null,
-    };
+    return toNoticeRecord(notice);
   }
 
   static async getAcademicCalendar() {
@@ -176,7 +163,7 @@ export class TeacherService {
           where: { targetRole: { in: ['Teacher', 'All'] } },
           orderBy: { date: 'desc' },
           take: 5,
-          select: { id: true, title: true, date: true, targetRole: true, expiryDate: true },
+          select: NOTICE_SUMMARY_SELECT,
         }),
         prisma.transaction.aggregate({
           where: { status: 'Pending', teacherSalary: { teacherId: teacher.id } },
@@ -215,13 +202,7 @@ export class TeacherService {
         subjectName: entry.subject.subjectName,
         date: toISODate(entry.date),
       })),
-      recentNotices: recentNotices.map((n) => ({
-        id: n.id,
-        title: n.title,
-        date: toISODate(n.date),
-        targetRole: n.targetRole,
-        expiryDate: n.expiryDate ? toISODate(n.expiryDate) : null,
-      })),
+      recentNotices: await toNoticeSummaries(recentNotices),
       pendingSalary: {
         count: pendingSalary._count._all,
         totalAmount: pendingSalary._sum.finalAmount ?? 0,

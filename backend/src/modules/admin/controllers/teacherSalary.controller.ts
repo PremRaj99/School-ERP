@@ -1,9 +1,7 @@
 import { adminTeacherSalaryContract } from '@schoolerp/contracts';
 import { defineRoute } from '@/core/http/defineRoute';
+import { toActor } from '@/shared/helpers/financeActor';
 import { AdminTeacherSalaryService } from '../services/teacherSalary.service';
-
-const toActor = (user: { id: string; role: string } | undefined) =>
-  user ? { id: user.id, username: `${user.role}:${user.id}` } : undefined;
 
 export const getTeacherSalaries = defineRoute(
   adminTeacherSalaryContract.list,

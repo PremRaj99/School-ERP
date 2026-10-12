@@ -26,18 +26,29 @@ import {
   Tooltip,
 } from 'recharts';
 import { EmptyChart } from './AnalyticsOverviewTab';
+import { useClassFilter } from '@/hooks/useClassFilter';
+import { ClassFilterBar, FILTER_LABEL_CLASS, FILTER_SELECT_CLASS } from '@/components/filters';
 
 export function AnalyticsAcademicsTab() {
   const navigate = useNavigate();
-  const [examId, setExamId] = useState('');
+  const filter = useClassFilter();
+  const [pickedExamId, setExamId] = useState('');
 
-  // pageSize: MAX_PAGE_SIZE — the exam picker needs every exam, not one page of the (now
-  // server-paginated, ALIGNMENT_PLAN.md 2C/P1) list endpoint.
+  // pageSize: MAX_PAGE_SIZE — the exam picker needs every exam in the chosen session/class, not
+  // one page of the (now server-paginated, ALIGNMENT_PLAN.md 2C/P1) list endpoint.
+  const examQuery = {
+    pageSize: MAX_PAGE_SIZE,
+    session: filter.session,
+    className: filter.className || undefined,
+    section: filter.section || undefined,
+  };
   const { data: examsResponse, isLoading: examsLoading } = useQuery({
-    queryKey: qk.admin.exams({ pageSize: MAX_PAGE_SIZE }),
-    queryFn: () => adminService.getExams({ pageSize: MAX_PAGE_SIZE }),
+    queryKey: qk.admin.exams(examQuery),
+    queryFn: () => adminService.getExams(examQuery),
   });
   const exams = examsResponse?.data;
+  // A picked exam that the session/class filter no longer lists counts as no pick.
+  const examId = exams?.some((ex) => ex.id === pickedExamId) ? pickedExamId : '';
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: qk.admin.analyticsAcademics(examId),
@@ -57,22 +68,31 @@ export function AnalyticsAcademicsTab() {
     <div className="space-y-4">
       <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
         <CardContent className="p-4">
-          <span className="text-muted-foreground mb-1 block text-[11px] font-semibold">
-            Examination
-          </span>
-          <select
-            value={examId}
-            onChange={(e) => setExamId(e.target.value)}
-            disabled={examsLoading}
-            className="h-9 w-full max-w-sm rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold dark:border-zinc-700 dark:bg-zinc-900"
-          >
-            <option value="">{examsLoading ? 'Loading…' : 'Select an examination'}</option>
-            {(exams ?? []).map((ex) => (
-              <option key={ex.id} value={ex.id}>
-                {ex.title} — Class {ex.className}-{ex.section}
-              </option>
-            ))}
-          </select>
+          <ClassFilterBar filter={filter} allowAllClasses>
+            <label>
+              <span className={FILTER_LABEL_CLASS}>Examination</span>
+              <select
+                value={examId}
+                onChange={(e) => setExamId(e.target.value)}
+                disabled={examsLoading || !exams?.length}
+                className={`${FILTER_SELECT_CLASS} min-w-56`}
+              >
+                <option value="">
+                  {examsLoading
+                    ? 'Loading…'
+                    : exams?.length
+                      ? 'Select an examination'
+                      : 'No exams in this session'}
+                </option>
+                {(exams ?? []).map((ex) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.title}
+                    {filter.section ? '' : ` — Class ${ex.className}-${ex.section}`}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </ClassFilterBar>
         </CardContent>
       </Card>
 

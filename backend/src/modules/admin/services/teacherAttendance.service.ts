@@ -8,6 +8,7 @@ import type {
   UpdateTeacherAttendanceBody,
 } from '@schoolerp/contracts';
 import { fromISODate, monthStartEndFromISO, toISODate } from '@/shared/helpers/isoDate';
+import { assertWorkingDay } from '@/shared/helpers/holidays';
 
 export class AdminTeacherAttendanceService {
   static async getTeacherAttendanceByDate(date: string): Promise<TeacherAttendanceByDate> {
@@ -60,6 +61,7 @@ export class AdminTeacherAttendanceService {
     date: string,
     attendance: MarkTeacherAttendanceBody,
   ): Promise<TeacherAttendanceByDate> {
+    await assertWorkingDay(date);
     const isoDate = fromISODate(date);
 
     // Pre-fetch all referenced teachers in a single query so the transaction
