@@ -17,3 +17,14 @@ export const updateClass = defineRoute(adminClassContract.update, async ({ param
 export const deleteClass = defineRoute(adminClassContract.remove, async ({ params }) => {
   return AdminClassService.deleteClass(params.classId);
 });
+
+export const getClassSubjects = defineRoute(adminClassContract.listSubjects, async ({ params }) => {
+  return AdminClassService.getClassSubjects(params.classId);
+});
+
+export const setClassSubjects = defineRoute(
+  adminClassContract.setSubjects,
+  async ({ params, body }) => {
+    return AdminClassService.setClassSubjects(params.classId, body);
+  },
+);

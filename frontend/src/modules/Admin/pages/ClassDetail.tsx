@@ -29,6 +29,7 @@ import { ErrorState } from '@/components/data-table';
 import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
+import { AssignClassSubjectsDialog } from './AssignClassSubjectsDialog';
 import { MAX_PAGE_SIZE, PromoteClassBody, type WeekDay } from '@schoolerp/contracts';
 import { toast } from 'sonner';
 import {
@@ -39,6 +40,7 @@ import {
   PiCalendarDots,
   PiLock,
   PiGraduationCap,
+  PiPencilSimpleLine,
 } from 'react-icons/pi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -72,6 +74,7 @@ export const AdminClassDetail: React.FC = () => {
   const queryClient = useQueryClient();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [isPromoteOpen, setIsPromoteOpen] = useState(false);
+  const [isAssignSubjectsOpen, setIsAssignSubjectsOpen] = useState(false);
   const [graduatingIds, setGraduatingIds] = useState<Set<string>>(new Set());
 
   const {
@@ -94,9 +97,10 @@ export const AdminClassDetail: React.FC = () => {
     queryFn: () => adminService.getClasses(),
   });
 
-  const { data: groupedSubjects, isLoading: subjectsLoading } = useQuery({
-    queryKey: qk.admin.subjectsGrouped(),
-    queryFn: () => adminService.getAllClassSubjects(),
+  const { data: classSubjects, isLoading: subjectsLoading } = useQuery({
+    queryKey: qk.admin.classSubjects(classId),
+    queryFn: () => adminService.getClassSubjects(classId),
+    enabled: !!classId,
   });
 
   const { data: classSchedules, isLoading: timetableLoading } = useQuery({
@@ -170,11 +174,7 @@ export const AdminClassDetail: React.FC = () => {
   });
   const roster = studentsResponse?.data ?? [];
 
-  const assignedSubjects = useMemo(
-    () =>
-      groupedSubjects?.assignedSubjects.find((g) => g.className === cls?.className)?.subjects ?? [],
-    [groupedSubjects, cls],
-  );
+  const assignedSubjects = useMemo(() => classSubjects ?? [], [classSubjects]);
 
   const schedule = useMemo(
     () =>
@@ -333,14 +333,26 @@ export const AdminClassDetail: React.FC = () => {
 
         {/* Subjects */}
         <Card className="border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-              <PiBookOpen className="text-primary h-4 w-4" />
-              Assigned Subjects
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Subjects taught to Class {cls.className}.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
+            <div className="space-y-1.5">
+              <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
+                <PiBookOpen className="text-primary h-4 w-4" />
+                Assigned Subjects
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Subjects taught to Class {cls.className} - {cls.section}.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              disabled={subjectsLoading}
+              onClick={() => setIsAssignSubjectsOpen(true)}
+            >
+              <PiPencilSimpleLine className="mr-1.5 h-3.5 w-3.5" />
+              Assign Subjects
+            </Button>
           </CardHeader>
           <CardContent>
             {subjectsLoading ? (
@@ -535,6 +547,14 @@ export const AdminClassDetail: React.FC = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AssignClassSubjectsDialog
+        open={isAssignSubjectsOpen}
+        onOpenChange={setIsAssignSubjectsOpen}
+        classId={classId}
+        classLabel={`${cls.className} - ${cls.section}`}
+        assigned={assignedSubjects}
+      />
 
       {/* Delete Confirmation */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>

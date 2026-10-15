@@ -37,6 +37,7 @@ export const financeService = {
     api(financeStudentFeeContract.detail, { params: { feeId } }),
   createStudentFee: (body: CreateStudentFeeBody) => api(financeStudentFeeContract.create, { body }),
   getFeeSettings: () => api(financeFeeSettingsContract.get),
+  getClassFees: () => api(financeFeeSettingsContract.listClassFees),
   /** Marking Paid can carry the payment mode/reference; the response then has a receipt number. */
   updateStudentFeeStatus: (feeId: string, body: UpdateStatusBody): Promise<StudentFeeRecord> =>
     api(financeStudentFeeContract.updateStatus, { params: { feeId }, body }),

@@ -1,68 +1,49 @@
 import prisma from '@/core/db';
 import { getCurrentSessionYear } from './getCurrentSessionYear';
 
+type SubjectRow = { subjectCode: string; subjectName: string };
+
+// A subject counts as assigned to a class if it has an explicit `ClassSubject` link or is
+// scheduled in that class's timetable (see `AdminClassService.getClassSubjects`).
 export const getGroupedSubject = async () => {
   const currentSessionString = getCurrentSessionYear();
+  const rowSelect = {
+    class: { select: { className: true } },
+    subject: { select: { subjectCode: true, subjectName: true } },
+  } as const;
 
-  const [timeTableForCurrentSession, allSubjects] = await Promise.all([
+  const [timeTableForCurrentSession, linksForCurrentSession, allSubjects] = await Promise.all([
     prisma.timeTable.findMany({
-      where: {
-        class: {
-          session: currentSessionString,
-        },
-      },
-      select: {
-        class: {
-          select: {
-            className: true,
-          },
-        },
-        subject: {
-          select: {
-            subjectCode: true,
-            subjectName: true,
-          },
-        },
-        teacher: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
+      where: { class: { session: currentSessionString } },
+      select: rowSelect,
+    }),
+    prisma.classSubject.findMany({
+      where: { class: { session: currentSessionString } },
+      select: rowSelect,
     }),
     prisma.subject.findMany(),
   ]);
 
+  // className -> subjectCode -> subject; the inner map dedupes a subject that appears in several
+  // sections/periods of the same class.
+  const classMap = new Map<string, Map<string, SubjectRow>>();
+  for (const entry of [...linksForCurrentSession, ...timeTableForCurrentSession]) {
+    const subjects = classMap.get(entry.class.className) ?? new Map<string, SubjectRow>();
+    subjects.set(entry.subject.subjectCode, entry.subject);
+    classMap.set(entry.class.className, subjects);
+  }
+
   const assignedSubjectCodes = new Set(
-    timeTableForCurrentSession.map((entry) => entry.subject.subjectCode),
+    [...classMap.values()].flatMap((subjects) => [...subjects.keys()]),
   );
-
-  const unassignedSubjects = allSubjects.filter(
-    (subject) => !assignedSubjectCodes.has(subject.subjectCode),
-  );
-
-  const classMap = new Map<
-    string,
-    { className: string; subjects: { subjectCode: string; subjectName: string }[] }
-  >();
-  timeTableForCurrentSession.forEach((entry) => {
-    const className = entry.class.className;
-    const subject = entry.subject;
-
-    if (!classMap.has(className)) {
-      classMap.set(className, {
-        className: className,
-        subjects: [],
-      });
-    }
-    classMap.get(className)!.subjects.push(subject);
-  });
-
-  const groupedByClass = Array.from(classMap.values());
 
   return {
-    assignedSubjects: groupedByClass,
-    unassignedSubjects: unassignedSubjects,
+    assignedSubjects: [...classMap.entries()].map(([className, subjects]) => ({
+      className,
+      subjects: [...subjects.values()],
+    })),
+    unassignedSubjects: allSubjects
+      .filter((subject) => !assignedSubjectCodes.has(subject.subjectCode))
+      .map((s) => ({ subjectCode: s.subjectCode, subjectName: s.subjectName })),
   };
 };

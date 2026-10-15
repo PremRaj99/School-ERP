@@ -38,8 +38,9 @@ export function FeeRulesDialog({ open, onClose }: { open: boolean; onClose: () =
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">Fee Rules</DialogTitle>
           <DialogDescription className="text-xs">
-            When a month&apos;s fee falls due, and the fine for paying after that. The fine is
-            suggested when a payment is recorded — staff can still change or waive it.
+            The default monthly fee per student, when it falls due, and the fine for paying after
+            that. The fine is suggested when a payment is recorded — staff can still change or waive
+            it.
           </DialogDescription>
         </DialogHeader>
         {isLoading || !data ? (
@@ -60,6 +61,7 @@ function FeeRulesForm({ initial, onClose }: { initial: FeeSettings; onClose: () 
     lateFineType: initial.lateFineType,
     lateFineAmount: initial.lateFineAmount ? String(initial.lateFineAmount) : '',
     lateFineCap: initial.lateFineCap !== null ? String(initial.lateFineCap) : '',
+    defaultMonthlyFee: String(initial.defaultMonthlyFee),
   });
 
   const parsed = FeeSettings.safeParse({
@@ -70,6 +72,7 @@ function FeeRulesForm({ initial, onClose }: { initial: FeeSettings; onClose: () 
       draft.lateFineType === 'PerDay' && draft.lateFineCap !== ''
         ? Number(draft.lateFineCap)
         : null,
+    defaultMonthlyFee: draft.defaultMonthlyFee === '' ? NaN : Number(draft.defaultMonthlyFee),
   });
   const error = parsed.success ? null : parsed.error.issues[0]?.message;
 
@@ -81,6 +84,9 @@ function FeeRulesForm({ initial, onClose }: { initial: FeeSettings; onClose: () 
       queryClient.invalidateQueries({ queryKey: qk.admin.feeSettings() });
       // (`studentFees()` is also the prefix of the monthly-status and summary keys.)
       queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.dashboard() });
+      // Classes without their own fee follow the default.
+      queryClient.invalidateQueries({ queryKey: qk.admin.classFees() });
       onClose();
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -89,6 +95,19 @@ function FeeRulesForm({ initial, onClose }: { initial: FeeSettings; onClose: () 
   return (
     <>
       <div className="space-y-3">
+        <label className="block space-y-1">
+          <span className="text-xs font-semibold">Default monthly fee (₹)</span>
+          <Input
+            type="number"
+            min={0}
+            value={draft.defaultMonthlyFee}
+            onChange={(e) => setDraft({ ...draft, defaultMonthlyFee: e.target.value })}
+            className="h-9 w-32 text-xs"
+          />
+          <span className="text-muted-foreground block text-[11px]">
+            For any class without its own fee (set those under Class Fees).
+          </span>
+        </label>
         <label className="block space-y-1">
           <span className="text-xs font-semibold">Fee due on day</span>
           <Input

@@ -19,11 +19,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
 import { getErrorMessage } from '@/lib/api';
-import {
-  useSessionOptions,
-  useSubjectOptions,
-  useTeacherOptions,
-} from '@/hooks/options/useAdminOptions';
+import { useSessionOptions, useTeacherOptions } from '@/hooks/options/useAdminOptions';
 import type { CreateCalendarEventBody, WeekDay } from '@schoolerp/contracts';
 import { toast } from 'sonner';
 import {
@@ -163,7 +159,21 @@ export const AdminAcademic: React.FC = () => {
   );
 
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
-  const subjectOptions = useSubjectOptions();
+  // Only subjects assigned to this class section (Class detail → Assign Subjects) can be
+  // scheduled; the backend enforces the same rule on slot update.
+  const activeClassId = (classes ?? []).find(
+    (c) =>
+      c.session === ttSession && c.className === activeClassName && c.section === activeSection,
+  )?.id;
+  const { data: classSubjects, isLoading: classSubjectsLoading } = useQuery({
+    queryKey: qk.admin.classSubjects(activeClassId ?? ''),
+    queryFn: () => adminService.getClassSubjects(activeClassId!),
+    enabled: !!activeClassId,
+  });
+  const subjectOptions = (classSubjects ?? []).map((s) => ({
+    value: s.subjectCode,
+    label: `${s.subjectName} (${s.subjectCode})`,
+  }));
   const teacherOptions = useTeacherOptions();
 
   const slotAt = (weekday: WeekDay, period: number) =>
@@ -207,6 +217,9 @@ export const AdminAcademic: React.FC = () => {
     onSuccess: () => {
       toast.success('Timetable slot updated!');
       queryClient.invalidateQueries({ queryKey: qk.admin.timetable() });
+      if (activeClassId) {
+        queryClient.invalidateQueries({ queryKey: qk.admin.classSubjects(activeClassId) });
+      }
       setEditingCell(null);
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -658,6 +671,12 @@ export const AdminAcademic: React.FC = () => {
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>
+                {!classSubjectsLoading && subjectOptions.length === 0 && (
+                  <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                    No subjects are assigned to Class {activeClass} yet. Assign them from the
+                    class&apos;s detail page first.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">

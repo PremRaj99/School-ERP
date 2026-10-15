@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { defineContract } from '../envelope';
+import { ClassName, ObjectId, Section, Session } from '../primitives';
 
 /**
  * School-wide fee rules: when a month's fee falls due, and the late fine charged after that.
  * One settings document for the whole school; until an admin saves it, `DEFAULT_FEE_SETTINGS`
- * applies (due on the 10th, no fine).
+ * applies (₹200 a month, due on the 10th, no fine).
  */
 
 export const LateFineTypeEnum = z.enum(['None', 'Flat', 'PerDay']);
@@ -19,6 +20,8 @@ export const FeeSettings = z
     lateFineAmount: z.number().min(0, 'Fine cannot be negative.'),
     /** Upper limit on a PerDay fine; null = no limit. */
     lateFineCap: z.number().min(0, 'Cap cannot be negative.').nullable(),
+    /** Monthly fee per student — pre-filled when a fee is created, and what an ungenerated month is expected to bring in. */
+    defaultMonthlyFee: z.number().min(0, 'Default fee cannot be negative.'),
   })
   .refine((s) => s.lateFineType === 'None' || s.lateFineAmount > 0, {
     message: 'Enter the fine amount.',
@@ -31,6 +34,7 @@ export const DEFAULT_FEE_SETTINGS: FeeSettings = {
   lateFineType: 'None',
   lateFineAmount: 0,
   lateFineCap: null,
+  defaultMonthlyFee: 200,
 };
 
 /** "2026-05" + due day 10 -> "2026-05-10". */
@@ -57,6 +61,25 @@ export const lateFineFor = (settings: FeeSettings, isoMonth: string, onDate: str
 /** The breakdown line a charged late fine is recorded as. */
 export const LATE_FINE_FEE_TYPE = 'Late Fine';
 
+/**
+ * A class's monthly fee. `monthlyFee` is what an admin set for the class (null = use the school's
+ * `defaultMonthlyFee`); `effectiveFee` is the amount that actually applies.
+ */
+export const ClassFee = z.object({
+  classId: ObjectId,
+  className: ClassName,
+  section: Section,
+  session: Session,
+  monthlyFee: z.number().nullable(),
+  effectiveFee: z.number(),
+});
+export type ClassFee = z.infer<typeof ClassFee>;
+
+export const UpdateClassFeeBody = z.object({
+  monthlyFee: z.number().min(0, 'Fee cannot be negative.').nullable(),
+});
+export type UpdateClassFeeBody = z.infer<typeof UpdateClassFeeBody>;
+
 export const adminFeeSettingsContract = defineContract({
   get: {
     method: 'GET',
@@ -70,6 +93,20 @@ export const adminFeeSettingsContract = defineContract({
     response: FeeSettings,
     successStatus: 202,
   },
+  /** The current session's active (non-archived) classes with their monthly fee. */
+  listClassFees: {
+    method: 'GET',
+    path: '/admin/finance/class-fees',
+    response: z.array(ClassFee),
+  },
+  updateClassFee: {
+    method: 'PUT',
+    path: '/admin/finance/class-fees/:classId',
+    params: z.object({ classId: ObjectId }),
+    body: UpdateClassFeeBody,
+    response: ClassFee,
+    successStatus: 202,
+  },
 } as const);
 
 /** Finance staff can read the rules (to see the fine on a payment) but only Admin changes them. */
@@ -78,5 +115,10 @@ export const financeFeeSettingsContract = defineContract({
     method: 'GET',
     path: '/finance/settings',
     response: FeeSettings,
+  },
+  listClassFees: {
+    method: 'GET',
+    path: '/finance/class-fees',
+    response: z.array(ClassFee),
   },
 } as const);

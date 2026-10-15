@@ -23,12 +23,14 @@ import {
   type StudentFeeRecord,
   type TxnStatus,
   type UpdateStatusBody,
+  DEFAULT_FEE_SETTINGS,
 } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { toast } from 'sonner';
 import { PiPlus, PiPrinter, PiSparkle, PiTrash } from 'react-icons/pi';
 import { FeeDueHint } from '@/components/finance/FeeDueHint';
+import { TUITION_FEE_TYPE, useTuitionPrefill } from '@/hooks/useTuitionPrefill';
 import { FeeReceiptDialog } from '@/components/finance/FeeReceipt';
 import { RecordPaymentDialog, type PaymentTarget } from '@/components/finance/RecordPaymentDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -46,12 +48,13 @@ const STATUS_STYLES: Record<string, string> = {
   Failed: 'border-rose-500/30 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
 };
 
-const emptyFeeDefaults: CreateStudentFeeBody = {
+/** A blank Collect Fee form, with tuition pre-filled at the school's default monthly fee. */
+const feeDefaults = (defaultMonthlyFee: number): CreateStudentFeeBody => ({
   studentId: '',
   month: '',
   title: 'Term Fee',
-  feeBreakdown: [{ feeType: 'Tuition Fee', amount: 0 }],
-};
+  feeBreakdown: [{ feeType: TUITION_FEE_TYPE, amount: defaultMonthlyFee }],
+});
 
 export const FinanceFees: React.FC = () => {
   const queryClient = useQueryClient();
@@ -71,10 +74,28 @@ export const FinanceFees: React.FC = () => {
   });
   const fees = feesResponse?.data ?? [];
 
-  const { control, handleSubmit, reset } = useForm<CreateStudentFeeBody>({
+  const { data: feeSettings } = useQuery({
+    queryKey: qk.finance.feeSettings(),
+    queryFn: financeService.getFeeSettings,
+  });
+  const emptyFeeDefaults = feeDefaults(
+    feeSettings?.defaultMonthlyFee ?? DEFAULT_FEE_SETTINGS.defaultMonthlyFee,
+  );
+
+  const { control, handleSubmit, reset, getValues, setValue } = useForm<CreateStudentFeeBody>({
     resolver: zodResolver(CreateStudentFeeBody),
     defaultValues: emptyFeeDefaults,
   });
+  // Same query (and cache entry) as `useFinanceStudentOptions()` above.
+  const { data: studentList } = useQuery({
+    queryKey: qk.finance.studentDirectory(),
+    queryFn: () => financeService.getStudents({ pageSize: MAX_PAGE_SIZE }),
+  });
+  const { data: classFees } = useQuery({
+    queryKey: qk.finance.classFees(),
+    queryFn: financeService.getClassFees,
+  });
+  useTuitionPrefill({ control, getValues, setValue, students: studentList?.data, classFees });
   const {
     fields: feeRows,
     append: appendFeeRow,
@@ -396,11 +417,11 @@ export const FinanceFees: React.FC = () => {
         target={paymentTarget}
         onClose={() => setPaymentTarget(null)}
         pending={statusMutation.isPending}
-        onConfirm={(payment) =>
+        onConfirm={({ paymentMode, paymentRef, lateFine }) =>
           paymentTarget &&
           statusMutation.mutate({
             feeId: paymentTarget.feeId,
-            body: { status: 'Paid', ...payment },
+            body: { status: 'Paid', paymentMode, paymentRef, lateFine },
           })
         }
       />

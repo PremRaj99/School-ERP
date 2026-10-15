@@ -28,6 +28,7 @@ export const qk = {
       query ? (['admin', 'classes', query] as const) : (['admin', 'classes'] as const),
     subjects: () => ['admin', 'subjects'] as const,
     subjectsGrouped: () => ['admin', 'subjects', 'grouped'] as const,
+    classSubjects: (classId: string) => ['admin', 'classes', classId, 'subjects'] as const,
     // Same omittable-query pattern as `students`/`teachers` above.
     exams: (query?: Record<string, unknown>) =>
       query ? (['admin', 'exams', query] as const) : (['admin', 'exams'] as const),
@@ -44,12 +45,15 @@ export const qk = {
         : (['admin', 'contact-messages'] as const),
     studentFee: (feeId: string) => ['admin', 'studentFees', 'detail', feeId] as const,
     feeSettings: () => ['admin', 'feeSettings'] as const,
+    classFees: () => ['admin', 'classFees'] as const,
     studentFees: (query?: Record<string, unknown>) =>
       query ? (['admin', 'student-fees', query] as const) : (['admin', 'student-fees'] as const),
     studentFeeMonthlyStatus: (query: Record<string, unknown>) =>
       ['admin', 'student-fees', 'monthly-status', query] as const,
     studentFeeSummary: (studentId: string, session?: string) =>
       ['admin', 'student-fees', 'summary', studentId, session] as const,
+    studentFeeSessionDues: (session?: string) =>
+      ['admin', 'student-fees', 'session-dues', session] as const,
     teacherSalaries: (query?: Record<string, unknown>) =>
       query
         ? (['admin', 'teacher-salaries', query] as const)
@@ -102,6 +106,7 @@ export const qk = {
       query ? (['finance', 'fees', query] as const) : (['finance', 'fees'] as const),
     fee: (feeId: string) => ['finance', 'fees', 'detail', feeId] as const,
     feeSettings: () => ['finance', 'feeSettings'] as const,
+    classFees: () => ['finance', 'classFees'] as const,
     salaries: (query?: Record<string, unknown>) =>
       query ? (['finance', 'salaries', query] as const) : (['finance', 'salaries'] as const),
     salary: (salaryId: string) => ['finance', 'salaries', 'detail', salaryId] as const,

@@ -10,7 +10,7 @@ import type {
   PaymentMode,
   PersonSummaryTotals,
 } from '@schoolerp/contracts';
-import { fromISOMonth, toISODate } from './isoDate';
+import { fromISOMonth, toISODate, toISOMonth } from './isoDate';
 
 type TxnStatus = 'Paid' | 'Pending' | 'Failed';
 
@@ -80,9 +80,24 @@ export const matchesStatusFilter = (
   return status === filter;
 };
 
+/**
+ * Last month of `session` that's already due: the current month for the current session, March
+ * for a past one, null for one that hasn't started.
+ */
+export const sessionDueThrough = (session: string): string | null => {
+  const months = sessionMonths(session);
+  const now = toISOMonth(new Date());
+  if (now < months[0]!) return null;
+  return now > months[11]! ? months[11]! : now;
+};
+
+/**
+ * `expected` is what a NotGenerated row would bill (class fee / salary); it's ignored for rows
+ * that have a record.
+ */
 export const summarizeMonth = (
   month: string,
-  rows: { status: MonthlyPaymentStatus; amount: number | null }[],
+  rows: { status: MonthlyPaymentStatus; amount: number | null; expected: number }[],
 ): MonthlyStatusSummary => {
   const summary: MonthlyStatusSummary = {
     month,
@@ -93,6 +108,8 @@ export const summarizeMonth = (
     notGeneratedCount: 0,
     paidAmount: 0,
     outstandingAmount: 0,
+    notGeneratedAmount: 0,
+    totalLeft: 0,
   };
   for (const row of rows) {
     if (row.status === 'Paid') {
@@ -106,12 +123,21 @@ export const summarizeMonth = (
       summary.outstandingAmount += row.amount ?? 0;
     } else {
       summary.notGeneratedCount += 1;
+      summary.notGeneratedAmount += row.expected;
     }
   }
+  summary.totalLeft = summary.outstandingAmount + summary.notGeneratedAmount;
   return summary;
 };
 
-export const summarizePerson = (months: PersonMonthEntry[]): PersonSummaryTotals => {
+/**
+ * `due` says which NotGenerated months already count as owed: those from `fromMonth` (admission /
+ * joining) through `throughMonth` (see `sessionDueThrough`), each at `monthlyAmount`.
+ */
+export const summarizePerson = (
+  months: PersonMonthEntry[],
+  due: { monthlyAmount: number; fromMonth: string; throughMonth: string | null },
+): PersonSummaryTotals => {
   const totals: PersonSummaryTotals = {
     billed: 0,
     paid: 0,
@@ -119,10 +145,15 @@ export const summarizePerson = (months: PersonMonthEntry[]): PersonSummaryTotals
     paidMonths: 0,
     unpaidMonths: 0,
     notGeneratedMonths: 0,
+    unbilledAmount: 0,
+    totalPending: 0,
   };
   for (const m of months) {
     if (m.status === 'NotGenerated') {
       totals.notGeneratedMonths += 1;
+      if (due.throughMonth && m.month >= due.fromMonth && m.month <= due.throughMonth) {
+        totals.unbilledAmount += due.monthlyAmount;
+      }
       continue;
     }
     const amount = m.amount ?? 0;
@@ -135,6 +166,7 @@ export const summarizePerson = (months: PersonMonthEntry[]): PersonSummaryTotals
       totals.unpaidMonths += 1;
     }
   }
+  totals.totalPending = totals.outstanding + totals.unbilledAmount;
   return totals;
 };
 

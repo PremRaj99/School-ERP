@@ -62,6 +62,7 @@ export const MonthlyHonorariumStatus: React.FC<Props> = ({ session, onOpenSummar
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: qk.admin.teacherSalaries() });
     queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+    queryClient.invalidateQueries({ queryKey: qk.admin.dashboard() });
     queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
   };
 

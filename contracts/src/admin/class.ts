@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { defineContract } from '../envelope';
-import { ClassName, ObjectId, Section, Session } from '../primitives';
+import { ClassName, ObjectId, Section, Session, SubjectCode } from '../primitives';
 
 export const ClassRecord = z.object({
   id: ObjectId,
@@ -38,6 +38,23 @@ export const ClassListQuery = z.object({
 });
 export type ClassListQuery = z.infer<typeof ClassListQuery>;
 
+// A subject assigned to one class section. `scheduledPeriods` counts that subject's slots in the
+// class's timetable — a subject with any scheduled period can't be unassigned until those slots
+// are moved to another subject.
+export const ClassSubjectRecord = z.object({
+  subjectCode: SubjectCode,
+  subjectName: z.string(),
+  scheduledPeriods: z.number().int().nonnegative(),
+});
+export type ClassSubjectRecord = z.infer<typeof ClassSubjectRecord>;
+
+// Replaces the class's whole assignment set — the UI is a checklist, so sending the final list is
+// simpler than add/remove calls per subject.
+export const SetClassSubjectsBody = z.object({
+  subjectCodes: z.array(SubjectCode),
+});
+export type SetClassSubjectsBody = z.infer<typeof SetClassSubjectsBody>;
+
 export const adminClassContract = defineContract({
   list: {
     method: 'GET',
@@ -66,5 +83,21 @@ export const adminClassContract = defineContract({
     params: z.object({ classId: ObjectId }),
     response: DeleteClassResponse,
     successStatus: 202,
+  },
+  listSubjects: {
+    method: 'GET',
+    path: '/admin/class/:classId/subjects',
+    params: z.object({ classId: ObjectId }),
+    response: z.array(ClassSubjectRecord),
+    summary: 'Subjects assigned to a class (explicitly, or via a timetable slot).',
+  },
+  setSubjects: {
+    method: 'PUT',
+    path: '/admin/class/:classId/subjects',
+    params: z.object({ classId: ObjectId }),
+    body: SetClassSubjectsBody,
+    response: z.array(ClassSubjectRecord),
+    successStatus: 202,
+    summary: 'Replace the set of subjects assigned to a class.',
   },
 } as const);

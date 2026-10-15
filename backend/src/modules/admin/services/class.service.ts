@@ -3,7 +3,9 @@ import { NotFoundError, ValidationError } from '@/core/errors';
 import type {
   ClassListQuery,
   ClassRecord,
+  ClassSubjectRecord,
   CreateClassBody,
+  SetClassSubjectsBody,
   UpdateClassBody,
 } from '@schoolerp/contracts';
 import { normalizeClassName } from '@schoolerp/contracts';
@@ -78,5 +80,81 @@ export class AdminClassService {
       throw new NotFoundError();
     }
     return { id: classId };
+  }
+
+  // A subject counts as assigned if it has an explicit `ClassSubject` link OR is scheduled in the
+  // class's timetable — classes set up before explicit assignment existed only have the latter.
+  static async getClassSubjects(classId: string): Promise<ClassSubjectRecord[]> {
+    const cls = await prisma.class.findUnique({ where: { id: classId }, select: { id: true } });
+    if (!cls) throw new NotFoundError('Class not found.');
+
+    const [links, slots] = await Promise.all([
+      prisma.classSubject.findMany({
+        where: { classId },
+        select: { subject: { select: { subjectCode: true, subjectName: true } } },
+      }),
+      prisma.timeTable.findMany({
+        where: { classId },
+        select: { subject: { select: { subjectCode: true, subjectName: true } } },
+      }),
+    ]);
+
+    const byCode = new Map<string, ClassSubjectRecord>();
+    for (const { subject } of links) {
+      byCode.set(subject.subjectCode, { ...subject, scheduledPeriods: 0 });
+    }
+    for (const { subject } of slots) {
+      const existing = byCode.get(subject.subjectCode);
+      if (existing) existing.scheduledPeriods += 1;
+      else byCode.set(subject.subjectCode, { ...subject, scheduledPeriods: 1 });
+    }
+    return [...byCode.values()].sort((a, b) => a.subjectName.localeCompare(b.subjectName));
+  }
+
+  static async setClassSubjects(
+    classId: string,
+    data: SetClassSubjectsBody,
+  ): Promise<ClassSubjectRecord[]> {
+    const current = await AdminClassService.getClassSubjects(classId);
+    const wanted = [...new Set(data.subjectCodes)];
+
+    const subjects = await prisma.subject.findMany({
+      where: { subjectCode: { in: wanted } },
+      select: { id: true, subjectCode: true },
+    });
+    const idByCode = new Map(subjects.map((s) => [s.subjectCode, s.id]));
+    const unknown = wanted.filter((code) => !idByCode.has(code));
+    if (unknown.length > 0) {
+      throw new ValidationError(
+        `Unknown subject code(s): ${unknown.join(', ')}.`,
+        unknown.map((code) => ({ path: 'subjectCodes', message: `Unknown subject code ${code}.` })),
+      );
+    }
+
+    const wantedSet = new Set(wanted);
+    const stillScheduled = current.filter(
+      (s) => s.scheduledPeriods > 0 && !wantedSet.has(s.subjectCode),
+    );
+    if (stillScheduled.length > 0) {
+      throw new ValidationError(
+        `Remove these subjects from the class timetable before unassigning them: ${stillScheduled
+          .map((s) => s.subjectName)
+          .join(', ')}.`,
+      );
+    }
+
+    const wantedIds = wanted.map((code) => idByCode.get(code)!);
+    await prisma.$transaction([
+      prisma.classSubject.deleteMany({ where: { classId, subjectId: { notIn: wantedIds } } }),
+      ...wantedIds.map((subjectId) =>
+        prisma.classSubject.upsert({
+          where: { classId_subjectId: { classId, subjectId } },
+          create: { classId, subjectId },
+          update: {},
+        }),
+      ),
+    ]);
+
+    return AdminClassService.getClassSubjects(classId);
   }
 }

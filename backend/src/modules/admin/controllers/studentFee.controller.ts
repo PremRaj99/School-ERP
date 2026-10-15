@@ -55,3 +55,8 @@ export const getStudentFeeSummary = defineRoute(
     return AdminStudentFeeService.getStudentSummary(params.studentId, query.session);
   },
 );
+
+export const getStudentFeeSessionDues = defineRoute(
+  adminStudentFeeContract.sessionDues,
+  async ({ query }) => AdminStudentFeeService.getSessionDues(query.session),
+);

@@ -5,6 +5,7 @@ import type {
   MonthlyPaymentStatus,
   MonthlyStatusSummary,
   PersonMonthEntry,
+  SessionFeeDues,
   StudentFeeDetail,
   StudentFeeListQuery,
   StudentFeeRecord,
@@ -33,6 +34,7 @@ import {
   sessionMonthRange,
   summarizeMonth,
   summarizePerson,
+  sessionDueThrough,
 } from '@/shared/helpers/financeStatus';
 import { nextReceiptNo } from '@/shared/helpers/receiptNo';
 import { dueFieldsFor, getFeeSettings } from '@/shared/helpers/feeSettings';
@@ -173,7 +175,7 @@ export class AdminStudentFeeService {
       lastName: true,
       rollNo: true,
       phone: true,
-      class: { select: { className: true, section: true } },
+      class: { select: { className: true, section: true, monthlyFee: true } },
     } as const;
 
     const [rosterStudents, fees, settings] = await Promise.all([
@@ -218,6 +220,7 @@ export class AdminStudentFeeService {
         amount: fee?.transaction.finalAmount ?? null,
         paidOn: fee ? paidOnFor(fee.transaction) : null,
         lateFine: fee ? dueFieldsFor(settings, query.month, fee.transaction.status).lateFine : 0,
+        monthlyFee: student.class?.monthlyFee ?? settings.defaultMonthlyFee,
       };
     });
 
@@ -229,7 +232,10 @@ export class AdminStudentFeeService {
     );
     if (query.sortDir === 'desc') allRows.reverse();
 
-    const summary = summarizeMonth(query.month, allRows);
+    const summary = summarizeMonth(
+      query.month,
+      allRows.map((row) => ({ ...row, expected: row.monthlyFee })),
+    );
 
     const q = query.q?.toLowerCase();
     const filtered = allRows.filter(
@@ -254,12 +260,14 @@ export class AdminStudentFeeService {
         firstName: true,
         lastName: true,
         rollNo: true,
-        class: { select: { className: true, section: true, session: true } },
+        dateOfAdmission: true,
+        class: { select: { className: true, section: true, session: true, monthlyFee: true } },
       },
     });
     if (!student) {
       throw new NotFoundError('Student not found.');
     }
+    const settings = await getFeeSettings();
 
     const targetSession = session ?? student.class?.session ?? getCurrentSessionYear();
     const months = sessionMonths(targetSession);
@@ -294,8 +302,81 @@ export class AdminStudentFeeService {
       rollNo: student.rollNo,
       session: targetSession,
       months: entries,
-      totals: summarizePerson(entries),
+      totals: summarizePerson(entries, {
+        monthlyAmount: student.class?.monthlyFee ?? settings.defaultMonthlyFee,
+        fromMonth: toISOMonth(student.dateOfAdmission),
+        throughMonth: sessionDueThrough(targetSession),
+      }),
     };
+  }
+
+  /**
+   * Paid / still-left totals for a whole session up to `sessionDueThrough(session)`. Each month's
+   * roster matches `getMonthlyStatus` (active students admitted by that month's end, plus anyone
+   * with a fee record that month); a student-month with no fee counts at the student's class fee.
+   */
+  static async getSessionDues(session?: string): Promise<SessionFeeDues> {
+    const targetSession = session ?? getCurrentSessionYear();
+    const throughMonth = sessionDueThrough(targetSession);
+    const empty: SessionFeeDues = {
+      session: targetSession,
+      throughMonth,
+      paidAmount: 0,
+      outstandingAmount: 0,
+      notGeneratedCount: 0,
+      notGeneratedAmount: 0,
+      totalLeft: 0,
+      studentsWithDues: 0,
+    };
+    if (!throughMonth) return empty;
+
+    const months = sessionMonths(targetSession).filter((m) => m <= throughMonth);
+    const [students, fees, settings] = await Promise.all([
+      prisma.student.findMany({
+        where: {
+          ...ACTIVE_STUDENT_STATUS_FILTER,
+          dateOfAdmission: { lt: monthStartEndFromISO(throughMonth).endDate },
+        },
+        select: { id: true, dateOfAdmission: true, class: { select: { monthlyFee: true } } },
+      }),
+      prisma.studentFee.findMany({
+        where: {
+          month: { gte: fromISOMonth(months[0]!), lte: fromISOMonth(throughMonth) },
+        },
+        select: {
+          studentId: true,
+          month: true,
+          transaction: { select: { status: true, finalAmount: true } },
+        },
+      }),
+      getFeeSettings(),
+    ]);
+
+    const result = { ...empty };
+    const withDues = new Set<string>();
+    const billed = new Set<string>();
+    for (const fee of fees) {
+      billed.add(`${fee.studentId}:${toISOMonth(fee.month)}`);
+      if (fee.transaction.status === 'Paid') {
+        result.paidAmount += fee.transaction.finalAmount;
+      } else {
+        result.outstandingAmount += fee.transaction.finalAmount;
+        withDues.add(fee.studentId);
+      }
+    }
+    for (const student of students) {
+      const admitted = toISOMonth(student.dateOfAdmission);
+      const fee = student.class?.monthlyFee ?? settings.defaultMonthlyFee;
+      for (const month of months) {
+        if (month < admitted || billed.has(`${student.id}:${month}`)) continue;
+        result.notGeneratedCount += 1;
+        result.notGeneratedAmount += fee;
+        withDues.add(student.id);
+      }
+    }
+    result.totalLeft = result.outstandingAmount + result.notGeneratedAmount;
+    result.studentsWithDues = withDues.size;
+    return result;
   }
 
   static async getStudentFeeById(feeId: string): Promise<StudentFeeDetail> {
@@ -400,6 +481,12 @@ export class AdminStudentFeeService {
         actorUsername: actor.username,
         after: result,
       });
+    }
+
+    if (data.payment) {
+      // Same path as marking it Paid afterwards, so the receipt number and audit entry match.
+      await this.updateStudentFeeStatus(studentFeeId, { status: 'Paid', ...data.payment }, actor);
+      return this.getStudentFeeById(studentFeeId);
     }
 
     return result;

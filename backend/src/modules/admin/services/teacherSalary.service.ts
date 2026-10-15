@@ -29,6 +29,7 @@ import {
   sessionMonthRange,
   summarizeMonth,
   summarizePerson,
+  sessionDueThrough,
 } from '@/shared/helpers/financeStatus';
 import { FinanceAuditLogService } from './financeAuditLog.service';
 
@@ -180,7 +181,10 @@ export class AdminTeacherSalaryService {
     allRows.sort((a, b) => a.firstName.localeCompare(b.firstName));
     if (query.sortDir === 'desc') allRows.reverse();
 
-    const summary = summarizeMonth(query.month, allRows);
+    const summary = summarizeMonth(
+      query.month,
+      allRows.map((row) => ({ ...row, expected: row.salaryPerMonth })),
+    );
 
     const q = query.q?.toLowerCase();
     const filtered = allRows.filter(
@@ -202,7 +206,14 @@ export class AdminTeacherSalaryService {
   ): Promise<TeacherHonorariumSummary> {
     const teacher = await prisma.teacher.findUnique({
       where: { teacherId },
-      select: { id: true, teacherId: true, firstName: true, lastName: true, salaryPerMonth: true },
+      select: {
+        id: true,
+        teacherId: true,
+        firstName: true,
+        lastName: true,
+        salaryPerMonth: true,
+        dateOfJoining: true,
+      },
     });
     if (!teacher) {
       throw new NotFoundError('Teacher not found.');
@@ -239,7 +250,11 @@ export class AdminTeacherSalaryService {
       salaryPerMonth: teacher.salaryPerMonth,
       session: targetSession,
       months: entries,
-      totals: summarizePerson(entries),
+      totals: summarizePerson(entries, {
+        monthlyAmount: teacher.salaryPerMonth,
+        fromMonth: toISOMonth(teacher.dateOfJoining),
+        throughMonth: sessionDueThrough(targetSession),
+      }),
     };
   }
 

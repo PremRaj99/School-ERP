@@ -116,6 +116,10 @@ export const adminService = {
     api(adminClassContract.update, { params: { classId }, body }),
   deleteClass: (classId: string): Promise<{ id: string }> =>
     api(adminClassContract.remove, { params: { classId } }),
+  getClassSubjects: (classId: string) =>
+    api(adminClassContract.listSubjects, { params: { classId } }),
+  setClassSubjects: (classId: string, subjectCodes: string[]) =>
+    api(adminClassContract.setSubjects, { params: { classId }, body: { subjectCodes } }),
 
   // Subjects
   getSubjects: (): Promise<SubjectRecord[]> => api(adminSubjectContract.list),
@@ -172,6 +176,9 @@ export const adminService = {
     api(adminStudentFeeContract.update, { params: { feeId }, body }),
   getFeeSettings: () => api(adminFeeSettingsContract.get),
   updateFeeSettings: (body: FeeSettings) => api(adminFeeSettingsContract.update, { body }),
+  getClassFees: () => api(adminFeeSettingsContract.listClassFees),
+  updateClassFee: (classId: string, monthlyFee: number | null) =>
+    api(adminFeeSettingsContract.updateClassFee, { params: { classId }, body: { monthlyFee } }),
   /** Marking Paid can carry the payment mode/reference; the response then has a receipt number. */
   updateStudentFeeStatus: (feeId: string, body: UpdateStatusBody): Promise<StudentFeeRecord> =>
     api(adminStudentFeeContract.updateStatus, { params: { feeId }, body }),
@@ -181,6 +188,8 @@ export const adminService = {
     api(adminStudentFeeContract.monthlyStatus, { query }),
   getStudentFeeSummary: (studentId: string, session?: string) =>
     api(adminStudentFeeContract.summary, { params: { studentId }, query: { session } }),
+  getStudentFeeSessionDues: (session?: string) =>
+    api(adminStudentFeeContract.sessionDues, { query: { session } }),
 
   getTeacherSalaries: (query?: TeacherSalaryListQuery) =>
     api(adminTeacherSalaryContract.list, { query: query ?? {} }),

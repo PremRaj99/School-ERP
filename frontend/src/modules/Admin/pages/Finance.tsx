@@ -25,6 +25,8 @@ import {
 } from '@/components/finance/PersonFinanceSummaryDialog';
 import { FeeDueHint } from '@/components/finance/FeeDueHint';
 import { FeeRulesDialog } from '@/components/finance/FeeRulesDialog';
+import { ClassFeesDialog } from '@/components/finance/ClassFeesDialog';
+import { TUITION_FEE_TYPE, useTuitionPrefill } from '@/hooks/useTuitionPrefill';
 import { FeeReceiptDialog } from '@/components/finance/FeeReceipt';
 import { RecordPaymentDialog, type PaymentTarget } from '@/components/finance/RecordPaymentDialog';
 import { adminService } from '@/lib/services/admin.service';
@@ -40,9 +42,12 @@ import {
   type FinanceAuditLogRecord,
   type TxnStatus,
   type UpdateStatusBody,
+  DEFAULT_FEE_SETTINGS,
+  MAX_PAGE_SIZE,
 } from '@schoolerp/contracts';
 import { getErrorMessage } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
+import { formatMonth } from '@/lib/finance-format';
 import { getCurrentSessionYear } from '@/lib/session';
 import { FILTER_SELECT_CLASS } from '@/components/filters';
 import { toast } from 'sonner';
@@ -72,12 +77,13 @@ const SORT_FIELD_BY_COLUMN_ID: Record<string, 'month' | 'finalAmount' | 'paidAt'
   paidAt: 'paidAt',
 };
 
-const emptyFeeDefaults: CreateStudentFeeBody = {
+/** A blank Collect Fee form, with tuition pre-filled at the school's default monthly fee. */
+const feeDefaults = (defaultMonthlyFee: number): CreateStudentFeeBody => ({
   studentId: '',
   month: '',
   title: 'Term Fee',
-  feeBreakdown: [{ feeType: 'Tuition Fee', amount: 0 }],
-};
+  feeBreakdown: [{ feeType: TUITION_FEE_TYPE, amount: defaultMonthlyFee }],
+});
 
 export const AdminFinance: React.FC = () => {
   const queryClient = useQueryClient();
@@ -88,6 +94,7 @@ export const AdminFinance: React.FC = () => {
   const [isCollectFeeOpen, setIsCollectFeeOpen] = useState(false);
   const [receiptFeeId, setReceiptFeeId] = useState<string | null>(null);
   const [isFeeRulesOpen, setIsFeeRulesOpen] = useState(false);
+  const [isClassFeesOpen, setIsClassFeesOpen] = useState(false);
   const [paymentTarget, setPaymentTarget] = useState<PaymentTarget | null>(null);
 
   // Monthly status ("who has / hasn't paid") vs. the full record ledger, per tab.
@@ -126,11 +133,33 @@ export const AdminFinance: React.FC = () => {
   }, [debouncedSalarySearch, salaryStatusFilter, session]);
 
   const studentOptions = useStudentOptions();
-
-  const { control, handleSubmit, watch, reset } = useForm<CreateStudentFeeBody>({
-    resolver: zodResolver(CreateStudentFeeBody),
-    defaultValues: emptyFeeDefaults,
+  const { data: feeSettings } = useQuery({
+    queryKey: qk.admin.feeSettings(),
+    queryFn: adminService.getFeeSettings,
   });
+  const emptyFeeDefaults = feeDefaults(
+    feeSettings?.defaultMonthlyFee ?? DEFAULT_FEE_SETTINGS.defaultMonthlyFee,
+  );
+
+  const { control, handleSubmit, watch, reset, getValues, setValue } =
+    useForm<CreateStudentFeeBody>({
+      resolver: zodResolver(CreateStudentFeeBody),
+      defaultValues: emptyFeeDefaults,
+    });
+  // Same query (and cache entry) as `useStudentOptions()` above.
+  const { data: studentList } = useQuery({
+    queryKey: qk.admin.students({
+      className: undefined,
+      section: undefined,
+      pageSize: MAX_PAGE_SIZE,
+    }),
+    queryFn: () => adminService.getStudents({ pageSize: MAX_PAGE_SIZE }),
+  });
+  const { data: classFees } = useQuery({
+    queryKey: qk.admin.classFees(),
+    queryFn: adminService.getClassFees,
+  });
+  useTuitionPrefill({ control, getValues, setValue, students: studentList?.data, classFees });
   const {
     fields: feeRows,
     append: appendFeeRow,
@@ -231,12 +260,29 @@ export const AdminFinance: React.FC = () => {
     queryFn: () => adminService.getAnalyticsFinance(session),
   });
   const feesRealized = (financeAnalytics?.monthly ?? []).reduce((sum, m) => sum + m.collected, 0);
-  const feesPending = (financeAnalytics?.monthly ?? []).reduce((sum, m) => sum + m.pending, 0);
   const payrollDisbursed = (financeAnalytics?.salaryVsCollection ?? []).reduce(
     (sum, m) => sum + m.salaryBurn,
     0,
   );
-  const pendingFeeCount = financeAnalytics?.defaulters.length ?? 0;
+  // Everything left to pay in the selected session so far (unpaid invoices + months with no fee
+  // generated yet, at the class fee) — sits under the `studentFees()` prefix, so every fee
+  // mutation's invalidation refreshes it.
+  const { data: sessionDues } = useQuery({
+    queryKey: qk.admin.studentFeeSessionDues(session),
+    queryFn: () => adminService.getStudentFeeSessionDues(session),
+  });
+  // This month's dues, class by class (same counting, current month only).
+  const { data: dashboard } = useQuery({
+    queryKey: qk.admin.dashboard(),
+    queryFn: () => adminService.getDashboard(),
+  });
+  const thisMonthDues = (dashboard?.classWiseFees.classes ?? []).reduce(
+    (t, c) => ({
+      amount: t.amount + (c.expected - c.collected),
+      students: t.students + (c.students - c.paidCount),
+    }),
+    { amount: 0, students: 0 },
+  );
 
   const collectFeeMutation = useMutation({
     mutationFn: (payload: CreateStudentFeeBody) => adminService.createStudentFee(payload),
@@ -244,6 +290,7 @@ export const AdminFinance: React.FC = () => {
       toast.success('Fee payment recorded successfully!');
       queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.dashboard() });
       queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
       setIsCollectFeeOpen(false);
       reset(emptyFeeDefaults);
@@ -258,6 +305,7 @@ export const AdminFinance: React.FC = () => {
       toast.success('Fee updated successfully!');
       queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.dashboard() });
       queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
       setIsEditFeeOpen(false);
       setEditingFee(null);
@@ -272,6 +320,7 @@ export const AdminFinance: React.FC = () => {
       toast.success('Honorarium updated successfully!');
       queryClient.invalidateQueries({ queryKey: qk.admin.teacherSalaries() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.dashboard() });
       queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
       setIsEditSalaryOpen(false);
       setEditingSalary(null);
@@ -289,6 +338,7 @@ export const AdminFinance: React.FC = () => {
       if (fee.status === 'Paid' && body.paymentMode) setReceiptFeeId(fee.id);
       queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.dashboard() });
       queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -301,6 +351,7 @@ export const AdminFinance: React.FC = () => {
       toast.success('Honorarium status updated!');
       queryClient.invalidateQueries({ queryKey: qk.admin.teacherSalaries() });
       queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+      queryClient.invalidateQueries({ queryKey: qk.admin.dashboard() });
       queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -730,7 +781,15 @@ export const AdminFinance: React.FC = () => {
               <span>Fee Rules</span>
             </Button>
             <Button
-              onClick={() => setIsCollectFeeOpen(true)}
+              variant="outline"
+              onClick={() => setIsClassFeesOpen(true)}
+              className="h-9 gap-1.5 text-xs"
+            >
+              <PiCreditCard className="h-3.5 w-3.5" />
+              <span>Class Fees</span>
+            </Button>
+            <Button
+              onClick={() => openCollectFor('', '')}
               className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs text-white shadow-sm"
             >
               <PiPlus className="h-3.5 w-3.5" />
@@ -772,13 +831,29 @@ export const AdminFinance: React.FC = () => {
           <CardContent className="p-4">
             <span className="text-muted-foreground text-xs font-semibold">
               Pending Student Dues
+              {sessionDues?.throughMonth && (
+                <span className="font-normal">
+                  {' '}
+                  · Session {sessionDues.session}, up to {formatMonth(sessionDues.throughMonth)}
+                </span>
+              )}
             </span>
             <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">
-              ₹{feesPending.toLocaleString()}
+              ₹{(sessionDues?.totalLeft ?? 0).toLocaleString()}
             </p>
-            <span className="text-muted-foreground text-[11px]">
-              {pendingFeeCount} invoice{pendingFeeCount === 1 ? '' : 's'} outstanding
+            <span className="text-muted-foreground block text-[11px]">
+              {sessionDues?.studentsWithDues ?? 0} student
+              {sessionDues?.studentsWithDues === 1 ? '' : 's'} with dues · ₹
+              {(sessionDues?.outstandingAmount ?? 0).toLocaleString()} billed + ₹
+              {(sessionDues?.notGeneratedAmount ?? 0).toLocaleString()} not generated
             </span>
+            {dashboard && (
+              <span className="mt-1 block text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                {formatMonth(dashboard.classWiseFees.month)}: ₹
+                {thisMonthDues.amount.toLocaleString()} left · {thisMonthDues.students} student
+                {thisMonthDues.students === 1 ? '' : 's'} yet to pay
+              </span>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -815,7 +890,6 @@ export const AdminFinance: React.FC = () => {
             <MonthlyFeeStatus
               key={session}
               session={session}
-              onCreateInvoice={openCollectFor}
               onOpenSummary={(studentId) => setSummaryTarget({ kind: 'student', studentId })}
             />
           ) : feesErrored ? (
@@ -838,7 +912,7 @@ export const AdminFinance: React.FC = () => {
                     <Button
                       size="sm"
                       className="mt-1 text-xs"
-                      onClick={() => setIsCollectFeeOpen(true)}
+                      onClick={() => openCollectFor('', '')}
                     >
                       <PiPlus className="mr-1 h-3.5 w-3.5" />
                       Collect Student Fee
@@ -1100,15 +1174,16 @@ export const AdminFinance: React.FC = () => {
       <PersonFinanceSummaryDialog target={summaryTarget} onClose={() => setSummaryTarget(null)} />
 
       <FeeRulesDialog open={isFeeRulesOpen} onClose={() => setIsFeeRulesOpen(false)} />
+      <ClassFeesDialog open={isClassFeesOpen} onClose={() => setIsClassFeesOpen(false)} />
       <RecordPaymentDialog
         target={paymentTarget}
         onClose={() => setPaymentTarget(null)}
         pending={updateFeeStatusMutation.isPending}
-        onConfirm={(payment) =>
+        onConfirm={({ paymentMode, paymentRef, lateFine }) =>
           paymentTarget &&
           updateFeeStatusMutation.mutate({
             feeId: paymentTarget.feeId,
-            body: { status: 'Paid', ...payment },
+            body: { status: 'Paid', paymentMode, paymentRef, lateFine },
           })
         }
       />

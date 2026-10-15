@@ -5,6 +5,7 @@ import {
   getStudentFeeDetail,
   getStudentFeeMonthlyStatus,
   getStudentFeeSummary,
+  getStudentFeeSessionDues,
   getStudentFees,
   updateStudentFee,
   updateStudentFeeStatus,
@@ -28,7 +29,12 @@ import {
   updateTransaction,
 } from '../controllers/transaction.controller';
 import { getFinanceAuditLogs } from '../controllers/financeAuditLog.controller';
-import { getAdminFeeSettings, updateFeeSettings } from '../controllers/feeSettings.controller';
+import {
+  getAdminClassFees,
+  getAdminFeeSettings,
+  updateClassFee,
+  updateFeeSettings,
+} from '../controllers/feeSettings.controller';
 
 export const financeRouter = Router();
 
@@ -38,6 +44,8 @@ financeRouter.get('/audit-log', getFinanceAuditLogs);
 // Fee rules (due day, late fine)
 financeRouter.get('/settings', getAdminFeeSettings);
 financeRouter.put('/settings', updateFeeSettings);
+financeRouter.get('/class-fees', getAdminClassFees);
+financeRouter.put('/class-fees/:classId', updateClassFee);
 
 // Student fees
 financeRouter.get('/student-fee', getStudentFees);
@@ -45,6 +53,7 @@ financeRouter.get('/student-fee', getStudentFees);
 // swallow `monthly-status` (same issue as `/transaction/expense-categories` below).
 financeRouter.get('/student-fee/monthly-status', getStudentFeeMonthlyStatus);
 financeRouter.get('/student-fee/summary/:studentId', getStudentFeeSummary);
+financeRouter.get('/student-fee/session-dues', getStudentFeeSessionDues);
 financeRouter.get('/student-fee/:feeId', getStudentFeeDetail);
 financeRouter.post('/student-fee', createStudentFee);
 // Full edit (month, title, fee breakdown) — distinct from the status-only update below

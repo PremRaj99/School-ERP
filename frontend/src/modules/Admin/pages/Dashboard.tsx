@@ -8,7 +8,9 @@ import { ErrorState } from '@/components/data-table';
 import { useQuery } from '@tanstack/react-query';
 import { adminService } from '@/lib/services/admin.service';
 import { qk } from '@/lib/query-keys';
+import { formatMonth, formatRupees as rupees } from '@/lib/finance-format';
 import { getErrorMessage } from '@/lib/api';
+import { getCurrentSessionYear } from '@/lib/session';
 import {
   PiUsers,
   PiGraduationCap,
@@ -21,6 +23,7 @@ import {
   PiArrowClockwise,
   PiCalendar,
   PiUserCheck,
+  PiChalkboardTeacher,
 } from 'react-icons/pi';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
@@ -50,6 +53,18 @@ export const AdminDashboard: React.FC = () => {
     queryKey: qk.admin.dashboard(),
     queryFn: () => adminService.getDashboard(),
   });
+
+  const classFees = dashboardData?.classWiseFees;
+  const feeTotals = (classFees?.classes ?? []).reduce(
+    (t, c) => ({
+      students: t.students + c.students,
+      paidCount: t.paidCount + c.paidCount,
+      collected: t.collected + c.collected,
+      pending: t.pending + c.pending,
+      expected: t.expected + c.expected,
+    }),
+    { students: 0, paidCount: 0, collected: 0, pending: 0, expected: 0 },
+  );
 
   const attendancePieData = dashboardData
     ? [
@@ -289,14 +304,33 @@ export const AdminDashboard: React.FC = () => {
                   <div className="rounded-md border border-amber-200/60 bg-amber-50 p-4 dark:border-amber-900/40 dark:bg-amber-950/30">
                     <span className="text-muted-foreground text-xs font-semibold">
                       Pending Student Fees
+                      <span className="font-normal">
+                        {' '}
+                        · {formatMonth(dashboardData.classWiseFees.month)}
+                      </span>
                     </span>
+                    {/* This month's dues, incl. students whose fee isn't generated yet. */}
                     <p className="mt-1 text-xl font-black text-amber-700 dark:text-amber-300">
-                      ₹{dashboardData.finance.pendingStudentFees.totalAmount.toLocaleString()}
+                      {rupees(feeTotals.expected - feeTotals.collected)}
                     </p>
-                    <span className="text-muted-foreground text-[11px]">
-                      {dashboardData.finance.pendingStudentFees.count} invoice
-                      {dashboardData.finance.pendingStudentFees.count === 1 ? '' : 's'}
+                    <span className="text-muted-foreground block text-[11px]">
+                      {feeTotals.students - feeTotals.paidCount} student
+                      {feeTotals.students - feeTotals.paidCount === 1 ? '' : 's'} yet to pay
                     </span>
+                    {/* Whole session so far (April → this month), same counting. */}
+                    <div className="mt-2 border-t border-amber-200/60 pt-2 dark:border-amber-900/40">
+                      <span className="text-muted-foreground block text-[11px] font-semibold">
+                        Session {dashboardData.sessionFeeDues.session} so far
+                      </span>
+                      <p className="text-base font-black text-amber-700 dark:text-amber-300">
+                        {rupees(dashboardData.sessionFeeDues.totalLeft)}
+                      </p>
+                      <span className="text-muted-foreground block text-[11px]">
+                        {dashboardData.sessionFeeDues.studentsWithDues} student
+                        {dashboardData.sessionFeeDues.studentsWithDues === 1 ? '' : 's'} with dues ·{' '}
+                        {rupees(dashboardData.sessionFeeDues.paidAmount)} collected
+                      </span>
+                    </div>
                   </div>
                   <div className="border-primary/20 bg-primary/5 dark:bg-primary/10 rounded-md border p-4">
                     <span className="text-muted-foreground text-xs font-semibold">
@@ -313,6 +347,122 @@ export const AdminDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Class-wise Fees (current month) */}
+            {classFees && (
+              <Card className="min-w-0 overflow-hidden border border-slate-200/80 bg-white/90 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/90">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
+                        <PiChalkboardTeacher className="text-primary h-4 w-4" />
+                        Class-wise Fees
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        {formatMonth(classFees.month)} · {getCurrentSessionYear()} session · default{' '}
+                        {rupees(classFees.defaultMonthlyFee)}/student, unless a class has its own
+                      </CardDescription>
+                    </div>
+                    <button
+                      onClick={() => navigate('/admin/finance')}
+                      className="text-primary text-xs font-semibold hover:underline"
+                    >
+                      Collect
+                    </button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {classFees.classes.length === 0 ? (
+                    <p className="text-muted-foreground py-6 text-center text-xs">
+                      No classes with students in this session yet.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[640px] text-xs">
+                        <thead>
+                          <tr className="text-muted-foreground border-b border-slate-100 text-left dark:border-zinc-800">
+                            <th className="py-2 pr-3 font-semibold">Class</th>
+                            <th className="py-2 pr-3 text-right font-semibold">Fee/mo</th>
+                            <th className="py-2 pr-3 text-right font-semibold">Students</th>
+                            <th className="py-2 pr-3 text-right font-semibold">Paid</th>
+                            <th className="py-2 pr-3 text-right font-semibold">Collected</th>
+                            <th className="py-2 pr-3 text-right font-semibold">Pending</th>
+                            <th className="py-2 pr-3 text-right font-semibold">Expected</th>
+                            <th className="w-32 py-2 font-semibold">Progress</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {classFees.classes.map((c) => {
+                            const pct = c.expected > 0 ? (c.collected / c.expected) * 100 : 0;
+                            return (
+                              <tr
+                                key={c.classId}
+                                className="border-b border-slate-100 last:border-0 dark:border-zinc-800/80"
+                              >
+                                <td className="py-2 pr-3 font-semibold text-slate-800 dark:text-zinc-200">
+                                  {c.className}-{c.section}
+                                </td>
+                                <td className="py-2 pr-3 text-right">{rupees(c.monthlyFee)}</td>
+                                <td className="py-2 pr-3 text-right">{c.students}</td>
+                                <td className="py-2 pr-3 text-right">
+                                  {c.paidCount}/{c.students}
+                                </td>
+                                <td className="py-2 pr-3 text-right font-semibold text-emerald-700 dark:text-emerald-400">
+                                  {rupees(c.collected)}
+                                </td>
+                                <td className="py-2 pr-3 text-right text-amber-700 dark:text-amber-300">
+                                  {rupees(c.pending)}
+                                  {c.notGeneratedCount > 0 && (
+                                    <span className="text-muted-foreground ml-1 text-[10px]">
+                                      +{c.notGeneratedCount} not generated
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-2 pr-3 text-right">{rupees(c.expected)}</td>
+                                <td className="py-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800">
+                                      <div
+                                        className="h-full rounded-full bg-emerald-500"
+                                        style={{ width: `${Math.min(pct, 100)}%` }}
+                                      />
+                                    </div>
+                                    <span className="text-muted-foreground w-8 text-right text-[10px]">
+                                      {Math.round(pct)}%
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                        <tfoot>
+                          <tr className="border-t border-slate-200 font-bold dark:border-zinc-700">
+                            <td className="py-2 pr-3">Total</td>
+                            <td className="py-2 pr-3" />
+                            <td className="py-2 pr-3 text-right">{feeTotals.students}</td>
+                            <td className="py-2 pr-3 text-right">
+                              {feeTotals.paidCount}/{feeTotals.students}
+                            </td>
+                            <td className="py-2 pr-3 text-right text-emerald-700 dark:text-emerald-400">
+                              {rupees(feeTotals.collected)}
+                            </td>
+                            <td className="py-2 pr-3 text-right text-amber-700 dark:text-amber-300">
+                              {rupees(feeTotals.pending)}
+                            </td>
+                            <td className="py-2 pr-3 text-right">{rupees(feeTotals.expected)}</td>
+                            <td className="text-muted-foreground py-2 text-[10px]">
+                              {feeTotals.expected > 0 &&
+                                `${Math.round((feeTotals.collected / feeTotals.expected) * 100)}% collected`}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Upcoming Exams + Recent Notices */}
             <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-12">

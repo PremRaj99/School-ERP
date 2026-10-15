@@ -88,12 +88,13 @@ export const MonthlySummaryCards: React.FC<SummaryCardsProps> = ({
       </Card>
       <Card className={cardClass}>
         <CardContent className="p-3">
-          <span className="text-muted-foreground text-[11px] font-semibold">Outstanding</span>
+          <span className="text-muted-foreground text-[11px] font-semibold">Left this month</span>
           <p className="mt-0.5 text-xl font-bold text-amber-600 dark:text-amber-400">
-            {formatRupees(summary?.outstandingAmount ?? 0)}
+            {formatRupees(summary?.totalLeft ?? 0)}
           </p>
           <span className="text-muted-foreground text-[10px]">
-            Pending + failed (excludes not generated)
+            {formatRupees(summary?.outstandingAmount ?? 0)} billed +{' '}
+            {formatRupees(summary?.notGeneratedAmount ?? 0)} not generated
           </span>
         </CardContent>
       </Card>

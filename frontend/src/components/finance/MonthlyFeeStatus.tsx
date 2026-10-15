@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { PiCheckCircle, PiPlus, PiPrinter, PiReceipt } from 'react-icons/pi';
+import { PiCheckCircle, PiPrinter, PiReceipt } from 'react-icons/pi';
 import type {
   MonthlyStatusFilter,
   StudentMonthlyStatusQuery,
@@ -23,14 +23,13 @@ import { SessionMonthPicker } from '@/components/filters';
 import { FeeReceiptDialog } from './FeeReceipt';
 import { FeeDueHint } from './FeeDueHint';
 import { RecordPaymentDialog, type PaymentTarget } from './RecordPaymentDialog';
+import { TUITION_FEE_TYPE } from '@/hooks/useTuitionPrefill';
 import { defaultMonth } from '@/lib/session';
 import { formatMonth, formatRupees, selectClass } from '@/lib/finance-format';
 
 interface Props {
   /** The Finance page's session — the month picker stays inside it. */
   session: string;
-  /** Opens the page's Collect Fee dialog prefilled for this student and month. */
-  onCreateInvoice: (studentId: string, month: string) => void;
   onOpenSummary: (studentId: string) => void;
 }
 
@@ -38,7 +37,7 @@ interface Props {
  * "Who has / hasn't paid this month" view: every student on the roster for the chosen month with
  * their fee status, including students with no fee record generated yet.
  */
-export const MonthlyFeeStatus: React.FC<Props> = ({ session, onCreateInvoice, onOpenSummary }) => {
+export const MonthlyFeeStatus: React.FC<Props> = ({ session, onOpenSummary }) => {
   const queryClient = useQueryClient();
   const [month, setMonth] = useState(() => defaultMonth(session));
   const [className, setClassName] = useState('');
@@ -74,7 +73,41 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ session, onCreateInvoice, on
   });
 
   const [paymentTarget, setPaymentTarget] = useState<PaymentTarget | null>(null);
+  // A not-yet-generated month whose fee is being accepted (created + paid in one go).
+  const [acceptStudentId, setAcceptStudentId] = useState<string | null>(null);
   const [receiptFeeId, setReceiptFeeId] = useState<string | null>(null);
+
+  const onPaid = (fee: { id: string; receiptNo: string | null }) => {
+    toast.success(fee.receiptNo ? `Payment recorded · ${fee.receiptNo}` : 'Marked as paid.');
+    setPaymentTarget(null);
+    setAcceptStudentId(null);
+    setReceiptFeeId(fee.id);
+    queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
+    queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
+    queryClient.invalidateQueries({ queryKey: qk.admin.dashboard() });
+    queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
+  };
+
+  const acceptFee = useMutation({
+    mutationFn: ({
+      studentId,
+      amount,
+      payment,
+    }: {
+      studentId: string;
+      amount: number;
+      payment: Pick<UpdateStatusBody, 'paymentMode' | 'paymentRef'>;
+    }) =>
+      adminService.createStudentFee({
+        studentId,
+        month,
+        title: 'Monthly Fee',
+        feeBreakdown: [{ feeType: TUITION_FEE_TYPE, amount }],
+        payment: { paymentMode: payment.paymentMode ?? 'Cash', paymentRef: payment.paymentRef },
+      }),
+    onSuccess: onPaid,
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
 
   const markPaid = useMutation({
     mutationFn: ({
@@ -84,14 +117,7 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ session, onCreateInvoice, on
       feeId: string;
       payment: Omit<UpdateStatusBody, 'status'>;
     }) => adminService.updateStudentFeeStatus(feeId, { status: 'Paid', ...payment }),
-    onSuccess: (fee) => {
-      toast.success(fee.receiptNo ? `Payment recorded · ${fee.receiptNo}` : 'Marked as paid.');
-      setPaymentTarget(null);
-      setReceiptFeeId(fee.id);
-      queryClient.invalidateQueries({ queryKey: qk.admin.studentFees() });
-      queryClient.invalidateQueries({ queryKey: qk.admin.analyticsFinance() });
-      queryClient.invalidateQueries({ queryKey: qk.admin.financeAuditLogs() });
-    },
+    onSuccess: onPaid,
     onError: (err) => toast.error(getErrorMessage(err)),
   });
 
@@ -172,10 +198,19 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ session, onCreateInvoice, on
                 variant="ghost"
                 size="sm"
                 className="text-primary hover:bg-primary/10 h-7 text-xs"
-                onClick={() => onCreateInvoice(s.studentId, month)}
+                onClick={() => {
+                  setAcceptStudentId(s.studentId);
+                  setPaymentTarget({
+                    feeId: `new:${s.studentId}:${month}`,
+                    studentName: `${s.firstName} ${s.lastName ?? ''}`.trim(),
+                    month,
+                    amount: s.monthlyFee,
+                    isNewFee: true,
+                  });
+                }}
               >
-                <PiPlus className="mr-1 h-3.5 w-3.5" />
-                Create invoice
+                <PiCheckCircle className="mr-1 h-3.5 w-3.5" />
+                Accept fee
               </Button>
             )}
             {(s.status === 'Pending' || s.status === 'Failed') && s.feeId && (
@@ -194,7 +229,7 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ session, onCreateInvoice, on
                 }
               >
                 <PiCheckCircle className="mr-1 h-3.5 w-3.5" />
-                Mark paid
+                Accept fee
               </Button>
             )}
             {s.status === 'Paid' && s.feeId && (
@@ -305,11 +340,19 @@ export const MonthlyFeeStatus: React.FC<Props> = ({ session, onCreateInvoice, on
 
       <RecordPaymentDialog
         target={paymentTarget}
-        onClose={() => setPaymentTarget(null)}
-        pending={markPaid.isPending}
-        onConfirm={(payment) =>
-          paymentTarget && markPaid.mutate({ feeId: paymentTarget.feeId, payment })
-        }
+        onClose={() => {
+          setPaymentTarget(null);
+          setAcceptStudentId(null);
+        }}
+        pending={markPaid.isPending || acceptFee.isPending}
+        onConfirm={({ amount, ...payment }) => {
+          if (!paymentTarget) return;
+          if (paymentTarget.isNewFee && acceptStudentId) {
+            acceptFee.mutate({ studentId: acceptStudentId, amount, payment });
+          } else {
+            markPaid.mutate({ feeId: paymentTarget.feeId, payment });
+          }
+        }}
       />
       <FeeReceiptDialog
         feeId={receiptFeeId}

@@ -100,6 +100,16 @@ export const CreateStudentFeeBody = z.object({
   feeBreakdown: z
     .array(FeeBreakdownItem, { message: 'Fee breakdown is required.' })
     .min(1, 'At least one fee breakdown item is required.'),
+  /**
+   * "Accept fee": the money is being received right now — the fee is created and immediately
+   * marked Paid (assigning its receipt number) instead of being left Pending.
+   */
+  payment: z
+    .object({
+      paymentMode: PaymentModeEnum,
+      paymentRef: z.string().trim().max(60, 'Reference must be at most 60 characters.').optional(),
+    })
+    .optional(),
 });
 export type CreateStudentFeeBody = z.infer<typeof CreateStudentFeeBody>;
 
@@ -159,6 +169,10 @@ export const MonthlyStatusSummary = z.object({
   paidAmount: z.number(),
   /** Sum of `finalAmount` over Pending + Failed records (NotGenerated has no amount yet). */
   outstandingAmount: z.number(),
+  /** What the NotGenerated rows would bill: class fee per student / salary per teacher. */
+  notGeneratedAmount: z.number(),
+  /** Everything still to be paid for the month: `outstandingAmount + notGeneratedAmount`. */
+  totalLeft: z.number(),
 });
 export type MonthlyStatusSummary = z.infer<typeof MonthlyStatusSummary>;
 
@@ -185,6 +199,13 @@ export const PersonSummaryTotals = z.object({
   paidMonths: z.number().int(),
   unpaidMonths: z.number().int(),
   notGeneratedMonths: z.number().int(),
+  /**
+   * NotGenerated months that are already due (from admission/joining up to the current month),
+   * at the person's monthly fee/salary. Future months never count.
+   */
+  unbilledAmount: z.number(),
+  /** Everything still to be paid so far: `outstanding + unbilledAmount`. */
+  totalPending: z.number(),
 });
 export type PersonSummaryTotals = z.infer<typeof PersonSummaryTotals>;
 
@@ -209,6 +230,8 @@ export const StudentMonthlyStatusRow = z.object({
   paidOn: ISODate.nullable(),
   /** Fine owed as of today on an unpaid fee for this month; 0 otherwise. */
   lateFine: z.number(),
+  /** The student's class fee — what a fee for this month would be if generated now. */
+  monthlyFee: z.number(),
 });
 export type StudentMonthlyStatusRow = z.infer<typeof StudentMonthlyStatusRow>;
 
@@ -233,6 +256,25 @@ export const StudentFeeSummary = z.object({
   totals: PersonSummaryTotals,
 });
 export type StudentFeeSummary = z.infer<typeof StudentFeeSummary>;
+
+/**
+ * Student fees for a whole session up to `throughMonth` (the current month for the current
+ * session, March for a past one): what's been paid, and everything still left — unpaid invoices
+ * plus, for each student-month with no fee generated yet, the student's class fee.
+ */
+export const SessionFeeDues = z.object({
+  session: Session,
+  /** Last month counted; null for a session that hasn't started yet. */
+  throughMonth: ISOMonth.nullable(),
+  paidAmount: z.number(),
+  outstandingAmount: z.number(),
+  notGeneratedCount: z.number().int(),
+  notGeneratedAmount: z.number(),
+  totalLeft: z.number(),
+  /** Students with anything left to pay in the session so far. */
+  studentsWithDues: z.number().int(),
+});
+export type SessionFeeDues = z.infer<typeof SessionFeeDues>;
 
 // Teacher side
 
@@ -283,6 +325,13 @@ export const adminStudentFeeContract = defineContract({
     query: PersonSummaryQuery,
     response: StudentFeeSummary,
     summary: "One student's fee status for each of the 12 months of a session.",
+  },
+  sessionDues: {
+    method: 'GET',
+    path: '/admin/finance/student-fee/session-dues',
+    query: PersonSummaryQuery,
+    response: SessionFeeDues,
+    summary: 'Paid and still-left student fee totals for a session, up to the current month.',
   },
   list: {
     method: 'GET',

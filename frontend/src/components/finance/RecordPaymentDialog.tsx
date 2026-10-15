@@ -14,12 +14,18 @@ import { PAYMENT_MODE_LABEL, formatMonth, formatRupees } from '@/lib/finance-for
 import { FILTER_SELECT_CLASS } from '@/components/filters';
 
 export interface PaymentTarget {
+  /** Also the form's reset key — any id unique to this payment works for a not-yet-created fee. */
   feeId: string;
   studentName: string;
   month: string;
   amount: number;
   /** Fine owed today under the fee rules — pre-filled, editable, 0 = waive. */
   lateFine?: number;
+  /**
+   * Accepting a fee that hasn't been generated yet: `amount` is only the suggested (class) fee,
+   * and staff can change it before accepting.
+   */
+  isNewFee?: boolean;
 }
 
 interface RecordPaymentDialogProps {
@@ -30,6 +36,8 @@ interface RecordPaymentDialogProps {
     paymentMode: PaymentMode;
     paymentRef?: string;
     lateFine?: number;
+    /** The amount being collected (only differs from `target.amount` for a new fee). */
+    amount: number;
   }) => void;
   pending?: boolean;
 }
@@ -80,17 +88,45 @@ function PaymentForm({
   const fineAmount = Number(fine) || 0;
   const fineInvalid = fine !== '' && (Number.isNaN(Number(fine)) || Number(fine) < 0);
   const refLabel = REF_LABEL[mode];
+  const [amountInput, setAmountInput] = useState(String(target.amount));
+  const amount = target.isNewFee ? Number(amountInput) : target.amount;
+  const amountInvalid =
+    target.isNewFee && (amountInput === '' || Number.isNaN(amount) || amount <= 0);
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">Record Payment</DialogTitle>
+        <DialogTitle className="text-lg font-bold">
+          {target.isNewFee ? 'Accept Fee' : 'Record Payment'}
+        </DialogTitle>
         <DialogDescription className="text-xs">
-          {target.studentName} · {formatMonth(target.month)} ·{' '}
-          <span className="font-semibold">{formatRupees(target.amount)}</span>
+          {target.studentName} · {formatMonth(target.month)}
+          {!target.isNewFee && (
+            <>
+              {' '}
+              · <span className="font-semibold">{formatRupees(target.amount)}</span>
+            </>
+          )}
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-3">
+        {target.isNewFee && (
+          <label className="block space-y-1">
+            <span className="text-xs font-semibold">
+              Amount (₹){' '}
+              <span className="text-muted-foreground font-normal">
+                — class fee {formatRupees(target.amount)}
+              </span>
+            </span>
+            <Input
+              type="number"
+              min={0}
+              value={amountInput}
+              onChange={(e) => setAmountInput(e.target.value)}
+              className="h-9 w-32 text-xs"
+            />
+          </label>
+        )}
         <label className="block space-y-1">
           <span className="text-xs font-semibold">Payment mode</span>
           <select
@@ -148,7 +184,7 @@ function PaymentForm({
             </label>
             <p className="pt-1 text-xs">
               Total to collect:{' '}
-              <span className="font-bold">{formatRupees(target.amount + fineAmount)}</span>
+              <span className="font-bold">{formatRupees(amount + fineAmount)}</span>
             </p>
           </div>
         )}
@@ -159,17 +195,22 @@ function PaymentForm({
         </Button>
         <Button
           className="h-9 text-xs"
-          disabled={pending || fineInvalid}
+          disabled={pending || fineInvalid || amountInvalid}
           onClick={() =>
             onConfirm({
               paymentMode: mode,
               paymentRef: refLabel && ref.trim() ? ref.trim() : undefined,
               // Only sent when a fine applied, so an explicit 0 records the waiver.
               lateFine: suggestedFine > 0 ? fineAmount : undefined,
+              amount,
             })
           }
         >
-          {pending ? 'Saving…' : 'Mark Paid & Get Receipt'}
+          {pending
+            ? 'Saving…'
+            : target.isNewFee
+              ? 'Accept Fee & Get Receipt'
+              : 'Mark Paid & Get Receipt'}
         </Button>
       </DialogFooter>
     </>

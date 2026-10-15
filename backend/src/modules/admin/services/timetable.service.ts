@@ -1,8 +1,9 @@
 import prisma from '@/core/db';
-import { NotFoundError } from '@/core/errors';
+import { NotFoundError, ValidationError } from '@/core/errors';
 import { timeTableFormattedData } from '../helpers';
 import type { ClassSchedule, TimeTableSlotRecord, UpdateTimeTableBody } from '@schoolerp/contracts';
 import { getCurrentSessionYear } from '@/shared';
+import { AdminClassService } from './class.service';
 
 export class AdminTimetableService {
   static async getTimeTables(): Promise<ClassSchedule[]> {
@@ -61,6 +62,14 @@ export class AdminTimetableService {
     let subject;
     if (data.subjectCode) {
       subject = await prisma.subject.findUnique({ where: { subjectCode: data.subjectCode } });
+      // Same set the timetable dialog offers: explicitly assigned, or already scheduled here.
+      const classSubjects = await AdminClassService.getClassSubjects(classRecord.id);
+      if (!classSubjects.some((s) => s.subjectCode === data.subjectCode)) {
+        throw new ValidationError(
+          `Subject ${data.subjectCode} is not assigned to Class ${data.className}-${data.section}.`,
+          [{ path: 'subjectCode', message: 'Subject is not assigned to this class.' }],
+        );
+      }
     }
 
     let teacher;

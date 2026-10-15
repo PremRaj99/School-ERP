@@ -169,9 +169,16 @@ export const PersonFinanceSummaryDialog: React.FC<Props> = ({ target, onClose })
                 tone="good"
               />
               <SummaryStat
-                label="Outstanding"
-                value={formatRupees(data.totals.outstanding)}
-                tone={data.totals.outstanding > 0 ? 'warn' : undefined}
+                label="Total Pending"
+                value={formatRupees(data.totals.totalPending)}
+                tone={data.totals.totalPending > 0 ? 'warn' : undefined}
+                hint={
+                  data.totals.unbilledAmount > 0
+                    ? `${formatRupees(data.totals.outstanding)} billed + ${formatRupees(
+                        data.totals.unbilledAmount,
+                      )} not generated`
+                    : undefined
+                }
               />
               <SummaryStat
                 label="Months"
