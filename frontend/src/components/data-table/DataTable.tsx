@@ -199,32 +199,12 @@ export function DataTable<TData>({
     downloadCsv(exportFilename ?? 'export', headers, rows);
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        <Skeleton className="h-9 w-full max-w-sm" />
-        <div className="space-y-1.5 rounded-md border">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   // In manual mode, an empty current page doesn't necessarily mean there's no data at all (the
   // user could be on a now-out-of-range page after a filter change) — only show the empty state
-  // when the server says there are genuinely zero matching rows.
-  if (isManual ? manual.totalRows === 0 : data.length === 0) {
-    return (
-      <Empty className="rounded-md border p-8">
-        <EmptyMedia illustration={emptyIllustration} illustrationSize={120} />
-        <EmptyTitle>{emptyTitle}</EmptyTitle>
-        <EmptyDescription>{emptyDescription}</EmptyDescription>
-        {emptyAction}
-      </Empty>
-    );
-  }
+  // when the server says there are genuinely zero matching rows. The toolbar (search + filters)
+  // and header stay mounted either way, so the user can always clear a filter that emptied the
+  // list instead of being stranded on a bare empty-state card.
+  const isEmpty = !isLoading && (isManual ? manual.totalRows === 0 : data.length === 0);
 
   return (
     <div className="space-y-3">
@@ -281,6 +261,7 @@ export function DataTable<TData>({
               size="sm"
               className="h-9 gap-1.5 text-xs"
               onClick={handleExport}
+              disabled={isLoading || isEmpty}
             >
               <PiDownload className="h-3.5 w-3.5" />
               <span>Export</span>
@@ -319,7 +300,26 @@ export function DataTable<TData>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={`skeleton-${i}`} className="hover:bg-transparent">
+                  <TableCell colSpan={tableColumns.length} className="py-2">
+                    <Skeleton className="h-6 w-full" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : isEmpty ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={tableColumns.length} className="p-0 whitespace-normal">
+                  <Empty className="border-0 p-8">
+                    <EmptyMedia illustration={emptyIllustration} illustrationSize={120} />
+                    <EmptyTitle>{emptyTitle}</EmptyTitle>
+                    <EmptyDescription>{emptyDescription}</EmptyDescription>
+                    {emptyAction}
+                  </Empty>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={tableColumns.length}
